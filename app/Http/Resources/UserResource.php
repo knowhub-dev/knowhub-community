@@ -34,6 +34,12 @@ class UserResource extends JsonResource
                 'following_count' => $this->following_count ?? $this->following()->count(),
             ],
             'created_at' => $this->created_at,
+            
+            // =======================================================
+            // MANA O'SHA ENG MUHIM QATOR:
+            // =======================================================
+            'role' => $this->is_admin ? 'admin' : 'user',
+            // =======================================================
         ];
     }
 }

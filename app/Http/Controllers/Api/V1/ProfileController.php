@@ -1,13 +1,24 @@
 <?php
-// file: app/Http/Controllers/Api/V1/ProfileController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+// Faylning yuqorisiga UserResource'ni chaqirib olamiz
+use App\Http\Resources\UserResource; 
 
 class ProfileController extends Controller
 {
-    public function me(Request $req) { return $req->user()->only(['id','name','username','avatar_url','xp','bio']); }
+    public function me(Request $req) 
+    { 
+        // XATO KODNI O'CHIRDIK:
+        // return $req->user()->only(['id','name','username','avatar_url','xp','bio']); 
+        
+        // ===========================================
+        // TO'G'RI KODNI YOZDIK:
+        // ===========================================
+        return new UserResource($req->user());
+    }
 
     public function update(Request $req)
     {
@@ -22,7 +33,8 @@ class ProfileController extends Controller
         ]);
         $user = $req->user();
         $user->fill($data)->save();
+        
+        // Bu yerda to'g'ri edi, UserResource'ni to'liq namespace bilan chaqirsa ham bo'ladi
         return new \App\Http\Resources\UserResource($user);
     }
 }
-

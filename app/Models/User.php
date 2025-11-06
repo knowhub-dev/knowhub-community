@@ -27,7 +27,10 @@ class User extends Authenticatable
         'website_url',
         'github_url',
         'linkedin_url',
-        'resume'
+        'resume',
+        'is_admin',
+        'is_banned',
+        'ban_reason'
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -99,5 +102,3 @@ class User extends Authenticatable
         return $this->posts()->where('status', 'published')->count();
     }
 }
-
-

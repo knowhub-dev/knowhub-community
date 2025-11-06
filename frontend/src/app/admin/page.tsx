@@ -1,44 +1,27 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers/AuthProvider'; // <-- BU ENDI TO'G'RI ISHLAYDI
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  MessageSquare, 
-  Settings, 
-  BarChart3, 
-  Shield, 
-  Database,
-  Bell,
-  Image,
-  Tag,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Activity,
-  Server,
-  Globe,
-  Mail,
-  Ban,
-  Edit,
-  Trash2,
-  Eye,
-  Download,
-  BookOpen
+  LayoutDashboard, Users, FileText, MessageSquare, Settings, 
+  BarChart3, Shield, Database, Bell, Image, Tag, TrendingUp, 
+  AlertTriangle, CheckCircle, Clock, Activity, Server, Globe, 
+  Mail, Ban, Edit, Trash2, Eye, Download, BookOpen, Zap, Code // Icon'larni qo'shdim
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
+// Interfeyslarni yuqoriga chiqardim
 interface AdminStats {
-  users: { total: number; new_today: number; active: number };
-  posts: { total: number; new_today: number; published: number; draft: number };
-  comments: { total: number; new_today: number; pending: number };
-  wiki: { articles: number; new_today: number; published: number };
+  users: { total: number; new_today: number; active: number; new_this_week?: number; online_now?: number };
+  posts: { total: number; new_today: number; published: number; draft: number; today?: number; trending?: number };
+  comments: { total: number; new_today: number; pending: number; today?: number; pending_moderation?: number };
+  wiki: { articles: number; new_today: number; published: number; proposals?: number };
   reports: { total: number; pending: number; resolved: number };
-  system: { uptime: string; memory_usage: string; disk_usage: string };
+  system: { uptime: string; memory_usage: string; disk_usage: string; queue_jobs?: number; failed_jobs?: number };
+  code_runs?: { total: number; successful: number; avg_runtime: string };
+  performance?: { avg_response_time: string; cache_hit_rate: string; slow_queries: number };
+  security?: { failed_logins_today: number; blocked_ips: number; suspicious_activity: number };
 }
 
 interface RecentActivity {
@@ -60,7 +43,8 @@ interface SystemLog {
   ip_address: string;
 }
 
-async function getAdminStats() {
+// API so'rovlari
+async function getAdminStats(): Promise<AdminStats | null> {
   try {
     const res = await api.get('/admin/dashboard');
     return res.data;
@@ -91,7 +75,12 @@ async function getSystemLogs() {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  // =======================================================
+  // BIZNING G'ALABAMIZ: BU IKKALA O'ZGARUVCHI ENDI TO'G'RI
+  // =======================================================
+  const { isAdmin, loading: authLoading } = useAuth();
+  // =======================================================
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,19 +89,20 @@ export default function AdminPage() {
     queryKey: ['admin-activity'],
     queryFn: getRecentActivity,
     retry: 1,
-    enabled: activeTab === 'activity',
+    enabled: !!isAdmin && activeTab === 'activity', // isAdmin true bo'lsagina ishlasin
   });
 
   const { data: logsData } = useQuery({
     queryKey: ['admin-logs'],
     queryFn: getSystemLogs,
     retry: 1,
-    enabled: activeTab === 'logs',
+    enabled: !!isAdmin && activeTab === 'logs', // isAdmin true bo'lsagina ishlasin
   });
 
   useEffect(() => {
     const loadStats = async () => {
       try {
+        setLoading(true);
         const data = await getAdminStats();
         setStats(data);
       } catch (error) {
@@ -122,12 +112,24 @@ export default function AdminPage() {
       }
     };
 
-    if (activeTab === 'dashboard') {
+    if (isAdmin && activeTab === 'dashboard') { // isAdmin true bo'lsagina ishlasin
       loadStats();
     }
-  }, [activeTab]);
+  }, [activeTab, isAdmin]); 
 
-  if (!user || !(user as any).is_admin) {
+  // Avval Auth yuklanishini kutamiz
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // =======================================================
+  // BU SHART ENDI TO'G'RI ISHLAYDI (isAdmin = true)
+  // =======================================================
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -139,6 +141,9 @@ export default function AdminPage() {
     );
   }
 
+  // =======================================================
+  // ADMIN PANELNI KO'RSATAMIZ!
+  // =======================================================
   const tabs = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
     { id: 'users', name: 'Foydalanuvchilar', icon: Users },
@@ -151,7 +156,7 @@ export default function AdminPage() {
     { id: 'settings', name: 'Sozlamalar', icon: Settings },
     { id: 'system', name: 'Tizim', icon: Server },
   ];
-
+  
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Overview */}
@@ -216,9 +221,9 @@ export default function AdminPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Kod Ishga Tushirish</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.code_runs.total || 0}</p>
-              <p className="text-xs text-green-600">{stats?.code_runs.successful || 0} muvaffaq</p>
-              <p className="text-xs text-gray-600">{stats?.code_runs.avg_runtime || 0}ms o'rtacha</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.code_runs?.total || 0}</p>
+              <p className="text-xs text-green-600">{stats?.code_runs?.successful || 0} muvaffaq</p>
+              <p className="text-xs text-gray-600">{stats?.code_runs?.avg_runtime || 0}ms o'rtacha</p>
             </div>
             <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
               <Code className="w-6 h-6 text-indigo-600" />
@@ -290,7 +295,7 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
             onClick={() => {
-              fetch('/api/v1/admin/cache/clear', { method: 'POST' })
+              api.post('/admin/cache/clear')
                 .then(() => alert('Cache tozalandi'))
                 .catch(() => alert('Xatolik yuz berdi'));
             }}
@@ -302,7 +307,7 @@ export default function AdminPage() {
           
           <button
             onClick={() => {
-              fetch('/api/v1/admin/system/optimize', { method: 'POST' })
+              api.post('/admin/system/optimize')
                 .then(() => alert('Tizim optimallashtirildi'))
                 .catch(() => alert('Xatolik yuz berdi'));
             }}
@@ -314,7 +319,7 @@ export default function AdminPage() {
           
           <button
             onClick={() => {
-              fetch('/api/v1/admin/database/backup', { method: 'POST' })
+              api.post('/admin/database/backup')
                 .then(() => alert('Backup yaratildi'))
                 .catch(() => alert('Xatolik yuz berdi'));
             }}
@@ -340,7 +345,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-10 px-4">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Panel (Nihoyat!)</h1>
         </div>
         <div className="mb-8 flex space-x-4 overflow-x-auto">
           {tabs.map((tab) => (
@@ -367,4 +372,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

@@ -26,7 +26,7 @@ Thumbs.db
 /node_modules
 .env
 .env.local
-.env.*
+//.env.
 .next
 /storage/*.key
 /public/storage

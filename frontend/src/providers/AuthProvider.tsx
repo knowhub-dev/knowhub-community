@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
+// 1. Foydalanuvchi interfeysiga 'role' maydonini qo'shamiz
 interface User {
   id: number;
   name: string;
@@ -10,8 +11,16 @@ interface User {
   avatar_url?: string;
   xp: number;
   bio?: string;
+  website_url?: string;
+  github_url?: string;
+  linkedin_url?: string;
+  resume?: string;
+  stats?: any;
+  created_at?: string;
+  role?: 'admin' | 'user'; // <-- ENG MUHIM QO'SHIMCHA
 }
 
+// 2. Kontekstga 'isAdmin'ni qo'shamiz
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -19,6 +28,7 @@ interface AuthContextType {
   register: (name: string, username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkUser: () => Promise<void>;
+  isAdmin: boolean; // <-- BU HAM MUHIM
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,10 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem('auth_token');
       if (token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await api.get('/profile/me');
-        setUser(response.data);
+        // Bu manzil to'g'ri (api.ts da /api/v1 prefiksi bor)
+        const response = await api.get('/profile/me'); 
+        
+        // Bizda "data" o'rami yo'q, buni oldin to'g'irlagandik
+        setUser(response.data.data); 
       } else {
-        // Clear user data if no token
         setUser(null);
       }
     } catch (error) {
@@ -54,16 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await api.post('/auth/email/login', { email, password });
     const { token, user: userData } = response.data;
-    
     localStorage.setItem('auth_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    const response = await api.post('/auth/email/register', { name, username, email, password });
+    const response = await api.post('/auth/email/register', { name, username, email: string, password });
     const { token, user: userData } = response.data;
-    
     localStorage.setItem('auth_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
@@ -73,16 +83,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.post('/auth/email/logout');
     } catch (error) {
-      // Ignore logout errors
+      // Ignore
     } finally {
       localStorage.removeItem('auth_token');
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
     }
   };
+  
+  // 3. isAdmin qiymatini shu yerda, 'user.role'ga qarab hisoblaymiz
+  const isAdmin = !!user && user.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
