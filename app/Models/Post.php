@@ -1,80 +1,61 @@
 <?php
-
+// file: app/Models/Post.php
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory; // <-- QO'SHILDI
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Support\Str;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory; // <-- QO'SHILDI
 
+    // Faktori ishlashi uchun buni qo'shamiz:
     protected $fillable = [
-        'user_id', 'category_id', 'title', 'slug',
-        'content_markdown', 'is_ai_suggested', 'ai_suggestion',
-        'status', 'score', 'answers_count'
+        'user_id',
+        'category_id',
+        'title',
+        'slug',
+        'content_markdown',
+        'content_html',
+        'status',
+        'score',
+        'views',
+        'answers_count',
+        'is_ai_suggested',
     ];
 
-    protected $casts = [
-        'ai_suggestion' => 'array',
-        'is_ai_suggested' => 'boolean',
-    ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (Post $post) {
-            if (!$post->slug) {
-                $post->slug = Str::slug(Str::limit($post->title, 60, ''));
-            }
-        });
-    }
-
+    /**
+     * Postning muallifi
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Postning kategoriyasi
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * Postning kommentlari
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Postning teglari
+     */
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
     }
-
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class)->whereNull('parent_id');
-    }
-
-    public function votes(): MorphMany
-    {
-        return $this->morphMany(Vote::class, 'votable');
-    }
-
-    public function scopePublished($query)
-    {
-        return $query->where('status', 'published');
-    }
-
-    public function scopeTrending($query)
-    {
-        return $query->where('created_at', '>=', now()->subDays(7))
-                    ->orderByDesc('score')
-                    ->orderByDesc('answers_count');
-    }
-
-    public function scopePopular($query)
-    {
-        return $query->orderByDesc('answers_count')
-                    ->orderByDesc('score');
-    }
 }
-
