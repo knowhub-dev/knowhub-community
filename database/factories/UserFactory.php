@@ -23,7 +23,7 @@ class UserFactory extends Factory
             'level_id' => Level::inRandomOrder()->first()?->id ?? 1, // Tasodifiy level
             'is_admin' => 0, // Standart foydalanuvchi ADMIN EMAS
             'is_banned' => 0,
-            'email_verified_at' => now(), // Test uchun emailni tasdiqlaymiz
+            //'email_verified_at' => now(), // Test uchun emailni tasdiqlaymiz
         ];
     }
 

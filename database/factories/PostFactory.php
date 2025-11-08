@@ -10,7 +10,9 @@ use App\Models\Category;
 
 class PostFactory extends Factory
 {
-    protected $model = Post::class;
+    protected $model = Post::class;/**
+     * 
+     */
 
     public function definition(): array
     {
@@ -25,10 +27,10 @@ class PostFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title) . '-' . uniqid(),
             'content_markdown' => $content,
-            'content_html' => Str::markdown($content), // Avtomatik HTML'ga o'giramiz
+            //'content_html' => Str::markdown($content), // Avtomatik HTML'ga o'giramiz
             'status' => 'published', // Darhol nashr qilamiz
             'score' => rand(-5, 50),
-            'views' => rand(100, 5000),
+            //'views' => rand(100, 5000),
             'answers_count' => 0, // Kommentlarni keyin qo'shamiz
             'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'), // 1 yil ichida
         ];
