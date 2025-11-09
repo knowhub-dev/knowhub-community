@@ -1,31 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Activity,
+  ArrowRight,
   ArrowUpRight,
-  CircleDot,
   Compass,
+  PenSquare,
   Sparkles,
   Zap,
 } from "lucide-react";
-import PostCard from "../components/PostCard";
-import { api } from "../lib/api";
+import PostCard from "@/components/PostCard";
+import { api } from "@/lib/api";
 
-type StatShape = {
+interface StatShape {
   postsCount?: number;
   usersCount?: number;
   topTags?: string[];
-};
+}
 
-type PostShort = {
+interface PostShort {
   id: number;
   title: string;
   excerpt?: string;
   slug?: string;
   user?: any;
-};
+}
+
+const formatNumber = (value?: number) =>
+  typeof value === "number" ? value.toLocaleString("en-US") : "—";
 
 export default function HomePage() {
   const [stats, setStats] = useState<StatShape | null>(null);
@@ -38,6 +41,29 @@ export default function HomePage() {
   const quickActions = useMemo(
     () => [
       {
+        title: "Fikr almashish",
+        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
+        href: "/posts/create",
+        icon: PenSquare,
+        accent: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      },
+      {
+        title: "Mini serverni ishga tushiring",
+        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
+        href: "/containers",
+        icon: Zap,
+        accent: "bg-amber-50 text-amber-700 border-amber-100",
+      },
+      {
+        title: "Wiki'ni boyiting",
+        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
+        href: "/wiki",
+        icon: Compass,
+        accent: "bg-sky-50 text-sky-700 border-sky-100",
+      },
+    ],
+    []
+  );
         title: "Kosmik post yozish",
         description:
           "AI qo'llab-quvvatlovi bilan tezkor draft yaratib, jamiyatni hayratda qoldiring.",
@@ -100,6 +126,7 @@ export default function HomePage() {
         const postsData = Array.isArray(pRes.data)
           ? pRes.data
           : pRes.data?.data ?? pRes.data?.posts ?? [];
+        setPosts(postsData.slice(0, 8));
         setPosts(postsData.slice(0, 10));
       } catch (err: any) {
         setError(err?.message ?? String(err));
@@ -121,6 +148,7 @@ export default function HomePage() {
     }
 
     const id = window.setInterval(() => {
+      setActiveTagIndex((index) => (index + 1) % stats.topTags!.length);
       setActiveTagIndex((index) => (index + 1) % stats.topTags.length);
     }, 3200);
 
@@ -130,6 +158,91 @@ export default function HomePage() {
   const activeTag = stats?.topTags?.[activeTagIndex];
 
   return (
+    <main className="min-h-screen bg-[#f7f7f3] text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pb-24 pt-16">
+        <header className="grid gap-12 lg:grid-cols-[1.05fr,0.95fr] lg:items-center">
+          <div className="space-y-8">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              Jamiyat
+            </span>
+            <div className="space-y-5">
+              <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
+                Minimalistik hamjamiyat maydoni — g'oyalaringiz, tajribangiz va hamkorligingiz uchun.
+              </h1>
+              <p className="max-w-2xl text-lg text-slate-600">
+                KnowHub bilim bo'limlari, mini serverlar va real vaqtli hamkorlik orqali g'oyalaringizni tezda sinab ko'rish va ulashish imkonini beradi.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/posts/create"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+              >
+                Yangi post yozish
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/posts"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800"
+              >
+                So'nggi postlar
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                {formatNumber(stats?.postsCount)}+ postlar
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                Hamjamiyat: {formatNumber(stats?.usersCount)}+
+              </span>
+              {activeTag && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                  Trend tegi: #{activeTag}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="relative h-full rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-600">Bugungi panorama</p>
+                <span className="text-xs text-slate-400">Yangilanadi: {loading ? "…" : "real-time"}</span>
+              </div>
+              {loading ? (
+                <div className="space-y-4">
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                </div>
+              ) : error ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-500">
+                  {error}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <span className="text-sm text-slate-500">Faol ijodkorlar</span>
+                    <span className="text-lg font-semibold">{formatNumber(stats?.usersCount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <span className="text-sm text-slate-500">Jamiyatdagi postlar</span>
+                    <span className="text-lg font-semibold">{formatNumber(stats?.postsCount)}</span>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">Trend teglari</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {stats?.topTags?.length ? (
+                        stats.topTags.map((tag) => (
+                          <span key={tag} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                            #{tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-slate-400">Hali teglarga oid ma'lumot yo'q.</span>
+                      )}
+                    </div>
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
       <div className="absolute inset-0 pointer-events-none">
         {accentOrbs.map((className, idx) => (
@@ -303,7 +416,33 @@ export default function HomePage() {
                 </ul>
               )}
             </div>
+          </div>
 
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Yangi postlar</h2>
+              <Link href="/posts" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
+                Barchasini ko'rish
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            {loading ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <div key={idx} className="h-48 rounded-2xl border border-slate-200 bg-slate-100" />
+                ))}
+              </div>
+            ) : posts.length === 0 ? (
+              <p className="text-sm text-slate-500">Hali postlar qo'shilmagan.</p>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post as any} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-slate-900/40 backdrop-blur">
               <h3 className="text-lg font-semibold text-white">Eksperimental trayektoriyalar</h3>
               <p className="mt-2 text-sm text-white/60">
@@ -355,6 +494,6 @@ export default function HomePage() {
           © {new Date().getFullYear()} KnowHub — kosmik hamjamiyat.
         </footer>
       </div>
-    </div>
+    </main>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
 
 const CollaborationPanel = dynamic(() => import('@/components/PostCollaborationPanel'), {
   ssr: false,
