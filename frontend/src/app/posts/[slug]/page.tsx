@@ -1,9 +1,14 @@
 // app/posts/[slug]/page.tsx
 import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
+
+const CollaborationPanel = dynamic(() => import('@/components/PostCollaborationPanel'), {
+  ssr: false,
+});
 
 interface Post {
   id: number;
@@ -66,7 +71,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
           </ReactMarkdown>
         </div>
 
-        <PostCollaborationPanelWrapper
+        <CollaborationPanel
           postSlug={post.slug}
           postOwnerId={post.user.id}
           initialContent={post.content_markdown}
