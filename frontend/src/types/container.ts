@@ -34,3 +34,14 @@ export interface CreateContainerDto {
     disk_limit: number;
     env_vars?: Record<string, string>;
 }
+
+export interface ContainerOptions {
+    allowed_images: string[];
+    max_containers_per_user: number | null;
+    current_count: number;
+    remaining_slots: number | null;
+    can_create: boolean;
+    min_xp_required: number;
+    max_env_vars: number;
+    env_value_max_length: number;
+}

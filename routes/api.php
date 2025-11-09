@@ -141,12 +141,13 @@ Route::prefix('v1')->group(function () {
 
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);
-            Route::get('/containers/{id}', [ContainerController::class, 'show']);
+            Route::get('/containers/options', [ContainerController::class, 'options']);
+            Route::get('/containers/{container}', [ContainerController::class, 'show']);
             Route::post('/containers', [ContainerController::class, 'store']);
-            Route::post('/containers/{id}/start', [ContainerController::class, 'start']);
-            Route::post('/containers/{id}/stop', [ContainerController::class, 'stop']);
-            Route::delete('/containers/{id}', [ContainerController::class, 'destroy']);
-            Route::get('/containers/{id}/stats', [ContainerController::class, 'stats']);
+            Route::post('/containers/{container}/start', [ContainerController::class, 'start']);
+            Route::post('/containers/{container}/stop', [ContainerController::class, 'stop']);
+            Route::delete('/containers/{container}', [ContainerController::class, 'destroy']);
+            Route::get('/containers/{container}/stats', [ContainerController::class, 'stats']);
         });
 
         // Wiki PR-like
