@@ -7,6 +7,7 @@ use App\Services\AI\AiAssistant;
 use App\Services\AI\OpenAiAssistant;
 use App\Services\CodeRun\CodeRunner;
 use App\Services\CodeRun\PistonCodeRunner;
+use App\Services\Docker\ContainerService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
                 config('services.piston.base_url'),
                 config('services.piston.timeout_ms')
             );
+        });
+
+        // Container Service binding
+        $this->app->singleton(ContainerService::class, function ($app) {
+            return new ContainerService();
         });
     }
 

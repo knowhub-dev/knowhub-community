@@ -125,6 +125,15 @@ Route::prefix('v1')->group(function () {
             Route::post('/cache/clear', [AdminController::class, 'clearCache']);
             Route::post('/system/optimize', [AdminController::class, 'optimizeSystem']);
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
+
+            // Container Management Routes
+            Route::get('/containers', [ContainerController::class, 'index']);
+            Route::get('/containers/{id}', [ContainerController::class, 'show']);
+            Route::post('/containers', [ContainerController::class, 'store']);
+            Route::post('/containers/{id}/start', [ContainerController::class, 'start']);
+            Route::post('/containers/{id}/stop', [ContainerController::class, 'stop']);
+            Route::delete('/containers/{id}', [ContainerController::class, 'destroy']);
+            Route::get('/containers/{id}/stats', [ContainerController::class, 'stats']);
         });
 
         // Wiki PR-like

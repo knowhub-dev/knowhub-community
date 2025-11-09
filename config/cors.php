@@ -5,7 +5,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000'], // Next.js dev server
+    'allowed_origins' => ['http://localhost:3000', 'http://localhost'], // Next.js dev server and production
 
     'allowed_headers' => ['*'],
 

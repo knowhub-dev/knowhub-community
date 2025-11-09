@@ -123,6 +123,24 @@ class PostController extends Controller
 
     public function store(PostStoreRequest $req)
     {
+        $user = $req->user();
+        
+        // XP tekshirish
+        if ($req->input('required_xp', 0) > 0 && $user->xp < $req->input('required_xp')) {
+            return response()->json([
+                'message' => 'Bu postni yaratish uchun yetarli XP ballingiz yo\'q',
+                'required_xp' => $req->input('required_xp'),
+                'your_xp' => $user->xp
+            ], 403);
+        }
+
+        // Verifikatsiya tekshirish
+        if ($req->input('requires_verification', false) && !$user->is_verified) {
+            return response()->json([
+                'message' => 'Bu postni yaratish uchun verificatsiyadan o\'tishingiz kerak'
+            ], 403);
+        }
+
         $data = $req->validated();
         $post = DB::transaction(function () use ($data, $req) {
             $post = Post::create([
@@ -131,6 +149,8 @@ class PostController extends Controller
                 'title' => $data['title'],
                 'content_markdown' => $data['content_markdown'],
                 'status' => 'published',
+                'required_xp' => $data['required_xp'] ?? 0,
+                'requires_verification' => $data['requires_verification'] ?? false,
             ]);
             if (!empty($data['tags'])) {
                 $tagIds = collect($data['tags'])->map(function ($name) {

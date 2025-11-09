@@ -25,6 +25,8 @@ class Post extends Model
         'views',
         'answers_count',
         'is_ai_suggested',
+        'required_xp',
+        'requires_verification'
     ];
 
     /**

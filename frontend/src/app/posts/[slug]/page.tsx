@@ -65,4 +65,11 @@ export default async function PostPage({ params }: { params: { slug: string } })
   );
 }
 
+// For `output: 'export'` Next requires generateStaticParams for dynamic routes.
+// Provide an empty list so export build doesn't fail. If you want pre-rendered
+// posts at build time, replace this to fetch slugs from the API.
+export async function generateStaticParams() {
+  return [];
+}
+
 

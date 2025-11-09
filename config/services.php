@@ -59,5 +59,11 @@ return [
         'base_url' => env('PISTON_BASE_URL'),
         'timeout_ms' => env('PISTON_DEFAULT_TIMEOUT_MS', 6000),
     ],
+
+    'docker' => [
+        'api_version' => env('DOCKER_API_VERSION', 'v1.41'),
+        'base_uri' => env('DOCKER_BASE_URI', 'http://localhost/v1.41'),
+        'socket' => env('DOCKER_SOCKET', '/var/run/docker.sock'),
+    ],
 ];
 

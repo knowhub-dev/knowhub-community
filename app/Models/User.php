@@ -21,7 +21,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name', 'username', 'email', 'password', 'xp', 'level_id',
-        'is_admin', 'is_banned', 'avatar_url', 'bio', 'website_url',
+        'is_admin', 'is_banned', 'is_verified', 'verified_at', 'avatar_url', 'bio', 'website_url',
         'github_url', 'linkedin_url', 'resume',
     ];
 
@@ -38,6 +38,8 @@ class User extends Authenticatable
     protected $casts = [
         'is_admin' => 'boolean',
         'is_banned' => 'boolean',
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     /**
@@ -98,5 +100,13 @@ class User extends Authenticatable
     public function bookmarks(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'bookmarks');
+    }
+
+    /**
+     * User'ning mini-serverlari
+     */
+    public function containers(): HasMany
+    {
+        return $this->hasMany(Container::class);
     }
 }

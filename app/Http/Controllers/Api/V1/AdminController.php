@@ -921,6 +921,131 @@ class AdminController extends Controller
         ];
     }
 
+    public function containers(Request $request)
+    {
+        $query = Container::with(['user', 'stats'])
+            ->withCount(['stats as recent_stats_count' => function ($query) {
+                $query->where('created_at', '>=', now()->subMinutes(5));
+            }]);
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('image', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($userId = $request->get('user_id')) {
+            $query->where('user_id', $userId);
+        }
+
+        $containers = $query->latest()->paginate(20);
+        
+        return response()->json($containers);
+    }
+
+    public function containerStats(Request $request)
+    {
+        $startDate = now()->subHours($request->get('hours', 24));
+        $groupBy = $request->get('group_by', 'hour'); // hour, minute
+
+        $stats = ContainerStats::selectRaw('
+                DATE_FORMAT(created_at, ?) as period,
+                AVG(cpu_usage) as avg_cpu,
+                AVG(memory_usage) as avg_memory,
+                AVG(disk_usage) as avg_disk,
+                AVG(network_rx) as avg_network_rx,
+                AVG(network_tx) as avg_network_tx,
+                COUNT(DISTINCT container_id) as active_containers
+            ', [
+                $groupBy === 'hour' ? '%Y-%m-%d %H:00:00' : '%Y-%m-%d %H:%i:00'
+            ])
+            ->where('created_at', '>=', $startDate)
+            ->groupByRaw('period')
+            ->orderBy('period')
+            ->get();
+
+        return response()->json([
+            'stats' => $stats,
+            'summary' => [
+                'total_containers' => Container::count(),
+                'running_containers' => Container::where('status', 'running')->count(),
+                'stopped_containers' => Container::where('status', 'stopped')->count(),
+                'failed_containers' => Container::where('status', 'failed')->count(),
+                'total_cpu_usage' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->avg('cpu_usage'),
+                'total_memory_usage' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->avg('memory_usage'),
+                'total_disk_usage' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->avg('disk_usage'),
+                'total_network_rx' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->sum('network_rx'),
+                'total_network_tx' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->sum('network_tx'),
+            ]
+        ]);
+    }
+
+    public function startContainer(Request $request, Container $container)
+    {
+        $this->authorize('manage', $container);
+        
+        try {
+            app(ContainerService::class)->startContainer($container);
+            return response()->json(['message' => 'Container started successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function stopContainer(Request $request, Container $container)
+    {
+        $this->authorize('manage', $container);
+        
+        try {
+            app(ContainerService::class)->stopContainer($container);
+            return response()->json(['message' => 'Container stopped successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function restartContainer(Request $request, Container $container)
+    {
+        $this->authorize('manage', $container);
+        
+        try {
+            app(ContainerService::class)->restartContainer($container);
+            return response()->json(['message' => 'Container restarted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteContainer(Request $request, Container $container)
+    {
+        $this->authorize('manage', $container);
+        
+        try {
+            app(ContainerService::class)->deleteContainer($container);
+            return response()->json(['message' => 'Container deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getContainerLogs(Request $request, Container $container)
+    {
+        $this->authorize('manage', $container);
+        
+        try {
+            $lines = $request->get('lines', 100);
+            $logs = app(ContainerService::class)->getContainerLogs($container, $lines);
+            return response()->json(['logs' => $logs]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     // Security methods
     private function getFailedLoginsToday(): int
     {
