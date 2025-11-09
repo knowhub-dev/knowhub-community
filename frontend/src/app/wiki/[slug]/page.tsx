@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Calendar, User, CreditCard as Edit, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { WikiDiffExplorer } from '@/components/wiki/WikiDiffExplorer';
 
 interface WikiArticle {
   id: number;
@@ -152,6 +153,8 @@ export default async function WikiArticlePage({ params }: { params: { slug: stri
             </div>
           </div>
         </div>
+
+        <WikiDiffExplorer slug={slug} />
       </div>
     </div>
   );
