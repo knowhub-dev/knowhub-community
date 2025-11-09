@@ -1,22 +1,34 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import PostCard from "../components/PostCard";
-import { api } from "../lib/api";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Compass,
+  PenSquare,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import PostCard from "@/components/PostCard";
+import { api } from "@/lib/api";
 
-type StatShape = {
+interface StatShape {
   postsCount?: number;
   usersCount?: number;
   topTags?: string[];
-};
+}
 
-type PostShort = {
+interface PostShort {
   id: number;
   title: string;
   excerpt?: string;
   slug?: string;
   user?: any;
-};
+}
+
+const formatNumber = (value?: number) =>
+  typeof value === "number" ? value.toLocaleString("en-US") : "—";
 
 export default function HomePage() {
   const [stats, setStats] = useState<StatShape | null>(null);
@@ -24,6 +36,34 @@ export default function HomePage() {
   const [posts, setPosts] = useState<PostShort[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTagIndex, setActiveTagIndex] = useState(0);
+
+  const quickActions = useMemo(
+    () => [
+      {
+        title: "Fikr almashish",
+        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
+        href: "/posts/create",
+        icon: PenSquare,
+        accent: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      },
+      {
+        title: "Mini serverni ishga tushiring",
+        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
+        href: "/containers",
+        icon: Zap,
+        accent: "bg-amber-50 text-amber-700 border-amber-100",
+      },
+      {
+        title: "Wiki'ni boyiting",
+        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
+        href: "/wiki",
+        icon: Compass,
+        accent: "bg-sky-50 text-sky-700 border-sky-100",
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -42,11 +82,15 @@ export default function HomePage() {
 
         setStats(sRes.data ?? null);
 
-        const trendingData = Array.isArray(tRes.data) ? tRes.data : tRes.data?.data ?? tRes.data?.posts ?? [];
+        const trendingData = Array.isArray(tRes.data)
+          ? tRes.data
+          : tRes.data?.data ?? tRes.data?.posts ?? [];
         setTrending(trendingData.slice(0, 5));
 
-        const postsData = Array.isArray(pRes.data) ? pRes.data : pRes.data?.data ?? pRes.data?.posts ?? [];
-        setPosts(postsData.slice(0, 10));
+        const postsData = Array.isArray(pRes.data)
+          ? pRes.data
+          : pRes.data?.data ?? pRes.data?.posts ?? [];
+        setPosts(postsData.slice(0, 8));
       } catch (err: any) {
         setError(err?.message ?? String(err));
       } finally {
@@ -61,97 +105,201 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!stats?.topTags || stats.topTags.length < 2) {
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      setActiveTagIndex((index) => (index + 1) % stats.topTags!.length);
+    }, 3200);
+
+    return () => window.clearInterval(id);
+  }, [stats?.topTags]);
+
+  const activeTag = stats?.topTags?.[activeTagIndex];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-6">
-        <header className="mb-6">
-          <div className="rounded-lg bg-white shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">KnowHub</h1>
-              <p className="text-gray-600">Jamiyat, maqolalar va interaktiv kod bo'limi — hammasi bir joyda.</p>
+    <main className="min-h-screen bg-[#f7f7f3] text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pb-24 pt-16">
+        <header className="grid gap-12 lg:grid-cols-[1.05fr,0.95fr] lg:items-center">
+          <div className="space-y-8">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              Jamiyat
+            </span>
+            <div className="space-y-5">
+              <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
+                Minimalistik hamjamiyat maydoni — g'oyalaringiz, tajribangiz va hamkorligingiz uchun.
+              </h1>
+              <p className="max-w-2xl text-lg text-slate-600">
+                KnowHub bilim bo'limlari, mini serverlar va real vaqtli hamkorlik orqali g'oyalaringizni tezda sinab ko'rish va ulashish imkonini beradi.
+              </p>
             </div>
-            <div className="mt-4 md:mt-0 flex items-center gap-3">
-              <a className="inline-block bg-indigo-600 text-white px-4 py-2 rounded" href="/posts/create">Yangi post</a>
-              <a className="inline-block border border-indigo-200 text-indigo-600 px-4 py-2 rounded" href="/posts">Barcha postlar</a>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/posts/create"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+              >
+                Yangi post yozish
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/posts"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800"
+              >
+                So'nggi postlar
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                {formatNumber(stats?.postsCount)}+ postlar
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                Hamjamiyat: {formatNumber(stats?.usersCount)}+
+              </span>
+              {activeTag && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                  Trend tegi: #{activeTag}
+                </span>
+              )}
             </div>
           </div>
-        </header>
 
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Posts feed */}
-          <section className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">So'nggi postlar</h2>
-              <div className="text-sm text-gray-500">{loading ? "Yuklanmoqda..." : `Topildi ${posts.length} ta`}</div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {loading && <div className="col-span-2 text-gray-500">Yuklanmoqda…</div>}
-              {!loading && posts.length === 0 && <div className="col-span-2 text-gray-600">Hozircha postlar mavjud emas.</div>}
-              {!loading && posts.map((p) => (
-                <PostCard key={p.id} post={p as any} />
-              ))}
-            </div>
-          </section>
-
-          {/* Right: Stats & Trending */}
-          <aside className="space-y-4">
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-medium mb-3">Statistika</h3>
+          <div className="relative h-full rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-600">Bugungi panorama</p>
+                <span className="text-xs text-slate-400">Yangilanadi: {loading ? "…" : "real-time"}</span>
+              </div>
               {loading ? (
-                <div className="text-gray-500">Yuklanmoqda…</div>
+                <div className="space-y-4">
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                  <div className="h-12 rounded-2xl bg-slate-100" />
+                </div>
               ) : error ? (
-                <div className="text-red-600">Xato: {error}</div>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-500">
+                  {error}
+                </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="p-3 border rounded flex items-center justify-between">
-                    <div className="text-sm text-gray-500">Postlar</div>
-                    <div className="text-xl font-semibold">{stats?.postsCount ?? "—"}</div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <span className="text-sm text-slate-500">Faol ijodkorlar</span>
+                    <span className="text-lg font-semibold">{formatNumber(stats?.usersCount)}</span>
                   </div>
-                  <div className="p-3 border rounded flex items-center justify-between">
-                    <div className="text-sm text-gray-500">Foydalanuvchilar</div>
-                    <div className="text-xl font-semibold">{stats?.usersCount ?? "—"}</div>
+                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <span className="text-sm text-slate-500">Jamiyatdagi postlar</span>
+                    <span className="text-lg font-semibold">{formatNumber(stats?.postsCount)}</span>
                   </div>
-                  <div className="p-3 border rounded">
-                    <div className="text-sm text-gray-500">Mashhur teglar</div>
-                    <div className="mt-2 text-sm text-gray-700">{stats?.topTags && stats.topTags.length ? stats.topTags.join(", ") : "—"}</div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">Trend teglari</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {stats?.topTags?.length ? (
+                        stats.topTags.map((tag) => (
+                          <span key={tag} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                            #{tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-slate-400">Hali teglarga oid ma'lumot yo'q.</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
+          </div>
+        </header>
 
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-medium mb-3">Trenddagi postlar</h3>
-              {loading ? (
-                <div className="text-gray-500">Yuklanmoqda…</div>
-              ) : trending.length === 0 ? (
-                <div className="text-gray-600">Trend postlar yo'q.</div>
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-2xl font-semibold">Tezkor harakatlar</h2>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900">
+              Profil paneliga o'tish
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {quickActions.map((action) => (
+              <Link
+                key={action.title}
+                href={action.href}
+                className={`group flex flex-col gap-3 rounded-2xl border px-5 py-6 transition hover:-translate-y-1 hover:shadow-md ${action.accent}`}
+              >
+                <div className="flex items-center justify-between">
+                  <action.icon className="h-5 w-5" />
+                  <ArrowUpRight className="h-4 w-4 text-current opacity-60 transition group-hover:translate-x-1" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-base font-semibold">{action.title}</p>
+                  <p className="text-sm text-slate-600/80">{action.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-12 lg:grid-cols-[0.75fr,1.25fr]">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Trend yo'nalishlar</h2>
+              <Link href="/posts?sort=trending" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
+                Barchasini ko'rish
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {trending.length === 0 && !loading ? (
+                <p className="text-sm text-slate-500">Hozircha trend postlar aniqlanmadi.</p>
               ) : (
-                <ul className="space-y-3">
-                  {trending.map((t) => (
-                    <li key={t.id} className="flex items-start gap-3">
-                      <div className="flex-1">
-                        <a href={`/posts/${t.slug}`} className="font-medium hover:text-indigo-600">{t.title}</a>
-                        {t.excerpt && <div className="text-sm text-gray-500">{t.excerpt}</div>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                trending.map((post, index) => (
+                  <Link
+                    key={post.id}
+                    href={post.slug ? `/posts/${post.slug}` : "#"}
+                    className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:shadow-sm"
+                  >
+                    <span className="text-3xl font-semibold text-slate-300 group-hover:text-slate-500">
+                      {(index + 1).toString().padStart(2, "0")}
+                    </span>
+                    <div className="space-y-1">
+                      <p className="text-base font-semibold text-slate-800 group-hover:text-slate-900">
+                        {post.title}
+                      </p>
+                      {post.excerpt && <p className="text-sm text-slate-500 line-clamp-2">{post.excerpt}</p>}
+                    </div>
+                  </Link>
+                ))
               )}
             </div>
+          </div>
 
-            <div className="bg-white p-4 rounded shadow hidden sm:block">
-              <h3 className="text-lg font-medium mb-2">Qidiruv</h3>
-              <form action="/posts" method="get" className="flex gap-2">
-                <input name="q" placeholder="Qidirish..." className="flex-1 border rounded px-3 py-2" />
-                <button className="bg-indigo-600 text-white px-3 py-2 rounded">Qidir</button>
-              </form>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Yangi postlar</h2>
+              <Link href="/posts" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
+                Barchasini ko'rish
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          </aside>
-        </main>
-
-        <footer className="mt-8 text-center text-sm text-gray-500">© {new Date().getFullYear()} KnowHub</footer>
+            {loading ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <div key={idx} className="h-48 rounded-2xl border border-slate-200 bg-slate-100" />
+                ))}
+              </div>
+            ) : posts.length === 0 ? (
+              <p className="text-sm text-slate-500">Hali postlar qo'shilmagan.</p>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post as any} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

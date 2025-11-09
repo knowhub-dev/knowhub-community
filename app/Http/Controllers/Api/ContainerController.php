@@ -7,7 +7,12 @@ use App\Models\Container;
 use App\Services\Docker\ContainerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Throwable;
+use RuntimeException;
 
 class ContainerController extends Controller
 {
@@ -23,7 +28,11 @@ class ContainerController extends Controller
      */
     public function index()
     {
-        $containers = Auth::user()->containers()->with('stats')->get();
+        $containers = Auth::user()
+            ->containers()
+            ->with('stats')
+            ->latest()
+            ->get();
         return response()->json($containers);
     }
 
@@ -32,30 +41,104 @@ class ContainerController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Container::class);
+
+        $user = $request->user();
+
+        if (!$user->is_admin) {
+            $maxContainers = (int) config('containers.max_containers_per_user', PHP_INT_MAX);
+            $currentCount = $user->containers()->count();
+            if ($currentCount >= $maxContainers) {
+                return response()->json([
+                    'message' => 'Container limit reached for your account.',
+                ], 422);
+            }
+        }
+
+        $allowedImages = config('containers.allowed_images', []);
+        $maxEnvVars = (int) config('containers.max_env_vars', 0);
+        $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'image' => 'required|string',
-            'cpu_limit' => 'required|integer|min:1|max:4',
-            'memory_limit' => 'required|integer|min:128|max:2048',
-            'disk_limit' => 'required|integer|min:1024|max:10240',
-            'env_vars' => 'nullable|array'
+            'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
+            'image' => ['required', 'string', Rule::in($allowedImages)],
+            'cpu_limit' => ['required', 'integer', 'min:1', 'max:4'],
+            'memory_limit' => ['required', 'integer', 'min:128', 'max:2048'],
+            'disk_limit' => ['required', 'integer', 'min:1024', 'max:10240'],
+            'env_vars' => ['nullable', 'array', 'max:' . $maxEnvVars],
+            'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
+        ], [
+            'image.in' => 'The selected container image is not permitted.',
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $envVars = $request->input('env_vars');
+            if ($envVars === null) {
+                return;
+            }
+
+            if (!is_array($envVars)) {
+                $validator->errors()->add('env_vars', 'Environment variables must be an object of key/value pairs.');
+                return;
+            }
+
+            $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
+
+            foreach ($envVars as $key => $value) {
+                if (!is_string($key) || trim($key) === '') {
+                    $validator->errors()->add('env_vars', 'Environment variable keys must be non-empty strings.');
+                    continue;
+                }
+
+                $normalizedKey = strtoupper(trim((string) $key));
+                $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
+
+                if (!preg_match($keyPattern, $normalizedKey)) {
+                    $validator->errors()->add('env_vars.' . $key, 'Environment variable keys may only include uppercase letters, digits, and underscores.');
+                }
+
+                if (!is_null($value) && !is_scalar($value)) {
+                    $validator->errors()->add('env_vars.' . $key, 'Environment variable values must be simple strings or numbers.');
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $container = new Container($request->all());
-        $container->user_id = Auth::id();
-        $container->status = 'created';
-        $container->save();
+        $payload = collect($validator->validated())
+            ->only(['name', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
+            ->toArray();
 
-        if (!$this->containerService->create($container)) {
-            $container->delete();
+        $payload['env_vars'] = $this->normalizeEnvVars($request->input('env_vars', []));
+
+        $container = new Container($payload);
+        $container->user_id = $user->id;
+        $container->status = 'created';
+
+        try {
+            DB::transaction(function () use (&$container) {
+                $container->save();
+
+                if (!$this->containerService->create($container)) {
+                    throw new RuntimeException('Docker container provisioning failed.');
+                }
+            });
+        } catch (Throwable $exception) {
+            Log::warning('Failed to provision container for user.', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            if ($container->exists) {
+                $container->delete();
+            }
+
             return response()->json(['message' => 'Failed to create container'], 500);
         }
 
-        return response()->json($container, 201);
+        return response()->json($container->fresh(), 201);
     }
 
     /**
@@ -115,12 +198,68 @@ class ContainerController extends Controller
     public function stats(Container $container)
     {
         $this->authorize('view', $container);
-        
+
         $stats = $this->containerService->getStats($container);
         if ($stats) {
             return response()->json($stats);
         }
 
         return response()->json(['message' => 'Failed to get container stats'], 500);
+    }
+
+    public function options(Request $request)
+    {
+        $user = $request->user();
+
+        $allowedImages = config('containers.allowed_images', []);
+        $maxContainers = (int) config('containers.max_containers_per_user', PHP_INT_MAX);
+        $currentCount = $user->containers()->count();
+        $isAdmin = (bool) $user->is_admin;
+        $remaining = $isAdmin ? null : max(0, $maxContainers - $currentCount);
+
+        return response()->json([
+            'allowed_images' => $allowedImages,
+            'max_containers_per_user' => $isAdmin ? null : $maxContainers,
+            'current_count' => $currentCount,
+            'remaining_slots' => $remaining,
+            'can_create' => $user->can('create', Container::class),
+            'min_xp_required' => (int) config('containers.min_xp_required', 0),
+            'max_env_vars' => (int) config('containers.max_env_vars', 0),
+            'env_value_max_length' => (int) config('containers.env_value_max_length', 0),
+        ]);
+    }
+
+    private function normalizeEnvVars($envVars): array
+    {
+        if (!is_array($envVars)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($envVars as $key => $value) {
+            if (!is_string($key) || trim($key) === '') {
+                continue;
+            }
+
+            $normalizedKey = strtoupper(trim($key));
+            $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
+            $normalizedKey = trim($normalizedKey, '_');
+
+            if ($normalizedKey === '') {
+                continue;
+            }
+
+            if (is_null($value)) {
+                continue;
+            }
+
+            if (!is_scalar($value)) {
+                continue;
+            }
+
+            $normalized[$normalizedKey] = (string) $value;
+        }
+
+        return $normalized;
     }
 }
