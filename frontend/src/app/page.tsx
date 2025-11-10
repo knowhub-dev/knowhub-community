@@ -10,7 +10,6 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import PostCard from "@/components/PostCard";
 import { api } from "@/lib/api";
 
 interface StatShape {
@@ -30,6 +29,23 @@ interface PostShort {
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
 
+const buildSnippet = (post: PostShort, length = 160) => {
+  const raw =
+    post.excerpt ??
+    (post as any)?.summary ??
+    (post as any)?.content_preview ??
+    (post as any)?.content_markdown ??
+    (post as any)?.content ??
+    "";
+
+  if (typeof raw !== "string" || raw.length === 0) {
+    return "";
+  }
+
+  const clean = raw.replace(/[#*_`>\-]/g, " ").replace(/\s+/g, " ").trim();
+  return clean.length > length ? `${clean.slice(0, length)}…` : clean;
+};
+
 export default function HomePage() {
   const [stats, setStats] = useState<StatShape | null>(null);
   const [trending, setTrending] = useState<PostShort[]>([]);
@@ -45,20 +61,28 @@ export default function HomePage() {
         description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
         href: "/posts/create",
         icon: PenSquare,
-        accent: "bg-emerald-50 text-emerald-700 border-emerald-100",
+        accent:
+          "border-cyan-500/40 bg-cyan-500/10 text-cyan-100 shadow-[0_0_25px_-12px_rgba(34,211,238,0.8)]",
       },
       {
         title: "Mini serverni ishga tushiring",
         description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
         href: "/containers",
         icon: Zap,
-        accent: "bg-amber-50 text-amber-700 border-amber-100",
+        accent:
+          "border-purple-500/40 bg-purple-500/10 text-purple-100 shadow-[0_0_25px_-12px_rgba(168,85,247,0.8)]",
       },
       {
         title: "Wiki'ni boyiting",
         description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
         href: "/wiki",
         icon: Compass,
+        accent:
+          "border-sky-500/40 bg-sky-500/10 text-sky-100 shadow-[0_0_25px_-12px_rgba(56,189,248,0.8)]",
+      },
+    ],
+    []
+  );
         accent: "bg-sky-50 text-sky-700 border-sky-100",
       },
     ],
@@ -127,7 +151,6 @@ export default function HomePage() {
           ? pRes.data
           : pRes.data?.data ?? pRes.data?.posts ?? [];
         setPosts(postsData.slice(0, 8));
-        setPosts(postsData.slice(0, 10));
       } catch (err: any) {
         setError(err?.message ?? String(err));
       } finally {
@@ -149,93 +172,107 @@ export default function HomePage() {
 
     const id = window.setInterval(() => {
       setActiveTagIndex((index) => (index + 1) % stats.topTags!.length);
-      setActiveTagIndex((index) => (index + 1) % stats.topTags.length);
     }, 3200);
 
     return () => window.clearInterval(id);
   }, [stats?.topTags]);
 
   const activeTag = stats?.topTags?.[activeTagIndex];
+  const spotlightPost = posts[0];
+  const spotlightSnippet = spotlightPost ? buildSnippet(spotlightPost, 220) : "";
+  const supportingPosts = posts.slice(1, 5);
+  const archivePosts = posts.slice(5, 8);
 
   return (
-    <main className="min-h-screen bg-[#f7f7f3] text-slate-900">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pb-24 pt-16">
-        <header className="grid gap-12 lg:grid-cols-[1.05fr,0.95fr] lg:items-center">
-          <div className="space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-              Jamiyat
-            </span>
-            <div className="space-y-5">
-              <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-                Minimalistik hamjamiyat maydoni — g'oyalaringiz, tajribangiz va hamkorligingiz uchun.
-              </h1>
-              <p className="max-w-2xl text-lg text-slate-600">
-                KnowHub bilim bo'limlari, mini serverlar va real vaqtli hamkorlik orqali g'oyalaringizni tezda sinab ko'rish va ulashish imkonini beradi.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <Link
-                href="/posts/create"
-                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
-              >
-                Yangi post yozish
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/posts"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800"
-              >
-                So'nggi postlar
-              </Link>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                {formatNumber(stats?.postsCount)}+ postlar
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
-                Hamjamiyat: {formatNumber(stats?.usersCount)}+
-              </span>
-              {activeTag && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
-                  Trend tegi: #{activeTag}
-                </span>
-              )}
-            </div>
-          </div>
+    <main className="relative min-h-screen overflow-hidden bg-[#05070f] text-slate-100">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-1/2 top-[-10%] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-cyan-500/30 blur-[120px]" />
+        <div className="absolute bottom-[-15%] right-[8%] h-[380px] w-[380px] rounded-full bg-purple-500/20 blur-[140px]" />
+        <div className="absolute inset-x-0 top-40 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      </div>
 
-          <div className="relative h-full rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="space-y-6">
+      <div className="relative flex flex-col gap-20 pb-24">
+        <header className="px-6 pt-16 sm:pt-20">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[1.15fr,0.85fr]">
+            <div className="space-y-9">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white/70">
+                KnowHub 2.0
+              </span>
+              <div className="space-y-5">
+                <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
+                  Texnologik hamjamiyat uchun strategik bosh sahifa.
+                </h1>
+                <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
+                  Yangi g'oyalarni baham ko'ring, mini serverlarda sinovdan o'tkazing va hamjamiyatning tajribasidan ilhom oling. Hammasi bir joyda, fokus va ritmni yo'qotmagan holda.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/posts/create"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:opacity-90"
+                >
+                  Yangi post yozish
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/posts"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
+                >
+                  So'nggi postlar
+                </Link>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 sm:text-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                  {formatNumber(stats?.postsCount)}+ postlar
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                  Hamjamiyat: {formatNumber(stats?.usersCount)}+
+                </span>
+                {activeTag && (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                    Trend tegi: #{activeTag}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-600">Bugungi panorama</p>
-                <span className="text-xs text-slate-400">Yangilanadi: {loading ? "…" : "real-time"}</span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-white/50">Samaradorlik paneli</p>
+                  <p className="mt-2 text-lg font-semibold text-white">Hamjamiyat pulsini kuzating</p>
+                </div>
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[0.65rem] text-white/60">
+                  {loading ? "Yangilanmoqda" : "Real-time"}
+                </span>
               </div>
               {loading ? (
                 <div className="space-y-4">
-                  <div className="h-12 rounded-2xl bg-slate-100" />
-                  <div className="h-12 rounded-2xl bg-slate-100" />
-                  <div className="h-12 rounded-2xl bg-slate-100" />
+                  {Array.from({ length: 3 }).map((_, idx) => (
+                    <div key={idx} className="h-16 rounded-2xl border border-white/10 bg-white/5" />
+                  ))}
                 </div>
               ) : error ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-500">
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
                   {error}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-500">Faol ijodkorlar</span>
-                    <span className="text-lg font-semibold">{formatNumber(stats?.usersCount)}</span>
+                  <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
+                    <span className="text-sm text-slate-300">Faol ijodkorlar</span>
+                    <span className="text-2xl font-semibold text-white">{formatNumber(stats?.usersCount)}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-500">Jamiyatdagi postlar</span>
-                    <span className="text-lg font-semibold">{formatNumber(stats?.postsCount)}</span>
+                  <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
+                    <span className="text-sm text-slate-300">Jamiyatdagi postlar</span>
+                    <span className="text-2xl font-semibold text-white">{formatNumber(stats?.postsCount)}</span>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-xs uppercase tracking-widest text-slate-400">Trend teglari</p>
+                  <div className="rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
+                    <p className="text-xs uppercase tracking-[0.4em] text-white/40">Trend teglari</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {stats?.topTags?.length ? (
                         stats.topTags.map((tag) => (
-                          <span key={tag} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                          <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
                             #{tag}
                           </span>
                         ))
@@ -243,106 +280,6 @@ export default function HomePage() {
                         <span className="text-sm text-slate-400">Hali teglarga oid ma'lumot yo'q.</span>
                       )}
                     </div>
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-      <div className="absolute inset-0 pointer-events-none">
-        {accentOrbs.map((className, idx) => (
-          <div
-            key={idx}
-            className={`absolute h-72 w-72 rounded-full blur-3xl ${className}`}
-            aria-hidden="true"
-          />
-        ))}
-        <div className="absolute inset-x-0 top-1/3 h-px bg-gradient-to-r from-transparent via-slate-700/60 to-transparent" />
-      </div>
-
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 pb-20 pt-16 lg:pb-32 lg:pt-24">
-        <header className="grid gap-10 lg:grid-cols-[1.05fr,0.95fr] lg:items-center">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium uppercase tracking-[0.3em] text-white/70 backdrop-blur">
-              <CircleDot className="h-4 w-4 text-emerald-300" />
-              Orbitadagi jamiyat
-            </div>
-            <div className="space-y-6">
-              <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl xl:text-6xl">
-                Bilim orbitasini kengaytiruvchi
-                <span className="bg-gradient-to-r from-fuchsia-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
-                  {" "}KnowHub galaktikasi
-                </span>
-              </h1>
-              <p className="max-w-2xl text-lg text-slate-200/80 sm:text-xl">
-                Kod yozing, tajriba qiling va hamjamiyat bilan birgalikda kelajakni qurish uchun wiki, real-time hamkorlik va
-                mini serverlar kabi vositalardan foydalaning.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/posts/create"
-                className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02]"
-              >
-                Yangi missiya boshlash
-                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-              </Link>
-              <Link
-                href="/posts"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 text-base font-semibold text-white/80 backdrop-blur transition hover:border-white hover:text-white"
-              >
-                Jamiyat galereyasi
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-slate-900/40 backdrop-blur">
-            <div className="absolute -top-3 right-10 hidden rounded-full border border-white/40 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-emerald-200/90 sm:block">
-              Live snapshot
-            </div>
-            {loading ? (
-              <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-white/60">
-                Ma’lumotlar galaktikasi yuklanmoqda…
-              </div>
-            ) : error ? (
-              <div className="flex flex-col gap-3 text-sm text-rose-200">
-                <div className="text-lg font-semibold text-rose-100">Signal uzildi</div>
-                <p>{error}</p>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-4">
-                    <p className="text-xs uppercase tracking-widest text-white/60">Postlar</p>
-                    <p className="mt-3 text-3xl font-bold text-white">{stats?.postsCount ?? "—"}</p>
-                    <p className="mt-1 text-sm text-white/60">Yangiliklar orbitasi</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-4">
-                    <p className="text-xs uppercase tracking-widest text-white/60">Foydalanuvchilar</p>
-                    <p className="mt-3 text-3xl font-bold text-white">{stats?.usersCount ?? "—"}</p>
-                    <p className="mt-1 text-sm text-white/60">Kosmonavtlar soni</p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-widest text-white/50">Aktiv orbit</p>
-                    <div className="flex items-center gap-2 text-sm text-emerald-200">
-                      <Zap className="h-4 w-4" />
-                      Real-time
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/80">
-                    {stats?.topTags?.length ? (
-                      stats.topTags.slice(0, 6).map((tag) => (
-                        <span
-                          key={tag}
-                          className={`rounded-full border border-white/20 px-3 py-1 transition ${
-                            tag === activeTag ? "bg-white/20 text-white" : "bg-white/5 text-white/70"
-                          }`}
-                        >
-                          #{tag}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-white/50">Hali orbitaga teglar qo‘shilmadi.</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -384,115 +321,180 @@ export default function HomePage() {
                 ))}
             </div>
           </div>
+        </header>
 
-          <aside className="space-y-8">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-slate-900/40 backdrop-blur">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Trend tezlanishi</h3>
-                <span className="text-xs uppercase tracking-[0.35em] text-white/40">Live radar</span>
-              </div>
-              {loading ? (
-                <div className="mt-6 text-sm text-white/60">Trend signalini sinxronlashtirish…</div>
-              ) : trending.length === 0 ? (
-                <div className="mt-6 text-sm text-white/60">Trend orbitasi hozircha bo‘sh.</div>
-              ) : (
-                <ul className="relative mt-6 space-y-6 border-l border-dashed border-white/20 pl-6">
-                  {trending.map((t, index) => (
-                    <li key={t.id} className="relative">
-                      <span className="absolute -left-[33px] flex h-6 w-6 items-center justify-center rounded-full border border-white/40 bg-slate-950 text-xs text-white/80">
-                        {index + 1}
-                      </span>
-                      <div className="flex flex-col gap-1">
-                        <Link
-                          href={`/posts/${t.slug ?? String(t.id)}`}
-                          className="text-base font-semibold text-white transition hover:text-fuchsia-200"
-                        >
-                          {t.title}
-                        </Link>
-                        {t.excerpt && <p className="text-sm text-white/60 line-clamp-3">{t.excerpt}</p>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Yangi postlar</h2>
-              <Link href="/posts" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
-                Barchasini ko'rish
+        <section className="px-6">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <h2 className="text-xl font-semibold text-white sm:text-2xl">Mission rejimi</h2>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+              >
+                Profil paneliga o'tish
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            {loading ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <div key={idx} className="h-48 rounded-2xl border border-slate-200 bg-slate-100" />
-                ))}
-              </div>
-            ) : posts.length === 0 ? (
-              <p className="text-sm text-slate-500">Hali postlar qo'shilmagan.</p>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post as any} />
-                ))}
-              </div>
-            )}
+            <div className="grid gap-4 md:grid-cols-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.title}
+                  href={action.href}
+                  className={`group flex flex-col gap-3 rounded-2xl border px-5 py-6 transition duration-300 hover:-translate-y-1 hover:border-white/40 hover:shadow-[0_20px_45px_-25px_rgba(15,118,230,0.8)] ${action.accent}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <action.icon className="h-5 w-5" />
+                    <ArrowUpRight className="h-4 w-4 text-current opacity-60 transition group-hover:translate-x-1" />
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-base font-semibold text-white">{action.title}</p>
+                    <p className="text-slate-200/80">{action.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-slate-900/40 backdrop-blur">
-              <h3 className="text-lg font-semibold text-white">Eksperimental trayektoriyalar</h3>
-              <p className="mt-2 text-sm text-white/60">
-                KnowHub laboratoriyalariga sho‘ng‘ing va o‘zingizga mos yo‘nalishni tanlang.
-              </p>
-              <div className="mt-6 grid gap-4">
-                {quickActions.map(({ title, description, href, icon: Icon, accent }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/40"
-                  >
-                    <div
-                      className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent} opacity-0 transition-opacity group-hover:opacity-100`}
-                    />
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white/70">
-                          <Icon className="h-4 w-4" />
-                          {title}
+
+        <section className="px-6">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[0.85fr,1.15fr]">
+            <div className="space-y-6">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Trend signallari</h2>
+                <Link
+                  href="/posts?sort=trending"
+                  className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
+                >
+                  Barchasini ko'rish
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {trending.length === 0 && !loading ? (
+                  <p className="text-sm text-slate-400">Hozircha trend postlar aniqlanmadi.</p>
+                ) : (
+                  trending.map((post, index) => {
+                    const snippet = buildSnippet(post, 140);
+                    return (
+                      <Link
+                        key={post.id}
+                        href={post.slug ? `/posts/${post.slug}` : "#"}
+                        className="group rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition hover:border-cyan-400/40 hover:bg-white/[0.08]"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-cyan-200">
+                            {(index + 1).toString().padStart(2, "0")}
+                          </span>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-base font-semibold text-white group-hover:text-cyan-100">
+                              {post.title}
+                            </p>
+                            {snippet && (
+                              <p className="text-sm text-slate-300 line-clamp-2">{snippet}</p>
+                            )}
+                          </div>
+                          <ArrowRight className="mt-1 h-4 w-4 text-white/40 group-hover:text-cyan-200" />
                         </div>
-                        <p className="mt-2 text-sm text-white/60">{description}</p>
-                      </div>
-                      <ArrowUpRight className="mt-1 h-5 w-5 text-white/50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                    </div>
-                  </Link>
-                ))}
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            <div className="hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-slate-900/40 backdrop-blur sm:block">
-              <h3 className="text-lg font-semibold text-white">Galaktik qidiruv</h3>
-              <p className="mt-2 text-sm text-white/60">Qiziqqan mavzuni toping yoki yangi missiya boshlang.</p>
-              <form action="/posts" method="get" className="mt-4 flex gap-2">
-                <input
-                  name="q"
-                  placeholder="Masalan, Laravel queue monitoring"
-                  className="flex-1 rounded-full border border-white/20 bg-slate-900/70 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40"
-                />
-                <button className="rounded-full bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow">
-                  Qidir
-                </button>
-              </form>
+            <div className="space-y-6">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Yangi postlar</h2>
+                <Link
+                  href="/posts"
+                  className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
+                >
+                  Barchasini ko'rish
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              {loading ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx} className="h-48 rounded-2xl border border-white/10 bg-white/5" />
+                  ))}
+                </div>
+              ) : posts.length === 0 ? (
+                <p className="text-sm text-slate-400">Hali postlar qo'shilmagan.</p>
+              ) : (
+                <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+                  <Link
+                    href={spotlightPost?.slug ? `/posts/${spotlightPost.slug}` : "#"}
+                    className="group flex flex-col justify-between rounded-3xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 p-6 shadow-[0_20px_60px_-40px_rgba(56,189,248,0.8)] transition hover:border-cyan-400/60"
+                  >
+                    <div className="space-y-4">
+                      <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/70">
+                        Spotlight
+                      </span>
+                      <p className="text-2xl font-semibold text-white sm:text-3xl">
+                        {spotlightPost?.title}
+                      </p>
+                      {spotlightSnippet && (
+                        <p className="text-sm text-slate-200/80 line-clamp-3">{spotlightSnippet}</p>
+                      )}
+                    </div>
+                    <div className="mt-6 flex items-center justify-between text-xs text-white/60">
+                      <span className="inline-flex items-center gap-2">
+                        <ArrowRight className="h-4 w-4 text-cyan-200" />
+                        Batafsil o'qish
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1">
+                        #{spotlightPost?.user?.name ?? "KnowHub"}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="flex flex-col gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                      {supportingPosts.map((post) => {
+                        const snippet = buildSnippet(post);
+                        return (
+                          <Link
+                            key={post.id}
+                            href={post.slug ? `/posts/${post.slug}` : "#"}
+                            className="group rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition hover:border-cyan-300/40 hover:bg-white/[0.1]"
+                          >
+                            <p className="text-lg font-semibold text-white group-hover:text-cyan-100">{post.title}</p>
+                            {snippet && (
+                              <p className="mt-2 text-sm text-slate-300 line-clamp-3">{snippet}</p>
+                            )}
+                            <div className="mt-4 inline-flex items-center gap-2 text-xs text-white/60">
+                              <ArrowRight className="h-3.5 w-3.5" />
+                              Davomini o'qing
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                    {archivePosts.length > 0 && (
+                      <div className="border-t border-white/5 pt-4">
+                        <p className="text-xs uppercase tracking-[0.35em] text-white/40">Monitoring</p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {archivePosts.map((post) => (
+                            <Link
+                              key={post.id}
+                              href={post.slug ? `/posts/${post.slug}` : "#"}
+                              className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.04] px-4 py-3 transition hover:border-cyan-300/40 hover:bg-white/[0.08]"
+                            >
+                              <span className="text-sm font-medium text-white/80 group-hover:text-cyan-100 line-clamp-2">
+                                {post.title}
+                              </span>
+                              <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-cyan-200" />
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          </aside>
+          </div>
         </section>
-
-        <footer className="rounded-3xl border border-white/10 bg-white/5 px-6 py-8 text-center text-sm text-white/60 shadow-inner shadow-slate-900/50 backdrop-blur">
-          © {new Date().getFullYear()} KnowHub — kosmik hamjamiyat.
-        </footer>
       </div>
     </main>
   );

@@ -6,10 +6,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
 
-const CollaborationPanel = dynamic(() => import('@/components/PostCollaborationPanel'), {
-  ssr: false,
-});
-
 interface Post {
   id: number;
   title: string;
@@ -71,7 +67,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
           </ReactMarkdown>
         </div>
 
-        <CollaborationPanel
+        <PostCollaborationPanelWrapper
           postSlug={post.slug}
           postOwnerId={post.user.id}
           initialContent={post.content_markdown}

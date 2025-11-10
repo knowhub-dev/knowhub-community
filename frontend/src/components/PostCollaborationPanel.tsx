@@ -12,7 +12,6 @@ import { Activity, Loader2, Save, Users } from "lucide-react";
 import clsx from "clsx";
 
 export interface PostCollaborationPanelProps {
-interface PostCollaborationPanelProps {
   postSlug: string;
   postOwnerId: number;
   initialContent: string;
