@@ -83,6 +83,47 @@ export default function HomePage() {
     ],
     []
   );
+        accent: "bg-sky-50 text-sky-700 border-sky-100",
+      },
+    ],
+    []
+  );
+        title: "Kosmik post yozish",
+        description:
+          "AI qo'llab-quvvatlovi bilan tezkor draft yaratib, jamiyatni hayratda qoldiring.",
+        href: "/posts/create",
+        icon: Sparkles,
+        accent: "from-fuchsia-500/40 to-indigo-500/20",
+      },
+      {
+        title: "Tajriba laboratoriyasi",
+        description:
+          "Mini serveringizda yangi stakni sinab ko'ring va hamjamiyat bilan baham ko'ring.",
+        href: "/containers",
+        icon: Activity,
+        accent: "from-cyan-500/40 to-sky-500/20",
+      },
+      {
+        title: "Wiki orbitasini kengaytirish",
+        description:
+          "Kollektiv bilimga hissa qo'shish uchun yangi maqola qo'shing yoki taklif yuboring.",
+        href: "/wiki",
+        icon: Compass,
+        accent: "from-amber-500/40 to-orange-500/20",
+      },
+    ],
+    []
+  );
+
+  const accentOrbs = useMemo(
+    () => [
+      "top-[-10%] left-[-10%] bg-fuchsia-600/40",
+      "top-[40%] -right-10 bg-indigo-500/30",
+      "bottom-[-15%] left-[20%] bg-sky-500/30",
+      "top-[65%] right-[30%] bg-emerald-500/20",
+    ],
+    []
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -241,7 +282,43 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <section className="grid gap-8 lg:grid-cols-[1.6fr,1fr]">
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-white sm:text-3xl">So‘nggi missiyalar</h2>
+                <p className="text-sm text-white/60">
+                  Hamjamiyat a’zolari ayni damda nimalar yaratmoqda — eng yangi postlar.
+                </p>
+              </div>
+              <span className="text-xs uppercase tracking-[0.35em] text-white/40">
+                {loading ? "Yuklanmoqda" : `${posts.length} ta post`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {loading && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/50">
+                  So‘nggi signallarni qabul qilmoqdamiz…
+                </div>
               )}
+              {!loading && posts.length === 0 && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/60">
+                  Hozircha missiyalar mavjud emas. Birinchi bo‘lib boshlang!
+                </div>
+              )}
+              {!loading &&
+                posts.map((p) => (
+                  <div key={p.id} className="group relative">
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                    <PostCard post={p as any} />
+                  </div>
+                ))}
             </div>
           </div>
         </header>
