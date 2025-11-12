@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { containerService } from '@/lib/services/containers';
 import ContainerCard from '@/components/ContainerCard';
@@ -32,10 +32,40 @@ export default function ContainersTab() {
   const queryClient = useQueryClient();
   
   // Get containers
+  const { data: options } = useQuery({
+    queryKey: ['containers', 'options'],
+    queryFn: containerService.getOptions,
+  });
+
   const { data: containers = [], isLoading } = useQuery({
     queryKey: ['containers'],
     queryFn: containerService.getContainers,
   });
+
+  const allowedImages = options?.allowed_images ?? [];
+  const remainingSlots = options?.remaining_slots ?? null;
+  const isCreateDisabled =
+    !options ||
+    !allowedImages.length ||
+    !options.can_create ||
+    (remainingSlots !== null && remainingSlots <= 0);
+
+  useEffect(() => {
+    if (!allowedImages.length) {
+      return;
+    }
+
+    setFormData((prev) => {
+      if (allowedImages.includes(prev.image)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        image: allowedImages[0],
+      };
+    });
+  }, [allowedImages]);
 
   // Create container
   const createMutation = useMutation({
@@ -43,7 +73,10 @@ export default function ContainersTab() {
     onSuccess: () => {
       queryClient.invalidateQueries(['containers']);
       setIsDialogOpen(false);
-      setFormData(DEFAULT_CONTAINER);
+      setFormData({
+        ...DEFAULT_CONTAINER,
+        image: allowedImages[0] ?? '',
+      });
     },
   });
 
@@ -73,6 +106,10 @@ export default function ContainersTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreateDisabled) {
+      return;
+    }
+
     createMutation.mutate(formData);
   };
 
@@ -86,7 +123,7 @@ export default function ContainersTab() {
         <h2 className="text-2xl font-bold">Containers</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={isCreateDisabled}>
               <Plus className="w-4 h-4 mr-2" />
               Create Container
             </Button>
@@ -98,6 +135,11 @@ export default function ContainersTab() {
                 Configure and create a new container instance.
               </DialogDescription>
             </DialogHeader>
+            {isCreateDisabled && (
+              <div className="rounded-md bg-red-50 border border-red-200 text-red-600 text-sm p-3">
+                You cannot create additional containers yet. Ensure you meet the XP requirement and have available slots.
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
@@ -112,14 +154,21 @@ export default function ContainersTab() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image">Image</Label>
-                <Input
+                <select
                   id="image"
                   value={formData.image}
                   onChange={(e) =>
                     setFormData({ ...formData, image: e.target.value })
                   }
+                  className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   required
-                />
+                >
+                  {allowedImages.map((image) => (
+                    <option key={image} value={image}>
+                      {image}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cpu_limit">CPU Limit (cores)</Label>
@@ -174,13 +223,34 @@ export default function ContainersTab() {
                   required
                 />
               </div>
-              <Button type="submit" disabled={createMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || isCreateDisabled}
+              >
                 {createMutation.isPending ? 'Creating...' : 'Create'}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
+
+      {options && (
+        <div className="rounded-md border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
+          <p className="font-medium">Security constraints</p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li>Allowed images: {allowedImages.join(', ') || '—'}</li>
+            <li>
+              Containers remaining:{' '}
+              {remainingSlots === null ? 'Unlimited' : remainingSlots} /
+              {' '}
+              {options.max_containers_per_user === null
+                ? 'Unlimited'
+                : options.max_containers_per_user}
+            </li>
+            <li>Minimum XP required: {options.min_xp_required}</li>
+          </ul>
+        </div>
+      )}
 
       <div className="grid gap-6">
         {containers.map((container: Container) => (
