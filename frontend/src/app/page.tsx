@@ -241,7 +241,124 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <section className="grid gap-8 lg:grid-cols-[1.6fr,1fr]">
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-white sm:text-3xl">So‘nggi missiyalar</h2>
+                <p className="text-sm text-white/60">
+                  Hamjamiyat a’zolari ayni damda nimalar yaratmoqda — eng yangi postlar.
+                </p>
+              </div>
+              <span className="text-xs uppercase tracking-[0.35em] text-white/40">
+                {loading ? "Yuklanmoqda" : `${posts.length} ta post`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {loading && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/50">
+                  So‘nggi signallarni qabul qilmoqdamiz…
+                </div>
               )}
+              {!loading && posts.length === 0 && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/60">
+                  Hozircha missiyalar mavjud emas. Birinchi bo‘lib boshlang!
+                </div>
+              )}
+              {!loading &&
+                posts.map((p) => (
+                  <div key={p.id} className="group relative">
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                    <PostCard post={p as any} />
+                  </div>
+                ))}
+            </div>
+          </div>
+        </header>
+
+        <section className="px-6">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <h2 className="text-xl font-semibold text-white sm:text-2xl">Mission rejimi</h2>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+              >
+                Profil paneliga o'tish
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.title}
+                  href={action.href}
+                  className={`group flex flex-col gap-3 rounded-2xl border px-5 py-6 transition duration-300 hover:-translate-y-1 hover:border-white/40 hover:shadow-[0_20px_45px_-25px_rgba(15,118,230,0.8)] ${action.accent}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <action.icon className="h-5 w-5" />
+                    <ArrowUpRight className="h-4 w-4 text-current opacity-60 transition group-hover:translate-x-1" />
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-base font-semibold text-white">{action.title}</p>
+                    <p className="text-slate-200/80">{action.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[0.85fr,1.15fr]">
+            <div className="space-y-6">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Trend signallari</h2>
+                <Link
+                  href="/posts?sort=trending"
+                  className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
+                >
+                  Barchasini ko'rish
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {trending.length === 0 && !loading ? (
+                  <p className="text-sm text-slate-400">Hozircha trend postlar aniqlanmadi.</p>
+                ) : (
+                  trending.map((post, index) => {
+                    const snippet = buildSnippet(post, 140);
+                    return (
+                      <Link
+                        key={post.id}
+                        href={post.slug ? `/posts/${post.slug}` : "#"}
+                        className="group rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition hover:border-cyan-400/40 hover:bg-white/[0.08]"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-cyan-200">
+                            {(index + 1).toString().padStart(2, "0")}
+                          </span>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-base font-semibold text-white group-hover:text-cyan-100">
+                              {post.title}
+                            </p>
+                            {snippet && (
+                              <p className="text-sm text-slate-300 line-clamp-2">{snippet}</p>
+                            )}
+                          </div>
+                          <ArrowRight className="mt-1 h-4 w-4 text-white/40 group-hover:text-cyan-200" />
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         </header>
