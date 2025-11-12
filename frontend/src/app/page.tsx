@@ -241,7 +241,43 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <section className="grid gap-8 lg:grid-cols-[1.6fr,1fr]">
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-white sm:text-3xl">So‘nggi missiyalar</h2>
+                <p className="text-sm text-white/60">
+                  Hamjamiyat a’zolari ayni damda nimalar yaratmoqda — eng yangi postlar.
+                </p>
+              </div>
+              <span className="text-xs uppercase tracking-[0.35em] text-white/40">
+                {loading ? "Yuklanmoqda" : `${posts.length} ta post`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {loading && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/50">
+                  So‘nggi signallarni qabul qilmoqdamiz…
+                </div>
               )}
+              {!loading && posts.length === 0 && (
+                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/60">
+                  Hozircha missiyalar mavjud emas. Birinchi bo‘lib boshlang!
+                </div>
+              )}
+              {!loading &&
+                posts.map((p) => (
+                  <div key={p.id} className="group relative">
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                    <PostCard post={p as any} />
+                  </div>
+                ))}
             </div>
           </div>
         </header>
