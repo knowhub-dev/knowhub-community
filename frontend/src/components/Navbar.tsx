@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { Menu, X, User, LogOut, Plus, ChevronDown, Settings, Sun, Moon } from 'lucide-react';
+import { Menu, X, User, LogOut, Plus, ChevronDown, Settings } from 'lucide-react';
 import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
 import { useTheme } from '@/providers/ThemeProvider';
@@ -76,6 +77,13 @@ export default function Navbar() {
 
   return (
     <nav className={`sticky top-0 z-50 transition-colors ${navBackgroundClass}`}>
+    <nav
+      className={`sticky top-0 z-50 transition-colors ${
+        isHome
+          ? 'border-b border-white/10 bg-slate-950/60 shadow-none backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/30'
+          : 'border-b border-gray-200 bg-white shadow-sm'
+      }`}
+    >
       <div className="mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-full items-center justify-between">
           {/* Logo */}
@@ -85,6 +93,7 @@ export default function Navbar() {
                 isHome
                   ? 'bg-gradient-to-br from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/40'
                   : 'bg-indigo-600 text-white dark:bg-sky-500'
+                  : 'bg-indigo-600 text-white'
               }`}
             >
               KH
@@ -92,6 +101,7 @@ export default function Navbar() {
             <span
               className={`hidden text-xl font-bold sm:block ${
                 isHome ? 'text-white' : 'text-slate-900 dark:text-white'
+                isHome ? 'text-white' : 'text-gray-900'
               }`}
             >
               KnowHub
@@ -103,24 +113,44 @@ export default function Navbar() {
             <Link
               href="/posts"
               className={linkTone}
+              className={`${
+                isHome
+                  ? 'font-medium text-white/70 transition-colors hover:text-white'
+                  : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+              }`}
             >
               Postlar
             </Link>
             <Link
               href="/users"
               className={linkTone}
+              className={`${
+                isHome
+                  ? 'font-medium text-white/70 transition-colors hover:text-white'
+                  : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+              }`}
             >
               Foydalanuvchilar
             </Link>
             <Link
               href="/wiki"
               className={linkTone}
+              className={`${
+                isHome
+                  ? 'font-medium text-white/70 transition-colors hover:text-white'
+                  : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+              }`}
             >
               Wiki
             </Link>
             <Link
               href="/leaderboard"
               className={linkTone}
+              className={`${
+                isHome
+                  ? 'font-medium text-white/70 transition-colors hover:text-white'
+                  : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+              }`}
             >
               Reyting
             </Link>
@@ -130,6 +160,7 @@ export default function Navbar() {
           <SearchBar
             className="hidden md:flex flex-1 max-w-md mx-8"
             variant={searchVariant}
+            variant={isHome ? 'inverted' : 'default'}
           />
 
           {/* Desktop Auth */}
@@ -151,12 +182,22 @@ export default function Navbar() {
                 <Link
                   href="/dashboard"
                   className={linkTone}
+                  className={`${
+                    isHome
+                      ? 'font-medium text-white/70 transition-colors hover:text-white'
+                      : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+                  }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/posts/create"
                   className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${primaryCtaClass}`}
+                  className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${
+                    isHome
+                      ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30 hover:from-fuchsia-400 hover:via-indigo-500 hover:to-sky-400'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Post yozish
@@ -165,6 +206,11 @@ export default function Navbar() {
                   <button
                     onClick={handleProfileToggle}
                     className={`flex items-center space-x-2 focus:outline-none ${mutedActionClass}`}
+                    className={`flex items-center space-x-2 focus:outline-none ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:text-white'
+                        : 'text-gray-700 transition-colors hover:text-indigo-600'
+                    }`}
                   >
                     <img
                       src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
@@ -181,6 +227,7 @@ export default function Navbar() {
                         isHome
                           ? 'border-white/10 bg-slate-950/90 text-white backdrop-blur'
                           : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+                          : 'border-gray-200 bg-white'
                       }`}
                     >
                       <Link
@@ -189,6 +236,7 @@ export default function Navbar() {
                           isHome
                             ? 'text-white/80 hover:bg-white/10'
                             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                            : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setIsProfileOpen(false)}
                       >
@@ -201,6 +249,7 @@ export default function Navbar() {
                           isHome
                             ? 'text-white/80 hover:bg-white/10'
                             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                            : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setIsProfileOpen(false)}
                       >
@@ -216,6 +265,7 @@ export default function Navbar() {
                           isHome
                             ? 'text-white/80 hover:bg-white/10'
                             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                            : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <LogOut className="w-4 h-4 mr-2" />
@@ -230,12 +280,22 @@ export default function Navbar() {
                 <Link
                   href="/auth/login"
                   className={linkTone}
+                  className={`${
+                    isHome
+                      ? 'font-medium text-white/80 transition-colors hover:text-white'
+                      : 'font-medium text-gray-700 transition-colors hover:text-indigo-600'
+                  }`}
                 >
                   Kirish
                 </Link>
                 <Link
                   href="/auth/register"
                   className={`rounded-lg px-4 py-2 transition-colors ${primaryCtaClass}`}
+                  className={`rounded-lg px-4 py-2 transition-colors ${
+                    isHome
+                      ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30 hover:from-fuchsia-400 hover:via-indigo-500 hover:to-sky-400'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
                 >
                   Ro'yxatdan o'tish
                 </Link>
@@ -247,6 +307,11 @@ export default function Navbar() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={`rounded-lg p-2 md:hidden ${mobileToggleClass}`}
+            className={`rounded-lg p-2 md:hidden ${
+              isHome
+                ? 'text-white/80 transition-colors hover:bg-white/10'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -256,6 +321,11 @@ export default function Navbar() {
         {isOpen && (
           <div
             className={`md:hidden border-t py-4 ${mobilePanelClass}`}
+            className={`md:hidden border-t py-4 ${
+              isHome
+                ? 'border-white/10 bg-slate-950/80 text-white backdrop-blur'
+                : 'border-gray-200'
+            }`}
           >
             <div className="space-y-4">
               {/* Mobile Search */}
@@ -278,12 +348,19 @@ export default function Navbar() {
                   {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </button>
               </div>
+                variant={isHome ? 'inverted' : 'default'}
+              />
 
               {/* Mobile Links */}
               <div className="space-y-2">
                 <Link
                   href="/posts"
                   className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                  className={`block rounded-lg px-3 py-2 ${
+                    isHome
+                      ? 'text-white/80 transition-colors hover:bg-white/10'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   Postlar
@@ -291,6 +368,11 @@ export default function Navbar() {
                 <Link
                   href="/users"
                   className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                  className={`block rounded-lg px-3 py-2 ${
+                    isHome
+                      ? 'text-white/80 transition-colors hover:bg-white/10'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   Foydalanuvchilar
@@ -298,6 +380,11 @@ export default function Navbar() {
                 <Link
                   href="/wiki"
                   className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                  className={`block rounded-lg px-3 py-2 ${
+                    isHome
+                      ? 'text-white/80 transition-colors hover:bg-white/10'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   Wiki
@@ -305,6 +392,11 @@ export default function Navbar() {
                 <Link
                   href="/leaderboard"
                   className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                  className={`block rounded-lg px-3 py-2 ${
+                    isHome
+                      ? 'text-white/80 transition-colors hover:bg-white/10'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   Reyting
@@ -316,11 +408,17 @@ export default function Navbar() {
                 <div
                   className={`space-y-2 border-t pt-4 ${
                     isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
+                    isHome ? 'border-white/10' : 'border-gray-200'
                   }`}
                 >
                   <Link
                     href="/posts/create"
                     className={`flex items-center rounded-lg px-3 py-2 ${primaryCtaClass}`}
+                    className={`flex items-center rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30'
+                        : 'bg-indigo-600 text-white'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -329,6 +427,11 @@ export default function Navbar() {
                   <Link
                     href="/dashboard"
                     className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    className={`block rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:bg-white/10'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
@@ -336,6 +439,11 @@ export default function Navbar() {
                   <Link
                     href={`/profile/${user.username}`}
                     className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    className={`flex items-center rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:bg-white/10'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     <img
@@ -348,6 +456,11 @@ export default function Navbar() {
                   <Link
                     href="/settings/profile"
                     className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    className={`flex items-center rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:bg-white/10'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     <Settings className="w-4 h-4 mr-2" />
@@ -359,6 +472,11 @@ export default function Navbar() {
                       setIsOpen(false);
                     }}
                     className={`flex w-full items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    className={`flex w-full items-center rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:bg-white/10'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Chiqish
@@ -368,11 +486,17 @@ export default function Navbar() {
                 <div
                   className={`space-y-2 border-t pt-4 ${
                     isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
+                    isHome ? 'border-white/10' : 'border-gray-200'
                   }`}
                 >
                   <Link
                     href="/auth/login"
                     className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    className={`block rounded-lg px-3 py-2 ${
+                      isHome
+                        ? 'text-white/80 transition-colors hover:bg-white/10'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     Kirish
@@ -380,6 +504,11 @@ export default function Navbar() {
                   <Link
                     href="/auth/register"
                     className={`block rounded-lg px-3 py-2 text-center ${primaryCtaClass}`}
+                    className={`block rounded-lg px-3 py-2 text-center ${
+                      isHome
+                        ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30'
+                        : 'bg-indigo-600 text-white'
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     Ro'yxatdan o'tish

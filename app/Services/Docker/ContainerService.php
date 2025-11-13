@@ -231,6 +231,7 @@ class ContainerService
         $prefix = $container->subdomain ?: sprintf('user-%d', $container->user_id);
         $prefix = Str::slug($prefix);
         return sprintf('%s-%s', $prefix, Str::lower(Str::random(8)));
+        return sprintf('user-%d-%s', $container->user_id, Str::lower(Str::random(12)));
     }
 
     private function calculateCpuUsage(array $stats): float

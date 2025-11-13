@@ -79,6 +79,9 @@ class ContainerController extends Controller
                 Rule::notIn($reservedSubdomains),
                 Rule::unique('containers', 'subdomain'),
             ]),
+
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
             'image' => ['required', 'string', Rule::in($allowedImages)],
             'cpu_limit' => ['required', 'integer', 'min:1', 'max:4'],
             'memory_limit' => ['required', 'integer', 'min:128', 'max:2048'],
@@ -129,6 +132,8 @@ class ContainerController extends Controller
 
         $payload = collect($validated)
             ->only(['name', 'subdomain', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
+        $payload = collect($validator->validated())
+            ->only(['name', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
             ->toArray();
 
         $payload['env_vars'] = $this->normalizeEnvVars($request->input('env_vars', []));
