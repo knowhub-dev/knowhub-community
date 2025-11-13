@@ -1,5 +1,5 @@
 import { api } from '../api';
-import { Container, CreateContainerDto, ContainerStats } from '@/types/container';
+import { Container, CreateContainerDto, ContainerStats, ContainerOptions } from '@/types/container';
 
 const BASE_URL = '/api/v1/admin/containers';
 
@@ -25,6 +25,11 @@ export const deleteContainer = async (id: number): Promise<void> => {
 export const containerService = {
     async getContainers(): Promise<Container[]> {
         const response = await api.get(BASE_URL);
+        return response.data;
+    },
+
+    async getOptions(): Promise<ContainerOptions> {
+        const response = await api.get(`${BASE_URL}/options`);
         return response.data;
     },
 
