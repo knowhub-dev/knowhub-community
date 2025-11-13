@@ -15,13 +15,20 @@ interface SearchResult {
 interface SearchBarProps {
   onClose?: () => void;
   className?: string;
+  variant?: 'default' | 'inverted';
 }
 
-export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
+export default function SearchBar({
+  onClose,
+  className = '',
+  variant = 'default',
+}: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const isInverted = variant === 'inverted';
 
   // Search results
   const { data: results, isLoading } = useQuery({
@@ -74,7 +81,11 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Search
+          className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform ${
+            isInverted ? 'text-white/60' : 'text-gray-400'
+          }`}
+        />
         <input
           type="text"
           placeholder="Qidirish..."
@@ -84,7 +95,11 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className={`w-full rounded-lg border pl-10 pr-10 py-2 focus:border-transparent focus:ring-2 ${
+            isInverted
+              ? 'border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:ring-fuchsia-400'
+              : 'border-gray-300 focus:ring-indigo-500'
+          }`}
         />
         {query && (
           <button
@@ -92,7 +107,11 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
               setQuery('');
               setIsOpen(false);
             }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 transform ${
+              isInverted
+                ? 'text-white/60 hover:text-white'
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -101,22 +120,46 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
 
       {/* Search Results Dropdown */}
       {isOpen && (query.length >= 2 || suggestions.length > 0) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div
+          className={`absolute top-full left-0 right-0 z-50 mt-1 max-h-96 overflow-y-auto rounded-lg border shadow-lg ${
+            isInverted
+              ? 'border-white/10 bg-slate-950/90 text-white backdrop-blur'
+              : 'border-gray-200 bg-white'
+          }`}
+        >
           {isLoading && (
-            <div className="p-4 text-center text-gray-500">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mx-auto"></div>
+            <div
+              className={`p-4 text-center ${
+                isInverted ? 'text-white/70' : 'text-gray-500'
+              }`}
+            >
+              <div
+                className={`mx-auto h-6 w-6 animate-spin rounded-full border-b-2 ${
+                  isInverted ? 'border-fuchsia-300' : 'border-indigo-600'
+                }`}
+              ></div>
             </div>
           )}
 
           {/* Suggestions */}
           {suggestions.length > 0 && query.length < 2 && (
             <div className="p-2">
-              <div className="text-xs font-medium text-gray-500 px-2 py-1">Tavsiyalar</div>
+              <div
+                className={`px-2 py-1 text-xs font-medium ${
+                  isInverted ? 'text-white/50' : 'text-gray-500'
+                }`}
+              >
+                Tavsiyalar
+              </div>
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => handleSearch(suggestion)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isInverted
+                      ? 'text-white/80 hover:bg-white/10'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   {suggestion}
                 </button>
@@ -129,16 +172,30 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
             <div className="p-2">
               {results.posts && results.posts.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-xs font-medium text-gray-500 px-2 py-1">Postlar</div>
+                  <div
+                    className={`px-2 py-1 text-xs font-medium ${
+                      isInverted ? 'text-white/50' : 'text-gray-500'
+                    }`}
+                  >
+                    Postlar
+                  </div>
                   {results.posts.map((post: any) => (
                     <Link
                       key={post.id}
                       href={`/posts/${post.slug}`}
                       onClick={() => setIsOpen(false)}
-                      className="block px-3 py-2 hover:bg-gray-50 rounded"
+                      className={`block rounded px-3 py-2 transition ${
+                        isInverted
+                          ? 'text-white/80 hover:bg-white/10'
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
-                      <div className="font-medium text-sm">{post.title}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-medium">{post.title}</div>
+                      <div
+                        className={`text-xs ${
+                          isInverted ? 'text-white/50' : 'text-gray-500'
+                        }`}
+                      >
                         {post.user.name} • {post.score} ↑
                       </div>
                     </Link>
@@ -148,13 +205,23 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
 
               {results.users && results.users.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-xs font-medium text-gray-500 px-2 py-1">Foydalanuvchilar</div>
+                  <div
+                    className={`px-2 py-1 text-xs font-medium ${
+                      isInverted ? 'text-white/50' : 'text-gray-500'
+                    }`}
+                  >
+                    Foydalanuvchilar
+                  </div>
                   {results.users.map((user: any) => (
                     <Link
                       key={user.id}
                       href={`/profile/${user.username}`}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center px-3 py-2 hover:bg-gray-50 rounded"
+                      className={`flex items-center rounded px-3 py-2 transition ${
+                        isInverted
+                          ? 'text-white/80 hover:bg-white/10'
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
                       <img
                         src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
@@ -162,8 +229,14 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
                         className="w-8 h-8 rounded-full mr-3"
                       />
                       <div>
-                        <div className="font-medium text-sm">{user.name}</div>
-                        <div className="text-xs text-gray-500">@{user.username}</div>
+                        <div className="text-sm font-medium">{user.name}</div>
+                        <div
+                          className={`text-xs ${
+                            isInverted ? 'text-white/50' : 'text-gray-500'
+                          }`}
+                        >
+                          @{user.username}
+                        </div>
                       </div>
                     </Link>
                   ))}
@@ -172,16 +245,30 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
 
               {results.wiki && results.wiki.length > 0 && (
                 <div>
-                  <div className="text-xs font-medium text-gray-500 px-2 py-1">Wiki</div>
+                  <div
+                    className={`px-2 py-1 text-xs font-medium ${
+                      isInverted ? 'text-white/50' : 'text-gray-500'
+                    }`}
+                  >
+                    Wiki
+                  </div>
                   {results.wiki.map((article: any) => (
                     <Link
                       key={article.id}
                       href={`/wiki/${article.slug}`}
                       onClick={() => setIsOpen(false)}
-                      className="block px-3 py-2 hover:bg-gray-50 rounded"
+                      className={`block rounded px-3 py-2 transition ${
+                        isInverted
+                          ? 'text-white/80 hover:bg-white/10'
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
-                      <div className="font-medium text-sm">{article.title}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-medium">{article.title}</div>
+                      <div
+                        className={`text-xs ${
+                          isInverted ? 'text-white/50' : 'text-gray-500'
+                        }`}
+                      >
                         Wiki • Versiya {article.version}
                       </div>
                     </Link>
@@ -190,7 +277,11 @@ export default function SearchBar({ onClose, className = '' }: SearchBarProps) {
               )}
 
               {results.total === 0 && (
-                <div className="p-4 text-center text-gray-500">
+                <div
+                  className={`p-4 text-center ${
+                    isInverted ? 'text-white/60' : 'text-gray-500'
+                  }`}
+                >
                   Hech narsa topilmadi
                 </div>
               )}

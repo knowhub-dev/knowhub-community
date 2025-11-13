@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Comment;
 use App\Models\WikiArticle;
 use App\Models\CodeRun;
+use App\Models\XpTransaction;
 use App\Models\Category;
 use App\Models\Tag;
 use Illuminate\Support\Facades\Cache;
@@ -91,7 +92,7 @@ class StatsController extends Controller
     public function homepage()
     {
         $cacheKey = 'homepage:stats';
-        
+
         $data = Cache::remember($cacheKey, 600, function () {
             return [
                 'stats' => [
@@ -159,5 +160,57 @@ class StatsController extends Controller
         });
 
         return response()->json($data);
+    }
+
+    public function weeklyHeroes()
+    {
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
+
+        $xpLeaders = XpTransaction::query()
+            ->with(['user:id,name,username,avatar_url,xp'])
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->select('user_id', DB::raw('SUM(amount) as total_xp'))
+            ->groupBy('user_id')
+            ->orderByDesc('total_xp')
+            ->limit(5)
+            ->get()
+            ->map(function (XpTransaction $transaction) {
+                return [
+                    'user' => $transaction->user ? $transaction->user->only(['id', 'name', 'username', 'avatar_url', 'xp']) : null,
+                    'total_xp' => (int) $transaction->total_xp,
+                ];
+            })
+            ->filter(fn ($item) => $item['user'] !== null)
+            ->values();
+
+        $postLeaders = Post::query()
+            ->with(['user:id,name,username,avatar_url,xp'])
+            ->where('status', 'published')
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->select('user_id', DB::raw('SUM(score) as total_score'), DB::raw('COUNT(*) as posts_count'))
+            ->groupBy('user_id')
+            ->orderByDesc(DB::raw('SUM(score)'))
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->limit(5)
+            ->get()
+            ->map(function (Post $post) {
+                return [
+                    'user' => $post->user ? $post->user->only(['id', 'name', 'username', 'avatar_url', 'xp']) : null,
+                    'total_score' => (int) ($post->total_score ?? 0),
+                    'posts_count' => (int) ($post->posts_count ?? 0),
+                ];
+            })
+            ->filter(fn ($item) => $item['user'] !== null)
+            ->values();
+
+        return response()->json([
+            'range' => [
+                'start' => $startOfWeek->toISOString(),
+                'end' => $endOfWeek->toISOString(),
+            ],
+            'xp' => $xpLeaders,
+            'post_authors' => $postLeaders,
+        ]);
     }
 }

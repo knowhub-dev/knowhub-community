@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\Container;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Config;
 
 class ContainerPolicy
 {
@@ -21,7 +21,7 @@ class ContainerPolicy
      */
     public function view(User $user, Container $container): bool
     {
-        return $user->id === $container->user_id || $user->hasRole('admin');
+        return $user->id === $container->user_id || $user->is_admin;
     }
 
     /**
@@ -29,8 +29,18 @@ class ContainerPolicy
      */
     public function create(User $user): bool
     {
-        // Check if user has enough XP or is admin
-        return $user->level->required_xp >= 1000 || $user->hasRole('admin');
+        if ($user->is_admin) {
+            return true;
+        }
+
+        $minXp = (int) Config::get('containers.min_xp_required', 0);
+        $maxContainers = (int) Config::get('containers.max_containers_per_user', PHP_INT_MAX);
+
+        if ($user->xp < $minXp) {
+            return false;
+        }
+
+        return $user->containers()->count() < $maxContainers;
     }
 
     /**
@@ -38,7 +48,7 @@ class ContainerPolicy
      */
     public function update(User $user, Container $container): bool
     {
-        return $user->id === $container->user_id || $user->hasRole('admin');
+        return $user->id === $container->user_id || $user->is_admin;
     }
 
     /**
@@ -46,7 +56,7 @@ class ContainerPolicy
      */
     public function delete(User $user, Container $container): bool
     {
-        return $user->id === $container->user_id || $user->hasRole('admin');
+        return $user->id === $container->user_id || $user->is_admin;
     }
 
     /**
@@ -54,7 +64,7 @@ class ContainerPolicy
      */
     public function restore(User $user, Container $container): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin;
     }
 
     /**
@@ -62,6 +72,6 @@ class ContainerPolicy
      */
     public function forceDelete(User $user, Container $container): bool
     {
-        return $user->hasRole('admin');
-    }
+        return $user->is_admin;
+}
 }

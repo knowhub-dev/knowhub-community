@@ -2,6 +2,7 @@ import path from 'path';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   trailingSlash: true,
   turbopack: {
     // Ensure Turbopack uses the correct workspace root (frontend project root)
@@ -9,7 +10,17 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
   images: {
-    unoptimized: true
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'knowhub.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.knowhub.uz',
+      },
+    ],
   },
   eslint: {
     ignoreDuringBuilds: true,
