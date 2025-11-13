@@ -19,40 +19,46 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Compass,
-  PenSquare,
-  Sparkles,
-  Zap,
-} from "lucide-react";
-import { api } from "@/lib/api";
+import type { Post } from "@/types";
 
-interface StatShape {
-  postsCount?: number;
-  usersCount?: number;
-  topTags?: string[];
-}
-
-interface PostShort {
-  id: number;
-  title: string;
-  slug: string;
+type PostSummary = Pick<Post, "id" | "slug" | "title" | "content_markdown" | "score" | "created_at" | "user"> & {
   excerpt?: string;
   summary?: string;
   content_preview?: string;
-  content_markdown?: string;
   content?: string;
-  created_at?: string;
-  score?: number;
-  user?: {
-    id: number;
-    name: string;
-    username: string;
-    avatar_url?: string;
+};
+
+type TagSummary = {
+  id?: number;
+  name: string;
+  slug: string;
+  usage_count?: number;
+};
+
+type HomepageStatsResponse = {
+  stats?: {
+    users?: {
+      total?: number;
+      active_today?: number;
+      new_this_week?: number;
+    };
+    posts?: {
+      total?: number;
+      today?: number;
+      this_week?: number;
+    };
+    comments?: {
+      total?: number;
+      today?: number;
+    };
+    wiki?: {
+      articles?: number;
+    };
   };
+  trending_posts?: PostSummary[];
+  latest_posts?: PostSummary[];
+  trending_tags?: TagSummary[];
+  featured_post?: PostSummary | null;
 };
 
 type HeroEntry = {
@@ -100,37 +106,16 @@ type ActivityEvent = {
     icon?: string | null;
     xp_reward?: number;
   };
-  slug?: string;
-  user?: any;
-}
+};
 
-const formatNumber = (value?: number) =>
-  typeof value === "number" ? value.toLocaleString("en-US") : "—";
-
-const buildSnippet = (post: PostShort, length = 160) => {
-  const raw =
-    post.excerpt ??
-    (post as any)?.summary ??
-    (post as any)?.content_preview ??
-    (post as any)?.content_markdown ??
-    (post as any)?.content ??
-    "";
-
-  if (typeof raw !== "string" || raw.length === 0) {
-    return "";
-  }
-
-  const clean = raw.replace(/[#*_`>\-]/g, " ").replace(/\s+/g, " ").trim();
-  return clean.length > length ? `${clean.slice(0, length)}…` : clean;
+type ActivityFeedResponse = {
+  data: ActivityEvent[];
 };
 
 const LANGUAGE_SNIPPETS: Record<string, string> = {
-  javascript: `function greet(name) {\n  return \`Salom, ${"${name}"}!\`;\n}\n\nconsole.log(greet('KnowHub'));
-`,
-  python: `def greet(name):\n    return f"Salom, {name}!"\n\nprint(greet("KnowHub"))
-`,
-  php: `<?php\nfunction greet($name) {\n    return "Salom, {$name}!";\n}\n\necho greet('KnowHub');
-`,
+  javascript: `function greet(name) {\n  return \`Salom, \${name}!\`;\n}\n\nconsole.log(greet('KnowHub'));`,
+  python: `def greet(name):\n    return f"Salom, {name}!"\n\nprint(greet("KnowHub"))`,
+  php: `<?php\nfunction greet($name) {\n    return "Salom, {$name}!";\n}\n\necho greet('KnowHub');`,
 };
 
 const LANGUAGES = [
@@ -142,7 +127,7 @@ const LANGUAGES = [
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
 
-const buildSnippet = (post: PostShort, length = 160) => {
+const buildSnippet = (post: PostSummary, length = 160) => {
   const raw =
     post.excerpt ??
     post.summary ??
@@ -284,14 +269,10 @@ function CodeRunnerCard() {
           <div className="space-y-2">
             {result.message && <p className="text-amber-300">{result.message}</p>}
             {result.stdout && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-emerald-300">
-                {result.stdout}
-              </pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-emerald-300">{result.stdout}</pre>
             )}
             {result.stderr && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-rose-300">
-                {result.stderr}
-              </pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-rose-300">{result.stderr}</pre>
             )}
             {result.status && !result.message && (
               <p className="text-xs uppercase tracking-wider text-cyan-300">Holat: {result.status}</p>
@@ -346,9 +327,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
                     {entry.user.name}
                   </Link>
                 </div>
-                <span className="text-xs font-semibold text-cyan-500">
-                  +{formatNumber(entry.total_xp ?? 0)} XP
-                </span>
+                <span className="text-xs font-semibold text-cyan-500">+{formatNumber(entry.total_xp ?? 0)} XP</span>
               </li>
             ))}
             {!xpLeaders.length && <li className="text-xs text-slate-500">Hali XP bo'yicha ma'lumot yo'q.</li>}
@@ -371,9 +350,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
                   </Link>
                 </div>
                 <div className="text-right text-xs text-slate-500 dark:text-slate-300">
-                  <p className="font-semibold text-indigo-500 dark:text-indigo-300">
-                    {formatNumber(entry.total_score ?? 0)} ovoz
-                  </p>
+                  <p className="font-semibold text-indigo-500 dark:text-indigo-300">{formatNumber(entry.total_score ?? 0)} ovoz</p>
                   <p>{formatNumber(entry.posts_count ?? 0)} post</p>
                 </div>
               </li>
@@ -417,12 +394,8 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
     if (event.type === "comment" && event.payload?.post) {
       return (
         <div>
-          <p className="font-medium text-slate-900 dark:text-slate-100">
-            Izoh: {event.payload.post.title}
-          </p>
-          {event.payload.excerpt && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">{event.payload.excerpt}</p>
-          )}
+          <p className="font-medium text-slate-900 dark:text-slate-100">Izoh: {event.payload.post.title}</p>
+          {event.payload.excerpt && <p className="text-xs text-slate-500 dark:text-slate-400">{event.payload.excerpt}</p>}
         </div>
       );
     }
@@ -453,9 +426,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
             key={`${event.type}-${event.id}`}
             className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-slate-700/70 dark:bg-slate-900/70"
           >
-            <div className="mt-1 rounded-full bg-slate-900/80 p-2 dark:bg-slate-800/80">
-              {iconForType(event.type)}
-            </div>
+            <div className="mt-1 rounded-full bg-slate-900/80 p-2 dark:bg-slate-800/80">{iconForType(event.type)}</div>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 {event.user ? (
@@ -481,9 +452,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
 }
 
 export default function HomePage() {
-  const [homeStats, setHomeStats] = useState<any | null>(null);
-  const [trendingPosts, setTrendingPosts] = useState<PostShort[]>([]);
-  const [latestPosts, setLatestPosts] = useState<PostShort[]>([]);
+  const [homeStats, setHomeStats] = useState<HomepageStatsResponse | null>(null);
   const [heroes, setHeroes] = useState<WeeklyHeroesResponse | null>(null);
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -521,55 +490,66 @@ export default function HomePage() {
   );
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
     setLoading(true);
     setError(null);
 
-    async function load() {
+    (async () => {
+      const issues: string[] = [];
       try {
-        const [statsRes, heroesRes, feedRes] = await Promise.all([
-          api.get("/stats/homepage").catch(() => ({ data: null })),
-          api.get("/stats/weekly-heroes").catch(() => ({ data: null })),
-          api.get("/activity-feed", { params: { limit: 12 } }).catch(() => ({ data: { data: [] } })),
+        const [statsResult, heroesResult, feedResult] = await Promise.allSettled([
+          api.get<HomepageStatsResponse>("/stats/homepage"),
+          api.get<WeeklyHeroesResponse>("/stats/weekly-heroes"),
+          api.get<ActivityFeedResponse>("/activity-feed", { params: { limit: 12 } }),
         ]);
 
-        if (!mounted) return;
+        if (statsResult.status === "fulfilled") {
+          if (active) {
+            setHomeStats(statsResult.value.data ?? null);
+          }
+        } else {
+          issues.push("Bosh sahifa statistikasi yuklanmadi");
+          if (active) {
+            setHomeStats(null);
+          }
+        }
 
-        setHomeStats(statsRes.data ?? null);
-        setTrendingPosts((statsRes.data?.trending_posts ?? []) as PostShort[]);
-        setLatestPosts((statsRes.data?.latest_posts ?? []) as PostShort[]);
-        setHeroes(heroesRes.data ?? null);
-        setFeed((feedRes.data?.data ?? []) as ActivityEvent[]);
-        setStats(sRes.data ?? null);
+        if (heroesResult.status === "fulfilled") {
+          if (active) {
+            setHeroes(heroesResult.value.data ?? null);
+          }
+        } else if (active) {
+          setHeroes(null);
+        }
 
-        const trendingData = Array.isArray(tRes.data)
-          ? tRes.data
-          : tRes.data?.data ?? tRes.data?.posts ?? [];
-        setTrending(trendingData.slice(0, 5));
-
-        const postsData = Array.isArray(pRes.data)
-          ? pRes.data
-          : pRes.data?.data ?? pRes.data?.posts ?? [];
-        setPosts(postsData.slice(0, 8));
+        if (feedResult.status === "fulfilled") {
+          if (active) {
+            setFeed(feedResult.value.data?.data ?? []);
+          }
+        } else if (active) {
+          setFeed([]);
+        }
       } catch (err: any) {
-        if (!mounted) return;
-        setError(err?.message ?? "Ma'lumotlarni yuklashda xatolik yuz berdi");
+        issues.push(err?.message ?? "Ma'lumotlarni yuklashda xatolik yuz berdi");
       } finally {
-        if (mounted) setLoading(false);
+        if (!active) {
+          return;
+        }
+        setError(issues.length ? issues.join(". ") : null);
+        setLoading(false);
       }
-    }
-
-    load();
+    })();
 
     return () => {
-      mounted = false;
+      active = false;
     };
   }, []);
 
+  const latestPosts = homeStats?.latest_posts ?? [];
   const spotlightPost = latestPosts[0];
   const secondaryPosts = latestPosts.slice(1, 4);
   const queuePosts = latestPosts.slice(4, 9);
-  const trendingTags: any[] = homeStats?.trending_tags ?? [];
+  const trendingTags = homeStats?.trending_tags ?? [];
 
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
@@ -599,10 +579,11 @@ export default function HomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/posts"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
+                href="/containers"
+                className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/20"
               >
-                So'nggi yangiliklar
+                Mini-serverlarni boshlash
+                <Server className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
@@ -611,9 +592,7 @@ export default function HomePage() {
                   <PenSquare className="h-4 w-4" />
                   Postlar
                 </div>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatNumber(homeStats?.stats?.posts?.total)}
-                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.posts?.total)}</p>
                 <p>Umumiy maqolalar</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -621,9 +600,7 @@ export default function HomePage() {
                   <Users className="h-4 w-4" />
                   A'zolar
                 </div>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatNumber(homeStats?.stats?.users?.total)}
-                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.users?.total)}</p>
                 <p>Faol hamjamiyat</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -631,9 +608,7 @@ export default function HomePage() {
                   <BookOpen className="h-4 w-4" />
                   Wiki
                 </div>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatNumber(homeStats?.stats?.wiki?.articles)}
-                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.wiki?.articles)}</p>
                 <p>Bilim maqolalari</p>
               </div>
             </div>
@@ -688,9 +663,7 @@ export default function HomePage() {
               <Server className="h-5 w-5" />
               O'z g'oyangizni sinang
             </div>
-            <h2 className="mt-6 text-2xl font-semibold text-white">
-              Bir klikda shaxsiy mini serveringizni ishga tushiring.
-            </h2>
+            <h2 className="mt-6 text-2xl font-semibold text-white">Bir klikda shaxsiy mini serveringizni ishga tushiring.</h2>
             <p className="mt-3 max-w-xl text-sm text-slate-300">
               Izolyatsiyalangan Docker muhiti, resurs limitlari va xavfsizlik siyosatlari bilan tajribangizni real vaqt rejimida sinovdan o'tkazing.
             </p>
@@ -721,14 +694,8 @@ export default function HomePage() {
                 <h3 className="mt-4 text-2xl font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">
                   {spotlightPost.title}
                 </h3>
-                <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">
-                  {buildSnippet(spotlightPost, 220)}
-                </p>
-                {spotlightPost.user && (
-                  <p className="mt-4 text-xs text-slate-400">
-                    Muallif: {spotlightPost.user.name}
-                  </p>
-                )}
+                <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{buildSnippet(spotlightPost, 220)}</p>
+                {spotlightPost.user && <p className="mt-4 text-xs text-slate-400">Muallif: {spotlightPost.user.name}</p>}
               </Link>
             ) : (
               <div className="rounded-3xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
@@ -742,221 +709,31 @@ export default function HomePage() {
                   href={`/posts/${post.slug}`}
                   className="group rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm transition hover:border-emerald-300/70 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70"
                 >
-                  <h4 className="text-base font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">
-                    {post.title}
-                  </h4>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">
-                    {buildSnippet(post, 120)}
-                  </p>
+                  <h4 className="text-base font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">{post.title}</h4>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">{buildSnippet(post, 120)}</p>
                   <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-500">
                     Batafsil <ArrowRight className="h-3 w-3" />
                   </span>
-  useEffect(() => {
-    if (!stats?.topTags || stats.topTags.length < 2) {
-      return;
-    }
-
-    const id = window.setInterval(() => {
-      setActiveTagIndex((index) => (index + 1) % stats.topTags!.length);
-    }, 3200);
-
-    return () => window.clearInterval(id);
-  }, [stats?.topTags]);
-
-  const activeTag = stats?.topTags?.[activeTagIndex];
-  const spotlightPost = posts[0];
-  const spotlightSnippet = spotlightPost ? buildSnippet(spotlightPost, 220) : "";
-  const supportingPosts = posts.slice(1, 5);
-  const archivePosts = posts.slice(5, 8);
-
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-[#05070f] text-slate-100">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-10%] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-cyan-500/30 blur-[120px]" />
-        <div className="absolute bottom-[-15%] right-[8%] h-[380px] w-[380px] rounded-full bg-purple-500/20 blur-[140px]" />
-        <div className="absolute inset-x-0 top-40 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      </div>
-
-      <div className="relative flex flex-col gap-20 pb-24">
-        <header className="px-6 pt-16 sm:pt-20">
-          <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[1.15fr,0.85fr]">
-            <div className="space-y-9">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white/70">
-                KnowHub 2.0
-              </span>
-              <div className="space-y-5">
-                <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-                  Texnologik hamjamiyat uchun strategik bosh sahifa.
-                </h1>
-                <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
-                  Yangi g'oyalarni baham ko'ring, mini serverlarda sinovdan o'tkazing va hamjamiyatning tajribasidan ilhom oling. Hammasi bir joyda, fokus va ritmni yo'qotmagan holda.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href="/posts/create"
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:opacity-90"
-                >
-                  Yangi post yozish
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/posts"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
-                >
-                  So'nggi postlar
-                </Link>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 sm:text-sm">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                  {formatNumber(stats?.postsCount)}+ postlar
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                  Hamjamiyat: {formatNumber(stats?.usersCount)}+
-                </span>
-                {activeTag && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    Trend tegi: #{activeTag}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-white/50">Samaradorlik paneli</p>
-                  <p className="mt-2 text-lg font-semibold text-white">Hamjamiyat pulsini kuzating</p>
-                </div>
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[0.65rem] text-white/60">
-                  {loading ? "Yangilanmoqda" : "Real-time"}
-                </span>
-              </div>
-              {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 3 }).map((_, idx) => (
-                    <div key={idx} className="h-16 rounded-2xl border border-white/10 bg-white/5" />
-                  ))}
-                </div>
-              ) : error ? (
-                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-                  {error}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
-                    <span className="text-sm text-slate-300">Faol ijodkorlar</span>
-                    <span className="text-2xl font-semibold text-white">{formatNumber(stats?.usersCount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
-                    <span className="text-sm text-slate-300">Jamiyatdagi postlar</span>
-                    <span className="text-2xl font-semibold text-white">{formatNumber(stats?.postsCount)}</span>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-[#0b1120] px-4 py-4">
-                    <p className="text-xs uppercase tracking-[0.4em] text-white/40">Trend teglari</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {stats?.topTags?.length ? (
-                        stats.topTags.map((tag) => (
-                          <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
-                            #{tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-slate-400">Hali teglarga oid ma'lumot yo'q.</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
-
-        <section className="grid gap-8 lg:grid-cols-[1.6fr,1fr]">
-          <div className="space-y-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold text-white sm:text-3xl">So‘nggi missiyalar</h2>
-                <p className="text-sm text-white/60">
-                  Hamjamiyat a’zolari ayni damda nimalar yaratmoqda — eng yangi postlar.
-                </p>
-              </div>
-              <span className="text-xs uppercase tracking-[0.35em] text-white/40">
-                {loading ? "Yuklanmoqda" : `${posts.length} ta post`}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {loading && (
-                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/50">
-                  So‘nggi signallarni qabul qilmoqdamiz…
-                </div>
-              )}
-              {!loading && posts.length === 0 && (
-                <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center text-white/60">
-                  Hozircha missiyalar mavjud emas. Birinchi bo‘lib boshlang!
-                </div>
-              )}
-              {!loading &&
-                posts.map((p) => (
-                  <div key={p.id} className="group relative">
-                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                    <PostCard post={p as any} />
-                  </div>
-                ))}
-            </div>
-          </div>
-        </header>
-
-        <section className="px-6">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <h2 className="text-xl font-semibold text-white sm:text-2xl">Mission rejimi</h2>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-              >
-                Profil paneliga o'tish
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.title}
-                  href={action.href}
-                  className={`group flex flex-col gap-3 rounded-2xl border px-5 py-6 transition duration-300 hover:-translate-y-1 hover:border-white/40 hover:shadow-[0_20px_45px_-25px_rgba(15,118,230,0.8)] ${action.accent}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <action.icon className="h-5 w-5" />
-                    <ArrowUpRight className="h-4 w-4 text-current opacity-60 transition group-hover:translate-x-1" />
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="text-base font-semibold text-white">{action.title}</p>
-                    <p className="text-slate-200/80">{action.description}</p>
-                  </div>
                 </Link>
               ))}
             </div>
           </div>
           <div className="w-full max-w-md space-y-6">
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500">
-                Monitoring navbat
-              </h3>
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Monitoring navbat</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 {queuePosts.map((post) => (
-                  <li key={post.id} className="rounded-xl border border-transparent px-3 py-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10">
+                  <li
+                    key={post.id}
+                    className="rounded-xl border border-transparent px-3 py-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10"
+                  >
                     <Link
                       href={`/posts/${post.slug}`}
                       className="font-medium text-slate-700 hover:text-emerald-500 dark:text-slate-200 dark:hover:text-emerald-300"
                     >
                       {post.title}
                     </Link>
-                    <p className="text-xs text-slate-400">
-                      {timeAgo(post.created_at)}
-                    </p>
+                    <p className="text-xs text-slate-400">{timeAgo(post.created_at)}</p>
                   </li>
                 ))}
                 {!queuePosts.length && <li className="text-xs text-slate-500">Keyingi postlar hali yo'q.</li>}
@@ -966,7 +743,7 @@ export default function HomePage() {
               <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                 <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-500">Trend teglar</h3>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  {trendingTags.slice(0, 12).map((tag: any) => (
+                  {trendingTags.slice(0, 12).map((tag) => (
                     <span
                       key={tag.slug ?? tag.name}
                       className="rounded-full border border-slate-200/60 bg-slate-100/70 px-3 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"
@@ -996,148 +773,6 @@ export default function HomePage() {
           Ma'lumotlar yuklanmoqda...
         </div>
       )}
-        </section>
-
-        <section className="px-6">
-          <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[0.85fr,1.15fr]">
-            <div className="space-y-6">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <h2 className="text-xl font-semibold text-white sm:text-2xl">Trend signallari</h2>
-                <Link
-                  href="/posts?sort=trending"
-                  className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
-                >
-                  Barchasini ko'rish
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {trending.length === 0 && !loading ? (
-                  <p className="text-sm text-slate-400">Hozircha trend postlar aniqlanmadi.</p>
-                ) : (
-                  trending.map((post, index) => {
-                    const snippet = buildSnippet(post, 140);
-                    return (
-                      <Link
-                        key={post.id}
-                        href={post.slug ? `/posts/${post.slug}` : "#"}
-                        className="group rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition hover:border-cyan-400/40 hover:bg-white/[0.08]"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-cyan-200">
-                            {(index + 1).toString().padStart(2, "0")}
-                          </span>
-                          <div className="flex-1 space-y-1">
-                            <p className="text-base font-semibold text-white group-hover:text-cyan-100">
-                              {post.title}
-                            </p>
-                            {snippet && (
-                              <p className="text-sm text-slate-300 line-clamp-2">{snippet}</p>
-                            )}
-                          </div>
-                          <ArrowRight className="mt-1 h-4 w-4 text-white/40 group-hover:text-cyan-200" />
-                        </div>
-                      </Link>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <h2 className="text-xl font-semibold text-white sm:text-2xl">Yangi postlar</h2>
-                <Link
-                  href="/posts"
-                  className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
-                >
-                  Barchasini ko'rish
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              {loading ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {Array.from({ length: 4 }).map((_, idx) => (
-                    <div key={idx} className="h-48 rounded-2xl border border-white/10 bg-white/5" />
-                  ))}
-                </div>
-              ) : posts.length === 0 ? (
-                <p className="text-sm text-slate-400">Hali postlar qo'shilmagan.</p>
-              ) : (
-                <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-                  <Link
-                    href={spotlightPost?.slug ? `/posts/${spotlightPost.slug}` : "#"}
-                    className="group flex flex-col justify-between rounded-3xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 p-6 shadow-[0_20px_60px_-40px_rgba(56,189,248,0.8)] transition hover:border-cyan-400/60"
-                  >
-                    <div className="space-y-4">
-                      <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/70">
-                        Spotlight
-                      </span>
-                      <p className="text-2xl font-semibold text-white sm:text-3xl">
-                        {spotlightPost?.title}
-                      </p>
-                      {spotlightSnippet && (
-                        <p className="text-sm text-slate-200/80 line-clamp-3">{spotlightSnippet}</p>
-                      )}
-                    </div>
-                    <div className="mt-6 flex items-center justify-between text-xs text-white/60">
-                      <span className="inline-flex items-center gap-2">
-                        <ArrowRight className="h-4 w-4 text-cyan-200" />
-                        Batafsil o'qish
-                      </span>
-                      <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                        #{spotlightPost?.user?.name ?? "KnowHub"}
-                      </span>
-                    </div>
-                  </Link>
-                  <div className="flex flex-col gap-4">
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                      {supportingPosts.map((post) => {
-                        const snippet = buildSnippet(post);
-                        return (
-                          <Link
-                            key={post.id}
-                            href={post.slug ? `/posts/${post.slug}` : "#"}
-                            className="group rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition hover:border-cyan-300/40 hover:bg-white/[0.1]"
-                          >
-                            <p className="text-lg font-semibold text-white group-hover:text-cyan-100">{post.title}</p>
-                            {snippet && (
-                              <p className="mt-2 text-sm text-slate-300 line-clamp-3">{snippet}</p>
-                            )}
-                            <div className="mt-4 inline-flex items-center gap-2 text-xs text-white/60">
-                              <ArrowRight className="h-3.5 w-3.5" />
-                              Davomini o'qing
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                    {archivePosts.length > 0 && (
-                      <div className="border-t border-white/5 pt-4">
-                        <p className="text-xs uppercase tracking-[0.35em] text-white/40">Monitoring</p>
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          {archivePosts.map((post) => (
-                            <Link
-                              key={post.id}
-                              href={post.slug ? `/posts/${post.slug}` : "#"}
-                              className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.04] px-4 py-3 transition hover:border-cyan-300/40 hover:bg-white/[0.08]"
-                            >
-                              <span className="text-sm font-medium text-white/80 group-hover:text-cyan-100 line-clamp-2">
-                                {post.title}
-                              </span>
-                              <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-cyan-200" />
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
     </main>
   );
 }
