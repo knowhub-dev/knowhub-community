@@ -3,6 +3,7 @@ export interface Container {
     user_id: number;
     container_id: string | null;
     name: string;
+    subdomain?: string | null;
     image: string;
     status: 'created' | 'running' | 'stopped' | 'failed';
     cpu_limit: number;
@@ -28,6 +29,7 @@ export interface ContainerStats {
 
 export interface CreateContainerDto {
     name: string;
+    subdomain?: string;
     image: string;
     cpu_limit: number;
     memory_limit: number;
@@ -44,4 +46,8 @@ export interface ContainerOptions {
     min_xp_required: number;
     max_env_vars: number;
     env_value_max_length: number;
+    domain_suffix?: string | null;
+    reserved_subdomains?: string[];
+    subdomain_min_length?: number;
+    subdomain_max_length?: number;
 }

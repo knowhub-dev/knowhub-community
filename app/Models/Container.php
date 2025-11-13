@@ -10,6 +10,7 @@ class Container extends Model
         'user_id',
         'container_id',
         'name',
+        'subdomain',
         'image',
         'status',
         'cpu_limit',

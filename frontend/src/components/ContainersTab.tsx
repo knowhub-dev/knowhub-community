@@ -18,8 +18,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
-const DEFAULT_CONTAINER = {
+const DEFAULT_CONTAINER: CreateContainerDto = {
   name: '',
+  subdomain: '',
   image: '',
   cpu_limit: 1,
   memory_limit: 512,
@@ -43,6 +44,10 @@ export default function ContainersTab() {
   });
 
   const allowedImages = options?.allowed_images ?? [];
+  const domainSuffix = options?.domain_suffix ?? null;
+  const reservedSubdomains = options?.reserved_subdomains ?? [];
+  const subdomainMin = options?.subdomain_min_length ?? 3;
+  const subdomainMax = options?.subdomain_max_length ?? 30;
   const remainingSlots = options?.remaining_slots ?? null;
   const isCreateDisabled =
     !options ||
@@ -151,6 +156,38 @@ export default function ContainersTab() {
                   }
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subdomain">Subdomain</Label>
+                <div className="flex items-center">
+                  <Input
+                    id="subdomain"
+                    value={formData.subdomain ?? ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, subdomain: e.target.value.toLowerCase() })
+                    }
+                    placeholder="project"
+                    className="rounded-r-none"
+                    minLength={subdomainMin}
+                    maxLength={subdomainMax}
+                  />
+                  <span className="inline-flex h-9 items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    {domainSuffix ? `.${domainSuffix}` : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {subdomainMin}-{subdomainMax} ta kichik harf, raqam yoki tiredan foydalaning.
+                </p>
+                {domainSuffix && (
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                    To'liq manzil: {formData.subdomain ? `${formData.subdomain}.${domainSuffix}` : `*.${domainSuffix}`}
+                  </p>
+                )}
+                {reservedSubdomains.length > 0 && (
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                    Band subdomenlar: {reservedSubdomains.join(', ')}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image">Image</Label>

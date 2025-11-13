@@ -20,6 +20,11 @@ return [
     'env_key_regex' => '/^[A-Z][A-Z0-9_]*$/',
     'env_value_max_length' => env('CONTAINER_ENV_VALUE_MAX', 256),
 
+    'reserved_subdomains' => array_filter(array_map('trim', explode(',', env('CONTAINER_RESERVED_SUBDOMAINS', 'www,admin,api,app')))),
+    'domain_suffix' => env('CONTAINER_DOMAIN_SUFFIX', env('APP_URL_BASE', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost')),
+    'subdomain_min_length' => env('CONTAINER_SUBDOMAIN_MIN_LENGTH', 3),
+    'subdomain_max_length' => env('CONTAINER_SUBDOMAIN_MAX_LENGTH', 30),
+
     'security' => [
         'readonly_root_filesystem' => env('CONTAINER_READONLY_ROOT', true),
         'pids_limit' => env('CONTAINER_PIDS_LIMIT', 64),

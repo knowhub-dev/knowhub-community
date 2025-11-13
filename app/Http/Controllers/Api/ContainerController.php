@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Throwable;
 use RuntimeException;
 
@@ -58,6 +59,26 @@ class ContainerController extends Controller
         $allowedImages = config('containers.allowed_images', []);
         $maxEnvVars = (int) config('containers.max_env_vars', 0);
         $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
+        $reservedSubdomains = config('containers.reserved_subdomains', []);
+        $minSubdomainLength = (int) config('containers.subdomain_min_length', 3);
+        $maxSubdomainLength = (int) config('containers.subdomain_max_length', 30);
+
+        $input = $request->all();
+        if (array_key_exists('subdomain', $input) && $input['subdomain'] !== null) {
+            $input['subdomain'] = $this->sanitizeSubdomain($input['subdomain']);
+        }
+
+        $validator = Validator::make($input, [
+            'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
+            'subdomain' => array_filter([
+                'nullable',
+                'string',
+                'min:' . $minSubdomainLength,
+                'max:' . $maxSubdomainLength,
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::notIn($reservedSubdomains),
+                Rule::unique('containers', 'subdomain'),
+            ]),
 
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
@@ -107,11 +128,19 @@ class ContainerController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $validated = $validator->validated();
+
+        $payload = collect($validated)
+            ->only(['name', 'subdomain', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
         $payload = collect($validator->validated())
             ->only(['name', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
             ->toArray();
 
         $payload['env_vars'] = $this->normalizeEnvVars($request->input('env_vars', []));
+
+        if (!empty($payload['subdomain'])) {
+            $payload['subdomain'] = $this->sanitizeSubdomain($payload['subdomain']);
+        }
 
         $container = new Container($payload);
         $container->user_id = $user->id;
@@ -216,6 +245,7 @@ class ContainerController extends Controller
         $currentCount = $user->containers()->count();
         $isAdmin = (bool) $user->is_admin;
         $remaining = $isAdmin ? null : max(0, $maxContainers - $currentCount);
+        $reservedSubdomains = config('containers.reserved_subdomains', []);
 
         return response()->json([
             'allowed_images' => $allowedImages,
@@ -226,6 +256,10 @@ class ContainerController extends Controller
             'min_xp_required' => (int) config('containers.min_xp_required', 0),
             'max_env_vars' => (int) config('containers.max_env_vars', 0),
             'env_value_max_length' => (int) config('containers.env_value_max_length', 0),
+            'domain_suffix' => config('containers.domain_suffix'),
+            'reserved_subdomains' => $reservedSubdomains,
+            'subdomain_min_length' => (int) config('containers.subdomain_min_length', 3),
+            'subdomain_max_length' => (int) config('containers.subdomain_max_length', 30),
         ]);
     }
 
@@ -261,5 +295,19 @@ class ContainerController extends Controller
         }
 
         return $normalized;
+    }
+
+    private function sanitizeSubdomain(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = Str::lower($value);
+        $normalized = preg_replace('/[^a-z0-9-]/', '-', $normalized) ?? '';
+        $normalized = preg_replace('/-+/', '-', $normalized) ?? '';
+        $normalized = trim($normalized, '-');
+
+        return $normalized !== '' ? $normalized : null;
     }
 }

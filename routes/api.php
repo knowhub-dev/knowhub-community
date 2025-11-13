@@ -7,7 +7,8 @@ use App\Http\Controllers\Api\V1\{
     PostController, CommentController, VoteController, TagController, CategoryController,
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController,
-    DashboardController, AdminController, StatsController
+    DashboardController, AdminController, StatsController, ActivityFeedController,
+    ProjectSubdomainController
 };
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
@@ -28,6 +29,8 @@ Route::prefix('v1')->group(function () {
     // Public Data
     Route::get('/stats/public', [StatsController::class, 'public']);
     Route::get('/stats/homepage', [StatsController::class, 'homepage']);
+    Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
+    Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -156,4 +159,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/wiki/{slug}/merge/{proposalId}', [WikiArticleController::class, 'merge']);
     });
 });
+
+$baseDomain = config('app.url_base');
+
+if ($baseDomain && $baseDomain !== 'localhost') {
+    Route::domain('{subdomain}.' . $baseDomain)->group(function () {
+        Route::get('/{path?}', [ProjectSubdomainController::class, 'serve'])
+            ->where('path', '.*');
+    });
+}
 
