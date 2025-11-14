@@ -74,54 +74,36 @@ git clone https://github.com/knowhub-dev/knowhub-community.git
 cd knowhub-community
 ```
 
-#### 2. Backend o'rnatish
+#### 2. Backend (Laravel API)ni ishga tushirish
 ```bash
-# Dependencies o'rnatish
-composer install
-
-# Environment file yaratish
 cp .env.example .env
-
-# Application key generatsiya qilish
+composer install
 php artisan key:generate
-
-# Database migratsiya va seed
 php artisan migrate --seed
-
-# Storage link yaratish
 php artisan storage:link
-
-# Cache tozalash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan serve # API http://localhost:8000 da ishlaydi
 ```
 
-#### 3. Frontend o'rnatish
+#### 3. Frontend (Next.js UI)ni ishga tushirish
 ```bash
 cd frontend
-
-# Dependencies o'rnatish
 npm install
 
-# Environment file yaratish
-cp .env.example .env.local
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
+echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000" >> .env.local
+echo "NEXT_PUBLIC_SITE_NAME=KnowHub Community" >> .env.local
+echo "NEXT_PUBLIC_SITE_DESCRIPTION=O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati." >> .env.local
 
-# Build qilish
-npm run build
+npm run dev # UI http://localhost:3000 da ishlaydi
 ```
 
-#### 4. Development server ishga tushirish
+#### 4. Qo'shimcha servislar (ixtiyoriy)
 ```bash
-# Backend (Laravel)
-php artisan serve
-
-# Frontend (Next.js) - yangi terminal oynasida
-cd frontend
-npm run dev
-
-# Queue worker (background jobs uchun) - yangi terminal oynasida
+# Queue worker (background jobs uchun)
 php artisan queue:work
+
+# Schedulerni lokalda ishga tushirish
+php artisan schedule:work
 ```
 
 ---
@@ -197,9 +179,17 @@ MAIL_PASSWORD=your_password
 #### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=https://api.knowhub.uz/api/v1
-NEXT_PUBLIC_APP_URL=https://knowhub.uz
+NEXT_PUBLIC_SITE_URL=https://knowhub.uz
+NEXT_PUBLIC_SITE_NAME="KnowHub Community"
+NEXT_PUBLIC_SITE_DESCRIPTION="O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati."
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your_ga_id
 ```
+
+### Branding va SEO boshqaruvi
+
+- Admin paneldagi **Settings** tab'i orqali sayt nomi, tagline, meta description/keywords va light/dark logolarni boshqarish mumkin.
+- Logolar `storage/app/public/branding` papkasida saqlanadi. Frontend bilan integratsiya uchun `php artisan storage:link` buyrug'ini ishga tushiring.
+- `NEXT_PUBLIC_SITE_*` o'zgaruvchilari default qiymat sifatida ishlatiladi; admin panel orqali yangilangan ma'lumotlar avtomatik tarzda API orqali UI ga yetkaziladi.
 
 ---
 

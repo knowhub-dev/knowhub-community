@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\V1\{
     PostController, CommentController, VoteController, TagController, CategoryController,
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController,
-    DashboardController, AdminController, StatsController
+    DashboardController, AdminController, StatsController, ActivityFeedController,
+    ProjectSubdomainController, BrandingController
 };
+use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Middleware\CacheMiddleware;
 
@@ -27,6 +29,9 @@ Route::prefix('v1')->group(function () {
     // Public Data
     Route::get('/stats/public', [StatsController::class, 'public']);
     Route::get('/stats/homepage', [StatsController::class, 'homepage']);
+    Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
+    Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
+    Route::get('/settings/logo', [BrandingController::class, 'show']);
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -44,6 +49,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/wiki', [WikiArticleController::class, 'index']);
         Route::get('/wiki/{slug}', [WikiArticleController::class, 'show']);
+        Route::get('/wiki/{slug}/proposals', [WikiArticleController::class, 'proposals']);
+        Route::get('/wiki/{slug}/proposals/{proposalId}/diff', [WikiArticleController::class, 'diff']);
     });
 
     // Search
@@ -68,6 +75,16 @@ Route::prefix('v1')->group(function () {
         Route::post('/posts', [PostController::class, 'store']);
         Route::put('/posts/{slug}', [PostController::class, 'update']);
         Route::delete('/posts/{slug}', [PostController::class, 'destroy']);
+
+        // Collaboration Sessions
+        Route::get('/posts/{slug}/collaborations/active', [CollaborationController::class, 'activeForPost']);
+        Route::post('/posts/{slug}/collaborations', [CollaborationController::class, 'store']);
+        Route::get('/collaborations/{session}', [CollaborationController::class, 'show']);
+        Route::post('/collaborations/{session}/join', [CollaborationController::class, 'join']);
+        Route::post('/collaborations/{session}/heartbeat', [CollaborationController::class, 'heartbeat']);
+        Route::post('/collaborations/{session}/events', [CollaborationController::class, 'recordEvent']);
+        Route::get('/collaborations/{session}/events', [CollaborationController::class, 'events']);
+        Route::post('/collaborations/{session}/close', [CollaborationController::class, 'close']);
 
         // Comments
         Route::post('/posts/{slug}/comments', [CommentController::class, 'store']);
@@ -125,15 +142,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/cache/clear', [AdminController::class, 'clearCache']);
             Route::post('/system/optimize', [AdminController::class, 'optimizeSystem']);
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
+            Route::post('/branding/logo', [BrandingController::class, 'store']);
+            Route::delete('/branding/logo', [BrandingController::class, 'destroy']);
 
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);
-            Route::get('/containers/{id}', [ContainerController::class, 'show']);
+            Route::get('/containers/options', [ContainerController::class, 'options']);
+            Route::get('/containers/{container}', [ContainerController::class, 'show']);
             Route::post('/containers', [ContainerController::class, 'store']);
-            Route::post('/containers/{id}/start', [ContainerController::class, 'start']);
-            Route::post('/containers/{id}/stop', [ContainerController::class, 'stop']);
-            Route::delete('/containers/{id}', [ContainerController::class, 'destroy']);
-            Route::get('/containers/{id}/stats', [ContainerController::class, 'stats']);
+            Route::post('/containers/{container}/start', [ContainerController::class, 'start']);
+            Route::post('/containers/{container}/stop', [ContainerController::class, 'stop']);
+            Route::delete('/containers/{container}', [ContainerController::class, 'destroy']);
+            Route::get('/containers/{container}/stats', [ContainerController::class, 'stats']);
         });
 
         // Wiki PR-like
@@ -142,4 +162,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/wiki/{slug}/merge/{proposalId}', [WikiArticleController::class, 'merge']);
     });
 });
+
+$baseDomain = config('app.url_base');
+
+if ($baseDomain && $baseDomain !== 'localhost') {
+    Route::domain('{subdomain}.' . $baseDomain)->group(function () {
+        Route::get('/{path?}', [ProjectSubdomainController::class, 'serve'])
+            ->where('path', '.*');
+    });
+}
 

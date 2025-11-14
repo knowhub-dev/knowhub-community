@@ -1,16 +1,96 @@
 'use client';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
-import { Menu, X, User, LogOut, Plus, Search, ChevronDown, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, Plus, ChevronDown, Settings, Sun, Moon } from 'lucide-react';
 import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
+import { useTheme } from '@/providers/ThemeProvider';
+import { api } from '@/lib/api';
+
+type BrandingLogo = {
+  url: string;
+  path?: string;
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const isHome = pathname === '/';
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+  const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const response = await api.get('/settings/logo');
+        if (!active) return;
+        setBranding({
+          light: response.data?.light ?? null,
+          dark: response.data?.dark ?? null,
+        });
+      } catch (error) {
+        if (!active) return;
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Logo fetch failed', error);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeLogo = useMemo(() => {
+    const selected = isDark ? branding.dark ?? branding.light : branding.light ?? branding.dark;
+    return selected ?? null;
+  }, [branding.dark, branding.light, isDark]);
+
+  const navBackgroundClass = isHome
+    ? 'border-b border-white/10 bg-slate-950/60 shadow-none backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/30'
+    : 'border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/90';
+
+  const linkTone = isHome
+    ? 'font-medium text-white/70 transition-colors hover:text-white'
+    : 'font-medium text-slate-700 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-sky-400';
+
+  const mutedActionClass = isHome
+    ? 'text-white/80 transition-colors hover:text-white'
+    : 'text-slate-700 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-sky-400';
+
+  const primaryCtaClass = isHome
+    ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30 hover:from-fuchsia-400 hover:via-indigo-500 hover:to-sky-400'
+    : 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-sky-500 dark:hover:bg-sky-400';
+
+  const ghostButtonClass = isHome
+    ? 'text-white/80 transition-colors hover:bg-white/10'
+    : 'text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60';
+
+  const searchVariant = isHome || isDark ? 'inverted' : 'default';
+
+  const mobileLinkClass = isHome
+    ? 'text-white/80 transition-colors hover:bg-white/10'
+    : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70';
+
+  const mobilePanelClass = isHome
+    ? 'border-white/10 bg-slate-950/80 text-white backdrop-blur'
+    : 'border-slate-200 bg-white/95 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-100 backdrop-blur';
+
+  const mobileToggleClass = isHome
+    ? 'text-white/80 transition-colors hover:bg-white/10'
+    : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60';
+
+  const mobileThemeCardClass = isHome
+    ? 'border-white/10 bg-white/5 text-white/80'
+    : 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700/70 dark:bg-slate-800/60 dark:text-slate-100';
 
   // Profile dropdown ni tashqariga bosilganda yopish
   useEffect(() => {
@@ -31,72 +111,104 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className={`sticky top-0 z-50 transition-colors ${navBackgroundClass}`}>
+      <div className="mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-full items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">KH</span>
-            </div>
-            <span className="font-bold text-xl text-gray-900 hidden sm:block">
+            {activeLogo ? (
+              <img
+                src={activeLogo.url}
+                alt="KnowHub logo"
+                className="h-9 w-auto"
+              />
+            ) : (
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm ${
+                  isHome
+                    ? 'bg-gradient-to-br from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/40'
+                    : 'bg-indigo-600 text-white dark:bg-sky-500'
+                }`}
+              >
+                KH
+              </div>
+            )}
+            <span
+              className={`hidden text-xl font-bold sm:block ${
+                isHome ? 'text-white' : 'text-slate-900 dark:text-white'
+              }`}
+            >
               KnowHub
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/posts" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+            <Link
+              href="/posts"
+              className={linkTone}
             >
               Postlar
             </Link>
-            <Link 
-              href="/users" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+            <Link
+              href="/users"
+              className={linkTone}
             >
               Foydalanuvchilar
             </Link>
-            <Link 
-              href="/wiki" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+            <Link
+              href="/wiki"
+              className={linkTone}
             >
               Wiki
             </Link>
-            <Link 
-              href="/leaderboard" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+            <Link
+              href="/leaderboard"
+              className={linkTone}
             >
               Reyting
             </Link>
           </div>
 
           {/* Search Bar */}
-          <SearchBar className="hidden md:flex flex-1 max-w-md mx-8" />
+          <SearchBar
+            className="hidden md:flex flex-1 max-w-md mx-8"
+            variant={searchVariant}
+          />
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle color scheme"
+              className={`rounded-lg p-2 transition-colors ${ghostButtonClass}`}
+            >
+              {isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </button>
             {user ? (
               <>
                 <NotificationDropdown />
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                  className={linkTone}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/posts/create"
-                  className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${primaryCtaClass}`}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Post yozish
                 </Link>
                 <div className="relative" ref={profileRef}>
-                  <button 
+                  <button
                     onClick={handleProfileToggle}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 focus:outline-none"
+                    className={`flex items-center space-x-2 focus:outline-none ${mutedActionClass}`}
                   >
                     <img
                       src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
@@ -106,12 +218,22 @@ export default function Navbar() {
                     <span className="font-medium">{user.name}</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                   </button>
-                  
+
                   {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div
+                      className={`absolute right-0 z-50 mt-2 w-48 rounded-lg border shadow-lg ${
+                        isHome
+                          ? 'border-white/10 bg-slate-950/90 text-white backdrop-blur'
+                          : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+                      }`}
+                    >
                       <Link
                         href={`/profile/${user.username}`}
-                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 transition-colors ${
+                          isHome
+                            ? 'text-white/80 hover:bg-white/10'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                        }`}
                         onClick={() => setIsProfileOpen(false)}
                       >
                         <User className="w-4 h-4 mr-2" />
@@ -119,7 +241,11 @@ export default function Navbar() {
                       </Link>
                       <Link
                         href="/settings/profile"
-                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 transition-colors ${
+                          isHome
+                            ? 'text-white/80 hover:bg-white/10'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                        }`}
                         onClick={() => setIsProfileOpen(false)}
                       >
                         <Settings className="w-4 h-4 mr-2" />
@@ -130,7 +256,11 @@ export default function Navbar() {
                           logout();
                           setIsProfileOpen(false);
                         }}
-                        className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex w-full items-center px-4 py-2 transition-colors ${
+                          isHome
+                            ? 'text-white/80 hover:bg-white/10'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                        }`}
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Chiqish
@@ -143,13 +273,13 @@ export default function Navbar() {
               <div className="flex items-center space-x-4">
                 <Link
                   href="/auth/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className={linkTone}
                 >
                   Kirish
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className={`rounded-lg px-4 py-2 transition-colors ${primaryCtaClass}`}
                 >
                   Ro'yxatdan o'tish
                 </Link>
@@ -160,7 +290,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
+            className={`rounded-lg p-2 md:hidden ${mobileToggleClass}`}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -168,37 +298,57 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
+          <div
+            className={`md:hidden border-t py-4 ${mobilePanelClass}`}
+          >
             <div className="space-y-4">
               {/* Mobile Search */}
-              <SearchBar onClose={() => setIsOpen(false)} />
+              <SearchBar
+                onClose={() => setIsOpen(false)}
+                variant={searchVariant}
+              />
+
+              <div className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm shadow-sm md:hidden ${mobileThemeCardClass}`}>
+                <span className="font-medium">
+                  Rejim
+                </span>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                  }}
+                  aria-label="Tungi rejimni almashtirish"
+                  className={`rounded-lg p-2 transition-colors ${mobileToggleClass}`}
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              </div>
 
               {/* Mobile Links */}
               <div className="space-y-2">
                 <Link
                   href="/posts"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Postlar
                 </Link>
                 <Link
                   href="/users"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Foydalanuvchilar
                 </Link>
                 <Link
                   href="/wiki"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Wiki
                 </Link>
                 <Link
                   href="/leaderboard"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Reyting
@@ -207,10 +357,14 @@ export default function Navbar() {
 
               {/* Mobile Auth */}
               {user ? (
-                <div className="space-y-2 pt-4 border-t border-gray-200">
+                <div
+                  className={`space-y-2 border-t pt-4 ${
+                    isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                >
                   <Link
                     href="/posts/create"
-                    className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg"
+                    className={`flex items-center rounded-lg px-3 py-2 ${primaryCtaClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -218,14 +372,14 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/dashboard"
-                    className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     href={`/profile/${user.username}`}
-                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     <img
@@ -237,7 +391,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/settings/profile"
-                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     <Settings className="w-4 h-4 mr-2" />
@@ -248,24 +402,28 @@ export default function Navbar() {
                       logout();
                       setIsOpen(false);
                     }}
-                    className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className={`flex w-full items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Chiqish
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2 pt-4 border-t border-gray-200">
+                <div
+                  className={`space-y-2 border-t pt-4 ${
+                    isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                >
                   <Link
                     href="/auth/login"
-                    className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     Kirish
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="block px-3 py-2 bg-indigo-600 text-white rounded-lg text-center"
+                    className={`block rounded-lg px-3 py-2 text-center ${primaryCtaClass}`}
                     onClick={() => setIsOpen(false)}
                   >
                     Ro'yxatdan o'tish
