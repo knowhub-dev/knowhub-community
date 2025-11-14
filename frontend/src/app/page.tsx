@@ -485,6 +485,37 @@ export default function HomePage() {
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTagIndex, setActiveTagIndex] = useState(0);
+
+  const quickActions = useMemo(
+    () => [
+      {
+        title: "Fikr almashish",
+        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
+        href: "/posts/create",
+        icon: PenSquare,
+        accent:
+          "border-cyan-500/40 bg-cyan-500/10 text-cyan-100 shadow-[0_0_25px_-12px_rgba(34,211,238,0.8)]",
+      },
+      {
+        title: "Mini serverni ishga tushiring",
+        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
+        href: "/containers",
+        icon: Zap,
+        accent:
+          "border-purple-500/40 bg-purple-500/10 text-purple-100 shadow-[0_0_25px_-12px_rgba(168,85,247,0.8)]",
+      },
+      {
+        title: "Wiki'ni boyiting",
+        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
+        href: "/wiki",
+        icon: Compass,
+        accent:
+          "border-sky-500/40 bg-sky-500/10 text-sky-100 shadow-[0_0_25px_-12px_rgba(56,189,248,0.8)]",
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     let active = true;
