@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
 
 interface Post {
   id: number;
@@ -56,11 +57,21 @@ export default async function PostPage({ params }: { params: { slug: string } })
   const post = await getPost(slug);
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose">
-        {post.content_markdown}
-      </ReactMarkdown>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6 space-y-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose max-w-none">
+            {post.content_markdown}
+          </ReactMarkdown>
+        </div>
+
+        <PostCollaborationPanelWrapper
+          postSlug={post.slug}
+          postOwnerId={post.user.id}
+          initialContent={post.content_markdown}
+        />
+      </div>
     </div>
   );
 }

@@ -60,4 +60,9 @@ class Post extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+
+    public function collaborationSessions(): HasMany
+    {
+        return $this->hasMany(CollaborationSession::class);
+    }
 }
