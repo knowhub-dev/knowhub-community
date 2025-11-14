@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Activity,
   ArrowRight,
@@ -16,10 +16,13 @@ import {
   Sparkles,
   TrendingUp,
   Users,
+  Zap,
+  Compass,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Post } from "@/types";
+
 
 type PostSummary = Pick<Post, "id" | "slug" | "title" | "content_markdown" | "score" | "created_at" | "user"> & {
   excerpt?: string;
