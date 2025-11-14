@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   ArrowRight,
@@ -16,13 +17,10 @@ import {
   Sparkles,
   TrendingUp,
   Users,
-  Zap,
-  Compass,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Post } from "@/types";
-
 
 type PostSummary = Pick<Post, "id" | "slug" | "title" | "content_markdown" | "score" | "created_at" | "user"> & {
   excerpt?: string;
@@ -113,6 +111,25 @@ type ActivityEvent = {
 
 type ActivityFeedResponse = {
   data: ActivityEvent[];
+};
+
+type StatCard = {
+  label: string;
+  value?: number;
+  subtitle: string;
+  icon: LucideIcon;
+  accentClass: string;
+};
+
+type QuickAction = {
+  href: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  accentClass: string;
+  hoverClass: string;
+  ctaLabel: string;
+  ctaClass: string;
 };
 
 const LANGUAGE_SNIPPETS: Record<string, string> = {
@@ -309,7 +326,9 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
         {heroes?.range?.start && (
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
             {new Date(heroes.range.start).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}
-            {heroes.range.end ? ` — ${new Date(heroes.range.end).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}` : ""}
+            {heroes.range.end
+              ? ` — ${new Date(heroes.range.end).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}`
+              : ""}
           </p>
         )}
       </div>
@@ -320,7 +339,10 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
           </h3>
           <ul className="space-y-3 text-sm">
             {xpLeaders.map((entry, index) => (
-              <li key={entry.user.id} className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70">
+              <li
+                key={`${entry.user.id}-xp`}
+                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+              >
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
                   <Link
@@ -342,7 +364,10 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
           </h3>
           <ul className="space-y-3 text-sm">
             {authors.map((entry, index) => (
-              <li key={entry.user.id} className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70">
+              <li
+                key={`${entry.user.id}-authors`}
+                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+              >
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
                   <Link
@@ -549,10 +574,69 @@ export default function HomePage() {
   }, []);
 
   const latestPosts = homeStats?.latest_posts ?? [];
-  const spotlightPost = latestPosts[0];
-  const secondaryPosts = latestPosts.slice(1, 4);
-  const queuePosts = latestPosts.slice(4, 9);
   const trendingTags = homeStats?.trending_tags ?? [];
+
+  const { spotlightPost, secondaryPosts, queuePosts } = useMemo(() => {
+    const [first, ...rest] = latestPosts;
+    return {
+      spotlightPost: first ?? null,
+      secondaryPosts: rest.slice(0, 3),
+      queuePosts: rest.slice(3, 8),
+    };
+  }, [latestPosts]);
+
+  const statsCards = useMemo<StatCard[]>(
+    () => [
+      {
+        label: "Postlar",
+        value: homeStats?.stats?.posts?.total,
+        subtitle: "Umumiy maqolalar",
+        icon: PenSquare,
+        accentClass: "text-cyan-300",
+      },
+      {
+        label: "A'zolar",
+        value: homeStats?.stats?.users?.total,
+        subtitle: "Faol hamjamiyat",
+        icon: Users,
+        accentClass: "text-emerald-300",
+      },
+      {
+        label: "Wiki",
+        value: homeStats?.stats?.wiki?.articles,
+        subtitle: "Bilim maqolalari",
+        icon: BookOpen,
+        accentClass: "text-indigo-300",
+      },
+    ],
+    [homeStats?.stats?.posts?.total, homeStats?.stats?.users?.total, homeStats?.stats?.wiki?.articles]
+  );
+
+  const quickActions = useMemo<QuickAction[]>(
+    () => [
+      {
+        href: "/posts/create",
+        title: "Fikr almashish",
+        description: "Muammolar va yechimlar bilan hamjamiyatni faollashtiring.",
+        icon: PenSquare,
+        accentClass: "text-cyan-600 dark:text-cyan-300",
+        hoverClass: "hover:border-cyan-400/70 hover:shadow-lg",
+        ctaLabel: "Boshlash",
+        ctaClass: "text-cyan-500",
+      },
+      {
+        href: "/wiki",
+        title: "Wiki'ni boyiting",
+        description: "Yangi maqola va tajribalarni qo'shib, bilim bazasini kengaytiring.",
+        icon: BookOpen,
+        accentClass: "text-indigo-600 dark:text-indigo-300",
+        hoverClass: "hover:border-indigo-400/70 hover:shadow-lg",
+        ctaLabel: "Ko'rish",
+        ctaClass: "text-indigo-500",
+      },
+    ],
+    []
+  );
 
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
@@ -590,30 +674,19 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center gap-2 text-cyan-300">
-                  <PenSquare className="h-4 w-4" />
-                  Postlar
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.posts?.total)}</p>
-                <p>Umumiy maqolalar</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center gap-2 text-emerald-300">
-                  <Users className="h-4 w-4" />
-                  A'zolar
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.users?.total)}</p>
-                <p>Faol hamjamiyat</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center gap-2 text-indigo-300">
-                  <BookOpen className="h-4 w-4" />
-                  Wiki
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(homeStats?.stats?.wiki?.articles)}</p>
-                <p>Bilim maqolalari</p>
-              </div>
+              {statsCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                      <Icon className="h-4 w-4" />
+                      {card.label}
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
+                    <p>{card.subtitle}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <CodeRunnerCard />
@@ -623,36 +696,25 @@ export default function HomePage() {
       <section className="max-w-6xl px-6 py-16 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/posts/create"
-              className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition hover:border-cyan-400/70 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70"
-            >
-              <div className="flex items-center gap-3 text-sm font-semibold text-cyan-600 dark:text-cyan-300">
-                <PenSquare className="h-5 w-5" />
-                Fikr almashish
-              </div>
-              <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">
-                Muammolar va yechimlar bilan hamjamiyatni faollashtiring.
-              </p>
-              <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-500">
-                Boshlash <ArrowRight className="h-3 w-3" />
-              </span>
-            </Link>
-            <Link
-              href="/wiki"
-              className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition hover:border-indigo-400/70 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70"
-            >
-              <div className="flex items-center gap-3 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
-                <BookOpen className="h-5 w-5" />
-                Wiki'ni boyiting
-              </div>
-              <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">
-                Yangi maqola va tajribalarni qo'shib, bilim bazasini kengaytiring.
-              </p>
-              <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-indigo-500">
-                Ko'rish <ArrowRight className="h-3 w-3" />
-              </span>
-            </Link>
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
+                >
+                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
+                    <Icon className="h-5 w-5" />
+                    {action.title}
+                  </div>
+                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
+                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
           <Link
             href="/containers"
