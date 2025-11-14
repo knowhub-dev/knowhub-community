@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -6,6 +7,7 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { buildMetadata, buildCanonicalUrl, getSiteName } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,9 +19,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "KnowHub Community",
-  description: "O'zbekiston va butun dunyo bo'ylab dasturchilar hamjamiyati",
+export const metadata: Metadata = buildMetadata();
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: getSiteName(),
+  url: buildCanonicalUrl("/"),
+  logo: buildCanonicalUrl("/globe.svg"),
+  sameAs: [
+    "https://t.me/knowhubcommunity",
+    "https://github.com/knowhub-dev",
+  ],
 };
 
 export default function RootLayout({
@@ -45,6 +56,9 @@ export default function RootLayout({
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
+        <Script id="knowhub-organization" type="application/ld+json">
+          {JSON.stringify(organizationJsonLd)}
+        </Script>
       </body>
     </html>
   );

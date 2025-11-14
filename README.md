@@ -80,6 +80,7 @@ cp .env.example .env
 composer install
 php artisan key:generate
 php artisan migrate --seed
+php artisan storage:link
 php artisan serve # API http://localhost:8000 da ishlaydi
 ```
 
@@ -89,6 +90,9 @@ cd frontend
 npm install
 
 echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
+echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000" >> .env.local
+echo "NEXT_PUBLIC_SITE_NAME=KnowHub Community" >> .env.local
+echo "NEXT_PUBLIC_SITE_DESCRIPTION=O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati." >> .env.local
 
 npm run dev # UI http://localhost:3000 da ishlaydi
 ```
@@ -175,9 +179,17 @@ MAIL_PASSWORD=your_password
 #### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=https://api.knowhub.uz/api/v1
-NEXT_PUBLIC_APP_URL=https://knowhub.uz
+NEXT_PUBLIC_SITE_URL=https://knowhub.uz
+NEXT_PUBLIC_SITE_NAME="KnowHub Community"
+NEXT_PUBLIC_SITE_DESCRIPTION="O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati."
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your_ga_id
 ```
+
+### Branding va SEO boshqaruvi
+
+- Admin paneldagi **Settings** tab'i orqali sayt nomi, tagline, meta description/keywords va light/dark logolarni boshqarish mumkin.
+- Logolar `storage/app/public/branding` papkasida saqlanadi. Frontend bilan integratsiya uchun `php artisan storage:link` buyrug'ini ishga tushiring.
+- `NEXT_PUBLIC_SITE_*` o'zgaruvchilari default qiymat sifatida ishlatiladi; admin panel orqali yangilangan ma'lumotlar avtomatik tarzda API orqali UI ga yetkaziladi.
 
 ---
 

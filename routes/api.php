@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\V1\{
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController
+    ProjectSubdomainController, BrandingController
 };
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
@@ -31,6 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/stats/homepage', [StatsController::class, 'homepage']);
     Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
+    Route::get('/settings/logo', [BrandingController::class, 'show']);
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -141,6 +142,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/cache/clear', [AdminController::class, 'clearCache']);
             Route::post('/system/optimize', [AdminController::class, 'optimizeSystem']);
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
+            Route::post('/branding/logo', [BrandingController::class, 'store']);
+            Route::delete('/branding/logo', [BrandingController::class, 'destroy']);
 
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);

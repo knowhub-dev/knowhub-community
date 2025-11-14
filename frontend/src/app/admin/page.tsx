@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -102,6 +102,27 @@ interface PaginatedUsers {
   to: number;
 }
 
+interface BrandingSettings {
+  light?: { url: string } | null;
+  dark?: { url: string } | null;
+}
+
+interface SystemSettings {
+  maintenance_mode: boolean;
+  registration_enabled: boolean;
+  max_posts_per_day: number;
+  max_comments_per_day: number;
+  code_execution_enabled: boolean;
+  ai_suggestions_enabled: boolean;
+  email_notifications_enabled: boolean;
+  auto_moderation_enabled: boolean;
+  site_title: string;
+  site_tagline: string;
+  seo_meta_description?: string | null;
+  seo_meta_keywords: string[];
+  branding: BrandingSettings;
+}
+
 async function getAdminStats(): Promise<AdminStats> {
   const res = await api.get('/admin/dashboard');
   return res.data;
@@ -113,6 +134,37 @@ async function getAdminUsers({ page, search }: { page: number; search: string })
       page,
       search,
     },
+  });
+  return res.data;
+}
+
+async function getSystemSettings(): Promise<SystemSettings> {
+  const res = await api.get('/admin/settings');
+  return res.data;
+}
+
+async function putSystemSettings(payload: Partial<SystemSettings>) {
+  const res = await api.put('/admin/settings', payload);
+  return res.data;
+}
+
+async function uploadLogo({ type, file }: { type: 'light' | 'dark'; file: File }) {
+  const formData = new FormData();
+  formData.append('type', type);
+  formData.append('file', file);
+
+  const res = await api.post('/admin/branding/logo', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return res.data;
+}
+
+async function deleteLogo(type: 'light' | 'dark') {
+  const res = await api.delete('/admin/branding/logo', {
+    data: { type },
   });
   return res.data;
 }
@@ -147,6 +199,16 @@ export default function AdminPage() {
   const [userPage, setUserPage] = useState(1);
   const [userSearch, setUserSearch] = useState('');
   const [searchDebounce, setSearchDebounce] = useState('');
+  const [siteTitle, setSiteTitle] = useState('');
+  const [siteTagline, setSiteTagline] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [codeExecutionEnabled, setCodeExecutionEnabled] = useState(true);
+  const [aiSuggestionsEnabled, setAiSuggestionsEnabled] = useState(true);
+  const [maxPostsPerDay, setMaxPostsPerDay] = useState(10);
+  const [maxCommentsPerDay, setMaxCommentsPerDay] = useState(50);
 
   const loadStats = useCallback(async () => {
     if (!isAdmin) return;
@@ -185,6 +247,30 @@ export default function AdminPage() {
     keepPreviousData: true,
   });
 
+  const {
+    data: systemSettings,
+    isLoading: settingsLoading,
+    refetch: refetchSystemSettings,
+  } = useQuery({
+    queryKey: ['admin-system-settings'],
+    queryFn: getSystemSettings,
+    enabled: isAdmin && activeTab === 'settings',
+  });
+
+  useEffect(() => {
+    if (!systemSettings) return;
+    setSiteTitle(systemSettings.site_title ?? '');
+    setSiteTagline(systemSettings.site_tagline ?? '');
+    setSeoDescription(systemSettings.seo_meta_description ?? '');
+    setSeoKeywords(systemSettings.seo_meta_keywords?.join(', ') ?? '');
+    setMaintenanceMode(Boolean(systemSettings.maintenance_mode));
+    setRegistrationEnabled(Boolean(systemSettings.registration_enabled));
+    setCodeExecutionEnabled(Boolean(systemSettings.code_execution_enabled));
+    setAiSuggestionsEnabled(Boolean(systemSettings.ai_suggestions_enabled));
+    setMaxPostsPerDay(systemSettings.max_posts_per_day ?? 10);
+    setMaxCommentsPerDay(systemSettings.max_comments_per_day ?? 50);
+  }, [systemSettings]);
+
   const userStatusMutation = useMutation({
     mutationFn: updateUserStatus,
     onSuccess: () => {
@@ -192,6 +278,36 @@ export default function AdminPage() {
     },
     onError: (error: any) => {
       alert('Xatolik: ' + (error.response?.data?.message || error.message));
+    },
+  });
+
+  const systemSettingsMutation = useMutation({
+    mutationFn: putSystemSettings,
+    onSuccess: () => {
+      refetchSystemSettings();
+    },
+    onError: (error: any) => {
+      alert('Sozlamalarni yangilashda xatolik: ' + (error.response?.data?.message || error.message));
+    },
+  });
+
+  const logoUploadMutation = useMutation({
+    mutationFn: uploadLogo,
+    onSuccess: () => {
+      refetchSystemSettings();
+    },
+    onError: (error: any) => {
+      alert('Logo yuklashda xatolik: ' + (error.response?.data?.message || error.message));
+    },
+  });
+
+  const logoDeleteMutation = useMutation({
+    mutationFn: deleteLogo,
+    onSuccess: () => {
+      refetchSystemSettings();
+    },
+    onError: (error: any) => {
+      alert('Logo o\'chirishda xatolik: ' + (error.response?.data?.message || error.message));
     },
   });
 
@@ -556,14 +672,230 @@ export default function AdminPage() {
     );
   };
 
-  const renderSettings = () => (
-    <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-900">Platforma siyosatlari</h3>
-      <p className="text-sm text-slate-500">
-        Admin siyosatlari, rol va ruxsatlarni boshqarish uchun kelgusida alohida modul qo'shiladi. Hozircha asosiy siyosatlar backend konfiguratsiyasidan boshqariladi.
-      </p>
-    </div>
-  );
+  const renderSettings = () => {
+    const branding = systemSettings?.branding ?? ({} as BrandingSettings);
+    const saving = systemSettingsMutation.isPending;
+
+    const handleSave = (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const keywords = seoKeywords
+        .split(',')
+        .map((keyword) => keyword.trim())
+        .filter(Boolean);
+
+      systemSettingsMutation.mutate({
+        site_title: siteTitle,
+        site_tagline: siteTagline,
+        seo_meta_description: seoDescription,
+        seo_meta_keywords: keywords,
+        maintenance_mode: maintenanceMode,
+        registration_enabled: registrationEnabled,
+        code_execution_enabled: codeExecutionEnabled,
+        ai_suggestions_enabled: aiSuggestionsEnabled,
+        max_posts_per_day: Number(maxPostsPerDay),
+        max_comments_per_day: Number(maxCommentsPerDay),
+      });
+    };
+
+    const handleLogoChange = (type: 'light' | 'dark') => (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      logoUploadMutation.mutate({ type, file });
+      event.target.value = '';
+    };
+
+    const handleRemoveLogo = (type: 'light' | 'dark') => {
+      if (confirm('Logo ni o\'chirishni tasdiqlaysizmi?')) {
+        logoDeleteMutation.mutate(type);
+      }
+    };
+
+    if (settingsLoading && !systemSettings) {
+      return (
+        <div className="flex items-center justify-center rounded-3xl border border-slate-200 bg-white p-12 shadow-sm">
+          <LoadingSpinner />
+        </div>
+      );
+    }
+
+    return (
+      <form onSubmit={handleSave} className="space-y-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">Brending va SEO</h3>
+          <p className="mt-1 text-sm text-slate-500">Sayt logotipi, nomi va qidiruvga oid meta ma\'lumotlarni boshqaring.</p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Sayt nomi</span>
+              <input
+                value={siteTitle}
+                onChange={(event) => setSiteTitle(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="KnowHub Community"
+                required
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Tagline</span>
+              <input
+                value={siteTagline}
+                onChange={(event) => setSiteTagline(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="Dasturchilar hamjamiyati"
+              />
+            </label>
+          </div>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Meta tavsif (description)</span>
+              <textarea
+                value={seoDescription}
+                onChange={(event) => setSeoDescription(event.target.value)}
+                maxLength={160}
+                className="mt-2 h-28 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="KnowHub — dasturchilar uchun hamjamiyat."
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Meta keywords (vergul bilan)</span>
+              <input
+                value={seoKeywords}
+                onChange={(event) => setSeoKeywords(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="knowhub, dasturlash, hamjamiyat"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {(['light', 'dark'] as Array<'light' | 'dark'>).map((type) => {
+            const logo = branding[type];
+            return (
+              <div key={type} className="rounded-2xl border border-slate-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">{type === 'light' ? 'Light rejim logosi' : 'Dark rejim logosi'}</h4>
+                    <p className="text-xs text-slate-500">PNG, SVG yoki WebP (2MB gacha)</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600">
+                      Yuklash
+                      <input
+                        type="file"
+                        accept="image/png,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={handleLogoChange(type)}
+                      />
+                    </label>
+                    {logo && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLogo(type)}
+                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                      >
+                        O'chirish
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50">
+                  {logo ? (
+                    <img src={logo.url} alt={`${type} logo preview`} className="max-h-20" />
+                  ) : (
+                    <span className="text-xs text-slate-400">Logo yuklanmagan</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 p-6">
+            <h4 className="text-sm font-semibold text-slate-900">Faollik sozlamalari</h4>
+            <div className="mt-4 space-y-3 text-sm">
+              <label className="flex items-center justify-between">
+                <span>Ro'yxatdan o'tish ochiq</span>
+                <input
+                  type="checkbox"
+                  checked={registrationEnabled}
+                  onChange={(event) => setRegistrationEnabled(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span>Kodni bajarish imkoniyati</span>
+                <input
+                  type="checkbox"
+                  checked={codeExecutionEnabled}
+                  onChange={(event) => setCodeExecutionEnabled(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span>AI tavsiyalar faol</span>
+                <input
+                  type="checkbox"
+                  checked={aiSuggestionsEnabled}
+                  onChange={(event) => setAiSuggestionsEnabled(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+              </label>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 p-6">
+            <h4 className="text-sm font-semibold text-slate-900">Limitlar</h4>
+            <div className="mt-4 space-y-3 text-sm">
+              <label className="block">
+                <span>Kunlik post limiti</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={maxPostsPerDay}
+                  onChange={(event) => setMaxPostsPerDay(Number(event.target.value))}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                />
+              </label>
+              <label className="block">
+                <span>Kunlik izoh limiti</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={maxCommentsPerDay}
+                  onChange={(event) => setMaxCommentsPerDay(Number(event.target.value))}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span>Texnik xizmat rejimi</span>
+                <input
+                  type="checkbox"
+                  checked={maintenanceMode}
+                  onChange={(event) => setMaintenanceMode(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-400"
+          >
+            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          </button>
+        </div>
+      </form>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f6f4] text-slate-900">

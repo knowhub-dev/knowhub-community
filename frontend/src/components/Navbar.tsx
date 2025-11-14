@@ -1,12 +1,18 @@
 'use client';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { Menu, X, User, LogOut, Plus, ChevronDown, Settings, Sun, Moon } from 'lucide-react';
 import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
 import { useTheme } from '@/providers/ThemeProvider';
+import { api } from '@/lib/api';
+
+type BrandingLogo = {
+  url: string;
+  path?: string;
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +23,36 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
+  const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const response = await api.get('/settings/logo');
+        if (!active) return;
+        setBranding({
+          light: response.data?.light ?? null,
+          dark: response.data?.dark ?? null,
+        });
+      } catch (error) {
+        if (!active) return;
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Logo fetch failed', error);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeLogo = useMemo(() => {
+    const selected = isDark ? branding.dark ?? branding.light : branding.light ?? branding.dark;
+    return selected ?? null;
+  }, [branding.dark, branding.light, isDark]);
 
   const navBackgroundClass = isHome
     ? 'border-b border-white/10 bg-slate-950/60 shadow-none backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/30'
@@ -80,15 +116,23 @@ export default function Navbar() {
         <div className="flex h-full items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm ${
-                isHome
-                  ? 'bg-gradient-to-br from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/40'
-                  : 'bg-indigo-600 text-white dark:bg-sky-500'
-              }`}
-            >
-              KH
-            </div>
+            {activeLogo ? (
+              <img
+                src={activeLogo.url}
+                alt="KnowHub logo"
+                className="h-9 w-auto"
+              />
+            ) : (
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm ${
+                  isHome
+                    ? 'bg-gradient-to-br from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/40'
+                    : 'bg-indigo-600 text-white dark:bg-sky-500'
+                }`}
+              >
+                KH
+              </div>
+            )}
             <span
               className={`hidden text-xl font-bold sm:block ${
                 isHome ? 'text-white' : 'text-slate-900 dark:text-white'

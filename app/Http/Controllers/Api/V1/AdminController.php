@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Support\Settings;
 
 class AdminController extends Controller
 {
@@ -546,6 +547,14 @@ class AdminController extends Controller
             'ai_suggestions_enabled' => Cache::get('settings.ai_suggestions_enabled', true),
             'email_notifications_enabled' => Cache::get('settings.email_notifications_enabled', true),
             'auto_moderation_enabled' => Cache::get('settings.auto_moderation_enabled', false),
+            'site_title' => Settings::get('site.title', config('app.name', 'KnowHub Community')),
+            'site_tagline' => Settings::get('site.tagline', "Dasturchilar hamjamiyati"),
+            'seo_meta_description' => Settings::get('seo.meta_description'),
+            'seo_meta_keywords' => Settings::get('seo.meta_keywords', []),
+            'branding' => [
+                'light' => $this->formatLogo(Settings::get('branding.logo.light')),
+                'dark' => $this->formatLogo(Settings::get('branding.logo.dark')),
+            ],
         ];
 
         return response()->json($settings);
@@ -562,9 +571,24 @@ class AdminController extends Controller
             'ai_suggestions_enabled' => 'sometimes|boolean',
             'email_notifications_enabled' => 'sometimes|boolean',
             'auto_moderation_enabled' => 'sometimes|boolean',
+            'site_title' => 'sometimes|string|max:120',
+            'site_tagline' => 'sometimes|string|max:200',
+            'seo_meta_description' => 'sometimes|string|max:160',
+            'seo_meta_keywords' => 'sometimes|array',
         ]);
 
-        foreach ($data as $key => $value) {
+        $cacheKeys = [
+            'maintenance_mode',
+            'registration_enabled',
+            'max_posts_per_day',
+            'max_comments_per_day',
+            'code_execution_enabled',
+            'ai_suggestions_enabled',
+            'email_notifications_enabled',
+            'auto_moderation_enabled',
+        ];
+
+        foreach (array_intersect_key($data, array_flip($cacheKeys)) as $key => $value) {
             Cache::forever("settings.{$key}", $value);
         }
 
@@ -576,12 +600,40 @@ class AdminController extends Controller
             }
         }
 
+        if (array_key_exists('site_title', $data)) {
+            Settings::set('site.title', $data['site_title']);
+        }
+
+        if (array_key_exists('site_tagline', $data)) {
+            Settings::set('site.tagline', $data['site_tagline']);
+        }
+
+        if (array_key_exists('seo_meta_description', $data)) {
+            Settings::set('seo.meta_description', $data['seo_meta_description']);
+        }
+
+        if (array_key_exists('seo_meta_keywords', $data)) {
+            Settings::set('seo.meta_keywords', array_values($data['seo_meta_keywords']), 'json');
+        }
+
         Log::info('System settings updated', [
             'admin_id' => $request->user()->id,
             'changes' => $data,
         ]);
 
         return response()->json(['message' => 'Tizim sozlamalari yangilandi']);
+    }
+
+    private function formatLogo($path): ?array
+    {
+        if (!$path) {
+            return null;
+        }
+
+        return [
+            'path' => $path,
+            'url' => Storage::disk('public')->url($path),
+        ];
     }
 
     public function clearCache()
