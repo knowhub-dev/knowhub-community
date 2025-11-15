@@ -485,6 +485,37 @@ export default function HomePage() {
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTagIndex, setActiveTagIndex] = useState(0);
+
+  const quickActions = useMemo(
+    () => [
+      {
+        title: "Fikr almashish",
+        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
+        href: "/posts/create",
+        icon: PenSquare,
+        accent:
+          "border-cyan-500/40 bg-cyan-500/10 text-cyan-100 shadow-[0_0_25px_-12px_rgba(34,211,238,0.8)]",
+      },
+      {
+        title: "Mini serverni ishga tushiring",
+        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
+        href: "/containers",
+        icon: Zap,
+        accent:
+          "border-purple-500/40 bg-purple-500/10 text-purple-100 shadow-[0_0_25px_-12px_rgba(168,85,247,0.8)]",
+      },
+      {
+        title: "Wiki'ni boyiting",
+        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
+        href: "/wiki",
+        icon: Compass,
+        accent:
+          "border-sky-500/40 bg-sky-500/10 text-sky-100 shadow-[0_0_25px_-12px_rgba(56,189,248,0.8)]",
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     let active = true;
@@ -657,6 +688,48 @@ export default function HomePage() {
                 );
               })}
             </div>
+            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
+              {statsCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                      <Icon className="h-4 w-4" />
+                      {card.label}
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
+                    <p>{card.subtitle}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <CodeRunnerCard />
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 py-16 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
+                >
+                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
+                    <Icon className="h-5 w-5" />
+                    {action.title}
+                  </div>
+                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
+                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
           <CodeRunnerCard />
         </div>
