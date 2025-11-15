@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Container } from '@/types/container';
-import { Play, Square, RefreshCw, Trash2, Settings, Server, Cpu, HardDrive, Memory } from 'lucide-react';
+import { Play, Square, RefreshCw, Trash2, Settings, Server, Cpu, HardDrive, MemoryStick } from 'lucide-react';
 import { startContainer, stopContainer, deleteContainer, getContainerStats } from '@/lib/services/containers';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -87,7 +87,7 @@ export default function ContainerCard({ container, onRefresh }: ContainerCardPro
           </span>
         </div>
         <div className="flex items-center space-x-2">
-          <Memory className="w-4 h-4 text-gray-400" />
+          <MemoryStick className="w-4 h-4 text-gray-400" />
           <span className="text-sm text-gray-600">
             {stats?.memory_usage ?? container.memory_limit}MB
           </span>

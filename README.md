@@ -148,6 +148,7 @@ Deploy script quyidagilarni avtomatik bajaradi:
 APP_NAME="KnowHub Community"
 APP_ENV=production
 APP_URL=https://knowhub.uz
+FRONTEND_URL=https://app.knowhub.uz
 
 # Database
 DB_CONNECTION=mysql

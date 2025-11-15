@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name', 'username', 'email', 'password', 'xp', 'level_id',
         'is_admin', 'is_banned', 'is_verified', 'verified_at', 'avatar_url', 'bio', 'website_url',
         'github_url', 'linkedin_url', 'resume',
+        'provider', 'provider_id',
     ];
 
     /**
