@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    const response = await api.post('/auth/email/register', { name, username, email: string, password });
+    const response = await api.post('/auth/email/register', { name, username, email, password });
     const { token, user: userData } = response.data;
     localStorage.setItem('auth_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

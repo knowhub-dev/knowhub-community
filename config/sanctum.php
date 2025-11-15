@@ -2,6 +2,23 @@
 
 use Laravel\Sanctum\Sanctum;
 
+$baseHost = env('APP_URL_BASE', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost');
+$defaultStateful = [
+    'localhost',
+    'localhost:3000',
+    '127.0.0.1',
+    '127.0.0.1:8000',
+    '::1',
+];
+
+if ($baseHost && !in_array($baseHost, $defaultStateful, true)) {
+    $defaultStateful[] = $baseHost;
+}
+
+if ($baseHost && !in_array('api.' . $baseHost, $defaultStateful, true)) {
+    $defaultStateful[] = 'api.' . $baseHost;
+}
+
 return [
 
     /*
@@ -15,12 +32,12 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', implode(',', array_unique(array_merge(
+        $defaultStateful,
+        array_filter([
+            trim(parse_url(Sanctum::currentApplicationUrlWithPort(), PHP_URL_HOST) ?? ''),
+        ])
+    ))))),
 
     /*
     |--------------------------------------------------------------------------

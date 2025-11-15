@@ -1,8 +1,10 @@
-import { api } from '@/lib/api';
+import type { Metadata } from 'next';
 import { notFound } from "next/navigation";
+import Script from 'next/script';
+import { buildMetadata, buildCanonicalUrl } from '@/lib/seo';
 
 // API URL-ni o'z muhitiga qarab almashtir
-const API_URL = process.env.API_URL || "http://localhost:8000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 interface Params {
   username: string;
@@ -44,6 +46,30 @@ export async function generateStaticParams(): Promise<Params[]> {
 }
 
 // ✅ Har bir user sahifasi
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const res = await fetch(`${API_URL}/users/${params.username}`, {
+    cache: 'no-store',
+  });
+
+  if (res.status === 404) {
+    notFound();
+  }
+
+  if (!res.ok) {
+    return buildMetadata({ title: 'Profil topilmadi', description: 'Profil mavjud emas.' });
+  }
+
+  const user: User = await res.json();
+  const description = user.bio || `${user.name} — KnowHub hamjamiyatining a'zosi.`;
+
+  return buildMetadata({
+    title: user.name,
+    description,
+    url: `/profile/${user.username}`,
+    keywords: [user.username, user.name, 'KnowHub foydalanuvchi'],
+  });
+}
+
 export default async function ProfilePage({ params }: { params: Params }) {
   const res = await fetch(`${API_URL}/users/${params.username}`, {
     cache: "no-store",
@@ -58,6 +84,14 @@ export default async function ProfilePage({ params }: { params: Params }) {
   }
 
   const user: User = await res.json();
+
+  const profileJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: user.name,
+    url: buildCanonicalUrl(`/profile/${user.username}`),
+    description: user.bio,
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -79,6 +113,9 @@ export default async function ProfilePage({ params }: { params: Params }) {
           </div>
         </div>
       </div>
+      <Script id={`profile-jsonld-${user.id}`} type="application/ld+json">
+        {JSON.stringify(profileJsonLd)}
+      </Script>
     </div>
   );
 }
