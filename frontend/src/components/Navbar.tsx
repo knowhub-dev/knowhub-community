@@ -1,29 +1,46 @@
 'use client';
+
 import Link from 'next/link';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/providers/AuthProvider';
-import { Menu, X, User, LogOut, Plus, ChevronDown, Settings, Sun, Moon } from 'lucide-react';
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  Plus,
+  ChevronDown,
+  Settings,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
+import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 type BrandingLogo = {
   url: string;
   path?: string;
 };
 
+interface NavLink {
+  href: string;
+  label: string;
+  exact?: boolean;
+}
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
   const profileRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const isHome = pathname === '/';
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
-  const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
 
   useEffect(() => {
     let active = true;
@@ -37,7 +54,6 @@ export default function Navbar() {
           dark: response.data?.dark ?? null,
         });
       } catch (error) {
-        if (!active) return;
         if (process.env.NODE_ENV !== 'production') {
           console.warn('Logo fetch failed', error);
         }
@@ -49,50 +65,21 @@ export default function Navbar() {
     };
   }, []);
 
+  const navLinks = useMemo<NavLink[]>(
+    () => [
+      { href: '/posts', label: 'Postlar' },
+      { href: '/wiki', label: 'Wiki' },
+      { href: '/containers', label: 'Mini-serverlar' },
+      { href: '/leaderboard', label: 'Leaderboard' },
+    ],
+    [],
+  );
+
   const activeLogo = useMemo(() => {
     const selected = isDark ? branding.dark ?? branding.light : branding.light ?? branding.dark;
     return selected ?? null;
   }, [branding.dark, branding.light, isDark]);
 
-  const navBackgroundClass = isHome
-    ? 'border-b border-white/10 bg-slate-950/60 shadow-none backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/30'
-    : 'border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/90';
-
-  const linkTone = isHome
-    ? 'font-medium text-white/70 transition-colors hover:text-white'
-    : 'font-medium text-slate-700 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-sky-400';
-
-  const mutedActionClass = isHome
-    ? 'text-white/80 transition-colors hover:text-white'
-    : 'text-slate-700 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-sky-400';
-
-  const primaryCtaClass = isHome
-    ? 'bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/30 hover:from-fuchsia-400 hover:via-indigo-500 hover:to-sky-400'
-    : 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-sky-500 dark:hover:bg-sky-400';
-
-  const ghostButtonClass = isHome
-    ? 'text-white/80 transition-colors hover:bg-white/10'
-    : 'text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60';
-
-  const searchVariant = isHome || isDark ? 'inverted' : 'default';
-
-  const mobileLinkClass = isHome
-    ? 'text-white/80 transition-colors hover:bg-white/10'
-    : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70';
-
-  const mobilePanelClass = isHome
-    ? 'border-white/10 bg-slate-950/80 text-white backdrop-blur'
-    : 'border-slate-200 bg-white/95 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-100 backdrop-blur';
-
-  const mobileToggleClass = isHome
-    ? 'text-white/80 transition-colors hover:bg-white/10'
-    : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/60';
-
-  const mobileThemeCardClass = isHome
-    ? 'border-white/10 bg-white/5 text-white/80'
-    : 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700/70 dark:bg-slate-800/60 dark:text-slate-100';
-
-  // Profile dropdown ni tashqariga bosilganda yopish
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -106,334 +93,216 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleProfileToggle = () => {
-    setIsProfileOpen(!isProfileOpen);
+  const renderNavLink = (link: NavLink) => {
+    const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
+
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        className={cn(
+          'relative inline-flex items-center text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground',
+          isActive && 'text-foreground',
+        )}
+      >
+        <span className="px-1 py-1">
+          {link.label}
+          <span
+            className={cn(
+              'pointer-events-none absolute inset-x-1 bottom-0 h-0.5 origin-center rounded-full bg-gradient-to-r from-primary/70 via-secondary/60 to-primary/70 transition-opacity duration-300',
+              isActive ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+        </span>
+      </Link>
+    );
   };
 
   return (
-    <nav className={`sticky top-0 z-50 transition-colors ${navBackgroundClass}`}>
-      <div className="mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-full items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            {activeLogo ? (
-              <img
-                src={activeLogo.url}
-                alt="KnowHub logo"
-                className="h-9 w-auto"
-              />
-            ) : (
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm ${
-                  isHome
-                    ? 'bg-gradient-to-br from-fuchsia-500 via-indigo-500 to-sky-500 text-white shadow-lg shadow-fuchsia-500/40'
-                    : 'bg-indigo-600 text-white dark:bg-sky-500'
-                }`}
-              >
-                KH
-              </div>
-            )}
-            <span
-              className={`hidden text-xl font-bold sm:block ${
-                isHome ? 'text-white' : 'text-slate-900 dark:text-white'
-              }`}
-            >
-              KnowHub
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/posts"
-              className={linkTone}
-            >
-              Postlar
+    <nav className="sticky top-0 z-50">
+      <div className="relative border-b border-white/5 bg-surface/80 shadow-subtle backdrop-blur-md">
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-r from-primary/45 via-secondary/35 to-primary/45 opacity-70 blur-md" />
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-3">
+              {activeLogo ? (
+                <img src={activeLogo.url} alt="KnowHub logo" className="h-9 w-auto" />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-primary-light to-secondary text-sm font-semibold text-white shadow-neon">
+                  KH
+                </div>
+              )}
+              <span className="hidden text-lg font-semibold tracking-tight text-foreground sm:block">KnowHub</span>
             </Link>
-            <Link
-              href="/users"
-              className={linkTone}
-            >
-              Foydalanuvchilar
-            </Link>
-            <Link
-              href="/wiki"
-              className={linkTone}
-            >
-              Wiki
-            </Link>
-            <Link
-              href="/leaderboard"
-              className={linkTone}
-            >
-              Reyting
-            </Link>
+            <div className="hidden items-center gap-6 md:flex">{navLinks.map(renderNavLink)}</div>
           </div>
 
-          {/* Search Bar */}
-          <SearchBar
-            className="hidden md:flex flex-1 max-w-md mx-8"
-            variant={searchVariant}
-          />
-
-          {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden flex-1 items-center justify-end gap-5 md:flex">
+            <SearchBar
+              className="w-full max-w-md"
+              variant={isDark ? 'inverted' : 'default'}
+            />
+            <NotificationDropdown />
             <button
+              type="button"
               onClick={toggleTheme}
-              aria-label="Toggle color scheme"
-              className={`rounded-lg p-2 transition-colors ${ghostButtonClass}`}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              aria-label="Mavzuni almashtirish"
             >
-              {isDark ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             {user ? (
-              <>
-                <NotificationDropdown />
+              <div className="flex items-center gap-3">
                 <Link
-                  href="/dashboard"
-                  className={linkTone}
+                  href="/posts/new"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
                 >
-                  Dashboard
+                  <Plus className="h-4 w-4" />
+                  Yangi post
                 </Link>
-                <Link
-                  href="/posts/create"
-                  className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${primaryCtaClass}`}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post yozish
-                </Link>
-                <div className="relative" ref={profileRef}>
+                <div ref={profileRef} className="relative">
                   <button
-                    onClick={handleProfileToggle}
-                    className={`flex items-center space-x-2 focus:outline-none ${mutedActionClass}`}
+                    type="button"
+                    onClick={() => setIsProfileOpen((prev) => !prev)}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
                   >
                     <img
-                      src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
+                      src={user.avatar_url ?? '/default-avatar.png'}
                       alt={user.name}
-                      className="w-8 h-8 rounded-full"
+                      className="h-9 w-9 rounded-full border border-white/10 object-cover"
                     />
-                    <span className="font-medium">{user.name}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className="h-4 w-4" />
                   </button>
-
                   {isProfileOpen && (
-                    <div
-                      className={`absolute right-0 z-50 mt-2 w-48 rounded-lg border shadow-lg ${
-                        isHome
-                          ? 'border-white/10 bg-slate-950/90 text-white backdrop-blur'
-                          : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
-                      }`}
-                    >
-                      <Link
-                        href={`/profile/${user.username}`}
-                        className={`flex items-center px-4 py-2 transition-colors ${
-                          isHome
-                            ? 'text-white/80 hover:bg-white/10'
-                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
-                        }`}
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <User className="w-4 h-4 mr-2" />
-                        Profil
-                      </Link>
-                      <Link
-                        href="/settings/profile"
-                        className={`flex items-center px-4 py-2 transition-colors ${
-                          isHome
-                            ? 'text-white/80 hover:bg-white/10'
-                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
-                        }`}
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Sozlamalar
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsProfileOpen(false);
-                        }}
-                        className={`flex w-full items-center px-4 py-2 transition-colors ${
-                          isHome
-                            ? 'text-white/80 hover:bg-white/10'
-                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
-                        }`}
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Chiqish
-                      </button>
+                    <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface/95 shadow-subtle backdrop-blur">
+                      <div className="border-b border-white/5 px-4 py-3">
+                        <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 p-2 text-sm text-muted-foreground">
+                        <Link
+                          href={`/profile/${user.username}`}
+                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                        >
+                          <User className="h-4 w-4" />
+                          Profil
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Sozlamalar
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={logout}
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-rose-300 transition hover:bg-rose-500/10 hover:text-rose-200"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Chiqish
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
                 <Link
-                  href="/auth/login"
-                  className={linkTone}
+                  href="/login"
+                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
                 >
                   Kirish
                 </Link>
                 <Link
-                  href="/auth/register"
-                  className={`rounded-lg px-4 py-2 transition-colors ${primaryCtaClass}`}
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
                 >
+                  <User className="h-4 w-4" />
                   Ro'yxatdan o'tish
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={`rounded-lg p-2 md:hidden ${mobileToggleClass}`}
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-3 md:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              aria-label="Mavzuni almashtirish"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40"
+              aria-label="Navigatsiyani ochish"
+            >
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div
-            className={`md:hidden border-t py-4 ${mobilePanelClass}`}
-          >
-            <div className="space-y-4">
-              {/* Mobile Search */}
-              <SearchBar
-                onClose={() => setIsOpen(false)}
-                variant={searchVariant}
-              />
-
-              <div className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm shadow-sm md:hidden ${mobileThemeCardClass}`}>
-                <span className="font-medium">
-                  Rejim
-                </span>
-                <button
-                  onClick={() => {
-                    toggleTheme();
-                  }}
-                  aria-label="Tungi rejimni almashtirish"
-                  className={`rounded-lg p-2 transition-colors ${mobileToggleClass}`}
-                >
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {/* Mobile Links */}
-              <div className="space-y-2">
-                <Link
-                  href="/posts"
-                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Postlar
-                </Link>
-                <Link
-                  href="/users"
-                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Foydalanuvchilar
-                </Link>
-                <Link
-                  href="/wiki"
-                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Wiki
-                </Link>
-                <Link
-                  href="/leaderboard"
-                  className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Reyting
-                </Link>
-              </div>
-
-              {/* Mobile Auth */}
+      {isOpen && (
+        <div className="border-b border-white/5 bg-surface/95 shadow-subtle backdrop-blur-md md:hidden">
+          <div className="space-y-6 px-6 pb-6 pt-4">
+            <SearchBar variant={isDark ? 'inverted' : 'default'} />
+            <div className="flex flex-col gap-3">
+              {navLinks.map((link) => {
+                const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'rounded-xl border border-white/5 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground',
+                      isActive && 'border-primary/40 bg-primary/10 text-foreground',
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <NotificationDropdown />
               {user ? (
-                <div
-                  className={`space-y-2 border-t pt-4 ${
-                    isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
-                  }`}
+                <Link
+                  href="/posts/new"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
                 >
-                  <Link
-                    href="/posts/create"
-                    className={`flex items-center rounded-lg px-3 py-2 ${primaryCtaClass}`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Post yozish
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href={`/profile/${user.username}`}
-                    className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <img
-                      src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
-                      alt={user.name}
-                      className="w-6 h-6 rounded-full mr-2"
-                    />
-                    {user.name}
-                  </Link>
-                  <Link
-                    href="/settings/profile"
-                    className={`flex items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Sozlamalar
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsOpen(false);
-                    }}
-                    className={`flex w-full items-center rounded-lg px-3 py-2 ${mobileLinkClass}`}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Chiqish
-                  </button>
-                </div>
+                  <Plus className="h-4 w-4" />
+                  Yangi post
+                </Link>
               ) : (
-                <div
-                  className={`space-y-2 border-t pt-4 ${
-                    isHome ? 'border-white/10' : 'border-slate-200 dark:border-slate-700'
-                  }`}
-                >
+                <div className="flex flex-1 flex-col gap-2">
                   <Link
-                    href="/auth/login"
-                    className={`block rounded-lg px-3 py-2 ${mobileLinkClass}`}
+                    href="/login"
                     onClick={() => setIsOpen(false)}
+                    className="rounded-full border border-white/10 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
                   >
                     Kirish
                   </Link>
                   <Link
-                    href="/auth/register"
-                    className={`block rounded-lg px-3 py-2 text-center ${primaryCtaClass}`}
+                    href="/register"
                     onClick={() => setIsOpen(false)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
                   >
+                    <User className="h-4 w-4" />
                     Ro'yxatdan o'tish
                   </Link>
                 </div>
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }
