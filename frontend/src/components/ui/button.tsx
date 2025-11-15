@@ -1,57 +1,96 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        primary:
+          "bg-primary text-white shadow-subtle hover:bg-primary-light hover:shadow-neon",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-surface/60 text-foreground border border-surface/80 backdrop-blur-sm hover:border-primary-light hover:shadow-subtle",
+        ghost:
+          "bg-transparent text-foreground hover:bg-surface/40 hover:text-white",
+        outline:
+          "border border-primary text-primary hover:bg-primary/10 hover:text-white hover:shadow-neon",
+        destructive:
+          "bg-red-600 text-white shadow-subtle hover:bg-red-700 hover:shadow-[0_0_22px_rgba(220,38,38,0.4)]",
+        neon:
+          "relative isolate overflow-hidden bg-transparent text-white shadow-neon hover:shadow-[0_0_30px_rgba(164,85,247,0.65)] before:absolute before:inset-0 before:-z-20 before:rounded-[var(--radius-md)] before:bg-gradient-to-r before:from-accent-purple before:to-accent-pink before:opacity-90 before:transition-opacity before:duration-200 before:content-[''] after:absolute after:inset-[1px] after:-z-10 after:rounded-[var(--radius-md)] after:bg-surface/80 after:content-[''] hover:before:opacity-100",
+        icon:
+          "bg-surface/60 text-foreground border border-surface/70 backdrop-blur-sm hover:border-primary hover:text-white hover:shadow-neon",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        sm: "h-9 px-3 text-sm",
+        md: "h-10 px-4 text-sm",
+        lg: "h-12 px-6 text-base",
+        icon: "h-10 w-10 p-0 [&>svg]:h-5 [&>svg]:w-5",
+      },
+      fullWidth: {
+        true: "w-full",
       },
     },
+    compoundVariants: [
+      {
+        variant: "icon",
+        size: "sm",
+        className: "h-9 w-9",
+      },
+      {
+        variant: "icon",
+        size: "md",
+        className: "h-10 w-10",
+      },
+      {
+        variant: "icon",
+        size: "lg",
+        className: "h-12 w-12 text-lg",
+      },
+    ],
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "primary",
+      size: "md",
     },
   }
-)
+);
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  asChild?: boolean;
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+  (
+    { className, variant, size, fullWidth, asChild = false, disabled, isLoading, children, ...props },
+    ref,
+  ) => {
+    const Comp = asChild ? Slot : "button";
+    const isDisabled = disabled || isLoading;
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, fullWidth }), className)}
         ref={ref}
+        disabled={isDisabled}
+        data-variant={variant}
+        aria-busy={isLoading || undefined}
         {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
+      >
+        {isLoading && (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        )}
+        {children}
+      </Comp>
+    );
+  },
+);
+Button.displayName = "Button";
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

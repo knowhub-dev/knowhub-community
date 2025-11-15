@@ -1,18 +1,85 @@
 'use client';
+
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/providers/AuthProvider';
-import { Menu, X, User, LogOut, Plus, Search, ChevronDown, Settings } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  Plus,
+  ChevronDown,
+  Settings,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
+import { useAuth } from '@/providers/AuthProvider';
+import { useTheme } from '@/providers/ThemeProvider';
+import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
+
+type BrandingLogo = {
+  url: string;
+  path?: string;
+};
+
+interface NavLink {
+  href: string;
+  label: string;
+  exact?: boolean;
+}
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
   const profileRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
-  // Profile dropdown ni tashqariga bosilganda yopish
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const response = await api.get('/settings/logo');
+        if (!active) return;
+        setBranding({
+          light: response.data?.light ?? null,
+          dark: response.data?.dark ?? null,
+        });
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Logo fetch failed', error);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const navLinks = useMemo<NavLink[]>(
+    () => [
+      { href: '/posts', label: 'Postlar' },
+      { href: '/wiki', label: 'Wiki' },
+      { href: '/containers', label: 'Mini-serverlar' },
+      { href: '/leaderboard', label: 'Leaderboard' },
+    ],
+    [],
+  );
+
+  const activeLogo = useMemo(() => {
+    const selected = isDark ? branding.dark ?? branding.light : branding.light ?? branding.dark;
+    return selected ?? null;
+  }, [branding.dark, branding.light, isDark]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -26,256 +93,216 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleProfileToggle = () => {
-    setIsProfileOpen(!isProfileOpen);
+  const renderNavLink = (link: NavLink) => {
+    const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
+
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        className={cn(
+          'relative inline-flex items-center text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground',
+          isActive && 'text-foreground',
+        )}
+      >
+        <span className="px-1 py-1">
+          {link.label}
+          <span
+            className={cn(
+              'pointer-events-none absolute inset-x-1 bottom-0 h-0.5 origin-center rounded-full bg-gradient-to-r from-primary/70 via-secondary/60 to-primary/70 transition-opacity duration-300',
+              isActive ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+        </span>
+      </Link>
+    );
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">KH</span>
-            </div>
-            <span className="font-bold text-xl text-gray-900 hidden sm:block">
-              KnowHub
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/posts" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-            >
-              Postlar
+    <nav className="sticky top-0 z-50">
+      <div className="relative border-b border-white/5 bg-surface/80 shadow-subtle backdrop-blur-md">
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-r from-primary/45 via-secondary/35 to-primary/45 opacity-70 blur-md" />
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-3">
+              {activeLogo ? (
+                <img src={activeLogo.url} alt="KnowHub logo" className="h-9 w-auto" />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-primary-light to-secondary text-sm font-semibold text-white shadow-neon">
+                  KH
+                </div>
+              )}
+              <span className="hidden text-lg font-semibold tracking-tight text-foreground sm:block">KnowHub</span>
             </Link>
-            <Link 
-              href="/users" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-            >
-              Foydalanuvchilar
-            </Link>
-            <Link 
-              href="/wiki" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-            >
-              Wiki
-            </Link>
-            <Link 
-              href="/leaderboard" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-            >
-              Reyting
-            </Link>
+            <div className="hidden items-center gap-6 md:flex">{navLinks.map(renderNavLink)}</div>
           </div>
 
-          {/* Search Bar */}
-          <SearchBar className="hidden md:flex flex-1 max-w-md mx-8" />
-
-          {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden flex-1 items-center justify-end gap-5 md:flex">
+            <SearchBar
+              className="w-full max-w-md"
+              variant={isDark ? 'inverted' : 'default'}
+            />
+            <NotificationDropdown />
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              aria-label="Mavzuni almashtirish"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             {user ? (
-              <>
-                <NotificationDropdown />
+              <div className="flex items-center gap-3">
                 <Link
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                  href="/posts/new"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
                 >
-                  Dashboard
+                  <Plus className="h-4 w-4" />
+                  Yangi post
                 </Link>
-                <Link
-                  href="/posts/create"
-                  className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post yozish
-                </Link>
-                <div className="relative" ref={profileRef}>
-                  <button 
-                    onClick={handleProfileToggle}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 focus:outline-none"
+                <div ref={profileRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileOpen((prev) => !prev)}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
                   >
                     <img
-                      src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
+                      src={user.avatar_url ?? '/default-avatar.png'}
                       alt={user.name}
-                      className="w-8 h-8 rounded-full"
+                      className="h-9 w-9 rounded-full border border-white/10 object-cover"
                     />
-                    <span className="font-medium">{user.name}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className="h-4 w-4" />
                   </button>
-                  
                   {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                      <Link
-                        href={`/profile/${user.username}`}
-                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <User className="w-4 h-4 mr-2" />
-                        Profil
-                      </Link>
-                      <Link
-                        href="/settings/profile"
-                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Sozlamalar
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsProfileOpen(false);
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Chiqish
-                      </button>
+                    <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface/95 shadow-subtle backdrop-blur">
+                      <div className="border-b border-white/5 px-4 py-3">
+                        <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 p-2 text-sm text-muted-foreground">
+                        <Link
+                          href={`/profile/${user.username}`}
+                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                        >
+                          <User className="h-4 w-4" />
+                          Profil
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Sozlamalar
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={logout}
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-rose-300 transition hover:bg-rose-500/10 hover:text-rose-200"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Chiqish
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
                 <Link
-                  href="/auth/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  href="/login"
+                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
                 >
                   Kirish
                 </Link>
                 <Link
-                  href="/auth/register"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
                 >
+                  <User className="h-4 w-4" />
                   Ro'yxatdan o'tish
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-3 md:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              aria-label="Mavzuni almashtirish"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40"
+              aria-label="Navigatsiyani ochish"
+            >
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <div className="space-y-4">
-              {/* Mobile Search */}
-              <SearchBar onClose={() => setIsOpen(false)} />
-
-              {/* Mobile Links */}
-              <div className="space-y-2">
-                <Link
-                  href="/posts"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Postlar
-                </Link>
-                <Link
-                  href="/users"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Foydalanuvchilar
-                </Link>
-                <Link
-                  href="/wiki"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Wiki
-                </Link>
-                <Link
-                  href="/leaderboard"
-                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Reyting
-                </Link>
-              </div>
-
-              {/* Mobile Auth */}
+      {isOpen && (
+        <div className="border-b border-white/5 bg-surface/95 shadow-subtle backdrop-blur-md md:hidden">
+          <div className="space-y-6 px-6 pb-6 pt-4">
+            <SearchBar variant={isDark ? 'inverted' : 'default'} />
+            <div className="flex flex-col gap-3">
+              {navLinks.map((link) => {
+                const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'rounded-xl border border-white/5 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground',
+                      isActive && 'border-primary/40 bg-primary/10 text-foreground',
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <NotificationDropdown />
               {user ? (
-                <div className="space-y-2 pt-4 border-t border-gray-200">
-                  <Link
-                    href="/posts/create"
-                    className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Post yozish
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href={`/profile/${user.username}`}
-                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <img
-                      src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
-                      alt={user.name}
-                      className="w-6 h-6 rounded-full mr-2"
-                    />
-                    {user.name}
-                  </Link>
-                  <Link
-                    href="/settings/profile"
-                    className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Sozlamalar
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Chiqish
-                  </button>
-                </div>
+                <Link
+                  href="/posts/new"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
+                >
+                  <Plus className="h-4 w-4" />
+                  Yangi post
+                </Link>
               ) : (
-                <div className="space-y-2 pt-4 border-t border-gray-200">
+                <div className="flex flex-1 flex-col gap-2">
                   <Link
-                    href="/auth/login"
-                    className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                    href="/login"
                     onClick={() => setIsOpen(false)}
+                    className="rounded-full border border-white/10 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
                   >
                     Kirish
                   </Link>
                   <Link
-                    href="/auth/register"
-                    className="block px-3 py-2 bg-indigo-600 text-white rounded-lg text-center"
+                    href="/register"
                     onClick={() => setIsOpen(false)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
                   >
+                    <User className="h-4 w-4" />
                     Ro'yxatdan o'tish
                   </Link>
                 </div>
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }

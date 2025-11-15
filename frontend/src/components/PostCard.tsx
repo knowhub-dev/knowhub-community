@@ -1,105 +1,236 @@
 import Link from 'next/link';
+import { useMemo } from 'react';
+import {
+  ArrowUpRight,
+  Clock,
+  Eye,
+  MessageCircle,
+  Sparkles,
+  Timer,
+} from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 import { Post } from '@/types';
-import { Clock, MessageCircle, User } from 'lucide-react';
+
 import BookmarkButton from './BookmarkButton';
 import VoteButtons from './VoteButtons';
 
-interface PostCardProps {
-  post: Post;
+const getAvatar = (name: string, avatarUrl?: string) =>
+  avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
+
+const estimateReadTime = (content: string) => {
+  const words = content ? content.split(/\s+/).filter(Boolean).length : 0;
+  return Math.max(1, Math.ceil(words / 220));
+};
+
+const buildExcerpt = (content: string, limit = 160) => {
+  const sanitized = content.replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (sanitized.length <= limit) {
+    return sanitized;
+  }
+  return `${sanitized.slice(0, limit)}…`;
+};
+
+const formatDate = (value: string) => {
+  try {
+    return new Intl.DateTimeFormat('uz-UZ', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(value));
+  } catch (error) {
+    return value;
+  }
+};
+
+type PostCardVariant = 'standard' | 'compact' | 'highlighted' | 'skeleton';
+
+type PostCardProps =
+  | {
+      post: Post;
+      variant?: Exclude<PostCardVariant, 'skeleton'>;
+      className?: string;
+    }
+  | {
+      variant: 'skeleton';
+      className?: string;
+    };
+
+const baseCardStyles =
+  'group relative overflow-hidden rounded-lg border border-border/60 bg-surface/60 shadow-subtle backdrop-blur-md transition-all duration-200';
+
+const variantStyles: Record<Exclude<PostCardVariant, 'skeleton'>, string> = {
+  standard: 'p-6 hover:-translate-y-0.5 hover:shadow-neon',
+  compact: 'p-4 hover:-translate-y-0.5 hover:shadow-neon',
+  highlighted:
+    'p-6 border-primary/70 bg-surface/70 ring-1 ring-inset ring-primary/30 hover:-translate-y-1 hover:shadow-neon',
+};
+
+function SkeletonCard({ className }: { className?: string }) {
+  return (
+    <article
+      className={cn(
+        baseCardStyles,
+        'p-6 animate-pulse border-border/40 bg-surface/50',
+        className,
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-muted/40" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-1/3 rounded bg-muted/40" />
+          <div className="h-3 w-1/2 rounded bg-muted/30" />
+        </div>
+      </div>
+      <div className="mt-6 space-y-3">
+        <div className="h-5 w-3/4 rounded bg-muted/40" />
+        <div className="h-4 w-full rounded bg-muted/30" />
+        <div className="h-4 w-5/6 rounded bg-muted/30" />
+      </div>
+      <div className="mt-6 flex items-center justify-between">
+        <div className="h-4 w-32 rounded bg-muted/30" />
+        <div className="h-9 w-24 rounded bg-muted/40" />
+      </div>
+    </article>
+  );
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard(props: PostCardProps) {
+  if (props.variant === 'skeleton') {
+    return <SkeletonCard className={props.className} />;
+  }
+
+  const { post, variant = 'standard', className } = props;
+
+  const formattedDate = useMemo(() => formatDate(post.created_at), [post.created_at]);
+  const readTime = useMemo(
+    () => estimateReadTime(post.content_markdown),
+    [post.content_markdown],
+  );
+  const excerpt = useMemo(
+    () => buildExcerpt(post.content_markdown, variant === 'compact' ? 120 : 180),
+    [post.content_markdown, variant],
+  );
+  const views = useMemo(() => {
+    const raw = (post as unknown as { views?: number; views_count?: number }).views;
+    const alt = (post as unknown as { views?: number; views_count?: number }).views_count;
+    return raw ?? alt ?? Math.max(post.score * 12, 48);
+  }, [post]);
+
+  const cardClasses = cn(baseCardStyles, variantStyles[variant], className);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
+    <article className={cardClasses}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
           <img
-            src={post.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.name)}`}
+            src={getAvatar(post.user.name, post.user.avatar_url)}
             alt={post.user.name}
-            className="w-10 h-10 rounded-full"
+            className="h-12 w-12 rounded-full border border-primary/30 object-cover shadow-subtle"
           />
           <div>
-            <p className="font-medium text-gray-900">{post.user.name}</p>
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="w-4 h-4 mr-1" />
-              {new Date(post.created_at).toLocaleDateString('uz-UZ')}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1 font-medium text-foreground">
+                {post.user.name}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-muted/60" aria-hidden />
+              <span className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                {formattedDate}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Timer className="h-3.5 w-3.5" />
+                {readTime} min o'qish
+              </span>
+              <span className="h-1 w-1 rounded-full bg-muted/60" aria-hidden />
+              <span className="flex items-center gap-1">
+                <Eye className="h-3.5 w-3.5" />
+                {views.toLocaleString('en-US')} marta ko'rildi
+              </span>
             </div>
           </div>
         </div>
-        
-        {/* User Level */}
         {post.user.level && (
-          <div className="flex items-center space-x-1 bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs">
-            <span>{post.user.level.name}</span>
-            <span>({post.user.xp} XP)</span>
-          </div>
+          <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            {post.user.level.name}
+          </span>
         )}
       </div>
 
-      {/* Title */}
-      <Link href={`/posts/${post.slug}`}>
-        <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors mb-3 line-clamp-2">
-          {post.title}
-        </h3>
-      </Link>
-
-      {/* Content Preview */}
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-        {post.content_markdown.replace(/[#*`]/g, '').substring(0, 150)}...
-      </p>
-
-      {/* Tags */}
-      {post.tags && post.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {post.tags.slice(0, 3).map((tag) => (
-            <Link
-              key={tag.slug}
-              href={`/posts?tag=${tag.slug}`}
-              className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-gray-200 transition-colors"
-            >
-              #{tag.name}
-            </Link>
-          ))}
-          {post.tags.length > 3 && (
-            <span className="text-xs text-gray-500">+{post.tags.length - 3} ko'proq</span>
-          )}
-        </div>
-      )}
-
-      {/* Category */}
-      {post.category && (
-        <div className="mb-4">
+      <div className="mt-6 space-y-4">
+        {post.category && (
           <Link
             href={`/posts?category=${post.category.slug}`}
-            className="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 text-sm rounded-full hover:bg-indigo-100 transition-colors"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary transition-colors duration-200 hover:border-primary hover:bg-primary/10"
           >
-            📁 {post.category.name}
+            <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
+            {post.category.name}
+          </Link>
+        )}
+
+        <Link href={`/posts/${post.slug}`} className="block">
+          <h3 className="text-xl font-semibold tracking-tight text-foreground transition-colors duration-200 group-hover:text-primary-light">
+            {post.title}
+          </h3>
+          {variant !== 'compact' && (
+            <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{excerpt}</p>
+          )}
+          {variant === 'compact' && (
+            <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{excerpt}</p>
+          )}
+        </Link>
+
+        {post.tags?.length ? (
+          <div className="flex flex-wrap gap-2">
+            {post.tags.slice(0, 3).map((tag) => (
+              <Link
+                key={tag.slug}
+                href={`/posts?tag=${tag.slug}`}
+                className="inline-flex items-center gap-1 rounded-full border border-muted/40 bg-muted/20 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:border-primary/40 hover:text-foreground"
+              >
+                #{tag.name}
+              </Link>
+            ))}
+            {post.tags.length > 3 && (
+              <span className="text-xs text-muted-foreground">+{post.tags.length - 3}</span>
+            )}
+          </div>
+        ) : null}
+
+        {post.is_ai_suggested ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-secondary/40 bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
+            <Sparkles className="h-3.5 w-3.5" />
+            AI tavsiya
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border/60 pt-4">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <MessageCircle className="h-4 w-4" />
+            {post.answers_count} izoh
+          </span>
+          <span className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            {views.toLocaleString('en-US')} ko'rish
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <VoteButtons type="post" id={post.id} score={post.score} />
+          <BookmarkButton postId={post.id} />
+          <Link
+            href={`/posts/${post.slug}`}
+            className="inline-flex items-center gap-1 rounded-full border border-transparent px-3 py-1 text-xs font-medium text-primary transition-colors duration-200 hover:border-primary/40 hover:bg-primary/10"
+          >
+            <ArrowUpRight className="h-4 w-4" />
+            Ulashish
           </Link>
         </div>
-      )}
-
-      {/* Footer Stats */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center space-x-4">
-          <VoteButtons type="post" id={post.id} score={post.score} />
-          <div className="flex items-center space-x-1 text-gray-500">
-            <MessageCircle className="w-4 h-4" />
-            <span className="text-sm">{post.answers_count}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <BookmarkButton postId={post.id} />
-          {/* AI Suggestion Indicator */}
-          {post.is_ai_suggested && (
-            <div className="flex items-center space-x-1 text-purple-600 text-xs">
-              <span>🤖</span>
-              <span>AI tavsiya</span>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
+    </article>
   );
 }

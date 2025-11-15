@@ -53,6 +53,34 @@ export interface Post {
   created_at: string;
 }
 
+export interface CollaborationParticipant {
+  id: number;
+  user_id: number;
+  role: string;
+  last_seen_at: string;
+  user?: Pick<User, 'id' | 'name' | 'username'> | null;
+}
+
+export interface CollaborationSession {
+  id: number;
+  post_id: number;
+  owner_id: number;
+  status: string;
+  content_snapshot: string;
+  ended_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  participants: CollaborationParticipant[];
+}
+
+export interface CollaborationEvent {
+  id: number;
+  type: string;
+  payload: Record<string, any>;
+  user_id: number;
+  created_at: string;
+}
+
 export interface Comment {
   id: number;
   content_markdown: string;
@@ -70,4 +98,31 @@ export interface WikiArticle {
   status: string;
   version: number;
   created_at: string;
+}
+
+export interface WikiProposalSummary {
+  id: number;
+  status: 'pending' | 'merged' | 'rejected';
+  comment?: string | null;
+  created_at: string;
+  user: Pick<User, 'id' | 'name' | 'username' | 'avatar_url'> | null;
+}
+
+export interface WikiDiffResponse {
+  article: {
+    id: number;
+    title: string;
+    slug: string;
+    version: number;
+  };
+  proposal: WikiProposalSummary;
+  summary: {
+    added: number;
+    removed: number;
+    net: number;
+  };
+  diff: {
+    raw: string;
+    lines: { type: 'context' | 'added' | 'removed'; text: string }[];
+  };
 }
