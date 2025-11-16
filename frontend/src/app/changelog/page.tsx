@@ -1,4 +1,6 @@
-import { Calendar, Code, Users, Zap, Shield, Database } from 'lucide-react';
+import { Calendar, Code, Users } from 'lucide-react';
+
+type ChangeType = 'added' | 'changed' | 'fixed' | 'removed';
 
 interface ChangelogEntry {
   version: string;
@@ -7,13 +9,41 @@ interface ChangelogEntry {
   title: string;
   description: string;
   changes: Array<{
-    type: 'added' | 'changed' | 'fixed' | 'removed';
+    type: ChangeType;
     description: string;
   }>;
 }
 
+const TYPE_STYLES: Record<ChangeType, string> = {
+  added: 'bg-accent-green/20 text-accent-green border-accent-green/40',
+  changed: 'bg-primary/20 text-primary border-primary/30',
+  fixed: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+  removed: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+};
+
+const VERSION_STYLES: Record<ChangelogEntry['type'], string> = {
+  major: 'bg-secondary/20 text-secondary border-secondary/40',
+  minor: 'bg-primary/20 text-primary border-primary/40',
+  patch: 'bg-accent-green/20 text-accent-green border-accent-green/40',
+};
+
 export default function ChangelogPage() {
   const changelog: ChangelogEntry[] = [
+    {
+      version: '1.1.0',
+      date: '2025-01-18',
+      type: 'minor',
+      title: 'Teal Pulse yangilanishi',
+      description:
+        "Frontend va backend aloqalari uyg'unlashtirildi, cookie roziligi hamda umumiy dizayn auditidan keyingi yaxshilanishlar ishga tushdi.",
+      changes: [
+        { type: 'added', description: 'CookieNotice komponenti orqali nozik, qalqib chiquvchi rozilik oynasi' },
+        { type: 'changed', description: 'Navbar, Sidebar, qidiruv, teglar va auth formalarini yangi yashil-ko\'k palitraga moslashtirish' },
+        { type: 'fixed', description: 'Shadcn Button asChild ishlatilganda React.Children.only xatosi' },
+        { type: 'fixed', description: 'API interceptor tokenni qayta yuklash paytida ham ulab turishi va 401 javoblarida keshni tozalashi' },
+        { type: 'added', description: 'Changelog sahifasiga ushbu versiya hikoyalari qo\'shildi' },
+      ],
+    },
     {
       version: '1.0.0',
       date: '2025-01-15',
@@ -66,45 +96,36 @@ export default function ChangelogPage() {
     }
   ];
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type: ChangeType) => TYPE_STYLES[type] ?? 'bg-muted text-foreground border-border';
+
+  const getTypeIcon = (type: ChangeType) => {
     switch (type) {
-      case 'added': return 'bg-green-100 text-green-800 border-green-200';
-      case 'changed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'fixed': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'removed': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'added':
+        return '✨';
+      case 'changed':
+        return '🔄';
+      case 'fixed':
+        return '🐛';
+      case 'removed':
+        return '🗑️';
+      default:
+        return '📝';
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'added': return '✨';
-      case 'changed': return '🔄';
-      case 'fixed': return '🐛';
-      case 'removed': return '🗑️';
-      default: return '📝';
-    }
-  };
-
-  const getVersionColor = (type: 'major' | 'minor' | 'patch') => {
-    switch (type) {
-      case 'major': return 'bg-red-100 text-red-800 border-red-200';
-      case 'minor': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'patch': return 'bg-green-100 text-green-800 border-green-200';
-    }
-  };
+  const getVersionColor = (type: ChangelogEntry['type']) => VERSION_STYLES[type];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white">
+      <div className="bg-gradient-to-br from-primary via-accent-purple to-secondary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               <Calendar className="w-12 h-12" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">O'zgarishlar Tarixi</h1>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+            <p className="text-xl text-white/80 max-w-2xl mx-auto">
               KnowHub Community platformasining barcha yangilanishlari va o'zgarishlari
             </p>
           </div>
@@ -113,14 +134,14 @@ export default function ChangelogPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Current Version */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 mb-8 text-white">
+        <div className="bg-gradient-to-r from-primary via-accent-purple to-secondary rounded-lg p-6 mb-8 text-white shadow-subtle">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Joriy Versiya: {changelog[0].version}</h2>
-              <p className="text-indigo-100">{changelog[0].title}</p>
+              <p className="text-white/80">{changelog[0].title}</p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-indigo-200">Chiqarilgan</div>
+              <div className="text-sm text-white/70">Chiqarilgan</div>
               <div className="font-semibold">{new Date(changelog[0].date).toLocaleDateString('uz-UZ')}</div>
             </div>
           </div>
@@ -128,30 +149,30 @@ export default function ChangelogPage() {
 
         {/* Changelog Entries */}
         <div className="space-y-8">
-          {changelog.map((entry, index) => (
-            <div key={entry.version} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {changelog.map(entry => (
+            <div key={entry.version} className="bg-card rounded-lg shadow-sm border border-border/60 p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getVersionColor(entry.type)}`}>
                     v{entry.version}
                   </span>
-                  <h3 className="text-xl font-bold text-gray-900">{entry.title}</h3>
+                  <h3 className="text-xl font-bold">{entry.title}</h3>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Calendar className="w-4 h-4 mr-1" />
                   {new Date(entry.date).toLocaleDateString('uz-UZ')}
                 </div>
               </div>
-              
-              <p className="text-gray-600 mb-6">{entry.description}</p>
-              
+
+              <p className="text-muted-foreground mb-6">{entry.description}</p>
+
               <div className="space-y-3">
                 {entry.changes.map((change, changeIndex) => (
                   <div key={changeIndex} className="flex items-start space-x-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getTypeColor(change.type)}`}>
                       {getTypeIcon(change.type)} {change.type.toUpperCase()}
                     </span>
-                    <p className="text-gray-700 flex-1">{change.description}</p>
+                    <p className="text-foreground/90 flex-1">{change.description}</p>
                   </div>
                 ))}
               </div>
@@ -160,7 +181,7 @@ export default function ChangelogPage() {
         </div>
 
         {/* Roadmap */}
-        <div className="mt-12 bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-8 text-white">
+        <div className="mt-12 bg-gradient-to-br from-surface to-surface/70 rounded-lg p-8 text-white">
           <h2 className="text-2xl font-bold mb-6">🚀 Kelajak Rejalari</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -168,7 +189,7 @@ export default function ChangelogPage() {
                 <Code className="w-5 h-5 mr-2" />
                 Versiya 1.1.0 - "Hamjamiyat Kengayishi"
               </h3>
-              <ul className="space-y-2 text-gray-300">
+              <ul className="space-y-2 text-white/80">
                 <li>• Guruhlar va qiziqish klublari</li>
                 <li>• Mentorship dasturi</li>
                 <li>• Jonli Q&A sessiyalari</li>
@@ -180,7 +201,7 @@ export default function ChangelogPage() {
                 <Users className="w-5 h-5 mr-2" />
                 Versiya 1.2.0 - "Bilim Markazi"
               </h3>
-              <ul className="space-y-2 text-gray-300">
+              <ul className="space-y-2 text-white/80">
                 <li>• Interaktiv darslar va kurslar</li>
                 <li>• Kodlash challenge'lari</li>
                 <li>• Skill badgelari va sertifikatlar</li>
