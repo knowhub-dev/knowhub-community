@@ -1,7 +1,12 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import PostCard from "@/components/PostCard";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -132,6 +137,25 @@ type QuickAction = {
   ctaClass: string;
 };
 
+type PaginatedPostsResponse = {
+  data: Post[];
+  meta?: Record<string, unknown>;
+};
+
+type SortType = "latest" | "popular" | "following";
+
+type FeedTab = {
+  value: SortType;
+  label: string;
+  authOnly?: boolean;
+};
+
+const FEED_TABS: FeedTab[] = [
+  { value: "latest", label: "So'nggilari" },
+  { value: "popular", label: "Trenddagilar" },
+  { value: "following", label: "Mening obunalarim", authOnly: true },
+];
+
 const LANGUAGE_SNIPPETS: Record<string, string> = {
   javascript: `function greet(name) {\n  return \`Salom, \${name}!\`;\n}\n\nconsole.log(greet('KnowHub'));`,
   python: `def greet(name):\n    return f"Salom, {name}!"\n\nprint(greet("KnowHub"))`,
@@ -143,6 +167,14 @@ const LANGUAGES = [
   { value: "python", label: "Python" },
   { value: "php", label: "PHP" },
 ];
+
+async function getPosts(params: { sort: SortType }) {
+  const sortParam = params.sort === "popular" ? "trending" : params.sort;
+  const response = await api.get<PaginatedPostsResponse>("/posts", {
+    params: { sort: sortParam, per_page: 6 },
+  });
+  return response.data;
+}
 
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
@@ -485,37 +517,31 @@ export default function HomePage() {
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTagIndex, setActiveTagIndex] = useState(0);
+  const [sortType, setSortType] = useState<SortType>("latest");
+  const auth = useAuth();
 
-  const quickActions = useMemo(
-    () => [
-      {
-        title: "Fikr almashish",
-        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
-        href: "/posts/create",
-        icon: PenSquare,
-        accent:
-          "border-cyan-500/40 bg-cyan-500/10 text-cyan-100 shadow-[0_0_25px_-12px_rgba(34,211,238,0.8)]",
-      },
-      {
-        title: "Mini serverni ishga tushiring",
-        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
-        href: "/containers",
-        icon: Zap,
-        accent:
-          "border-purple-500/40 bg-purple-500/10 text-purple-100 shadow-[0_0_25px_-12px_rgba(168,85,247,0.8)]",
-      },
-      {
-        title: "Wiki'ni boyiting",
-        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
-        href: "/wiki",
-        icon: Compass,
-        accent:
-          "border-sky-500/40 bg-sky-500/10 text-sky-100 shadow-[0_0_25px_-12px_rgba(56,189,248,0.8)]",
-      },
-    ],
-    []
+  const {
+    data: postsResponse,
+    isLoading: postsLoading,
+    isError: postsIsError,
+    error: postsError,
+  } = useQuery<PaginatedPostsResponse>({
+    queryKey: ["posts", sortType],
+    queryFn: () => getPosts({ sort: sortType }),
+  });
+
+  const posts = postsResponse?.data ?? [];
+
+  const visibleTabs = useMemo(
+    () => FEED_TABS.filter((tab) => (tab.authOnly ? auth.isAuthenticated : true)),
+    [auth.isAuthenticated],
   );
+
+  useEffect(() => {
+    if (!auth.isAuthenticated && sortType === "following") {
+      setSortType("latest");
+    }
+  }, [auth.isAuthenticated, sortType]);
 
   useEffect(() => {
     let active = true;
@@ -573,7 +599,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const latestPosts = homeStats?.latest_posts ?? [];
+  const latestPosts = useMemo(() => homeStats?.latest_posts ?? [], [homeStats?.latest_posts]);
   const trendingTags = homeStats?.trending_tags ?? [];
 
   const { spotlightPost, secondaryPosts, queuePosts } = useMemo(() => {
@@ -638,6 +664,59 @@ export default function HomePage() {
     []
   );
 
+  const builderHighlights = useMemo(
+    () => [
+      {
+        title: "Faol monitoring",
+        description: "Trendlar, ovozlar va mini hodisalarni real vaqt rejimida kuzating.",
+        icon: Activity,
+      },
+      {
+        title: "Jamiyat bilan tez aloqa",
+        description: "Izohlar va chatlardan foydalanib, g'oyalarga zudlik bilan javob bering.",
+        icon: MessageCircle,
+      },
+      {
+        title: "Hamkorlik rejimlari",
+        description: "Guruhlaringizga mos bo'limlar va navbatchilik ro'yxatlari bilan ishlang.",
+        icon: Users,
+      },
+    ],
+    []
+  );
+
+  const renderPostsGrid = () => {
+    if (postsLoading) {
+      return <LoadingSpinner />;
+    }
+
+    if (postsIsError) {
+      const postsErrorMessage =
+        postsError instanceof Error ? postsError.message : "Postlarni yuklashda xatolik yuz berdi.";
+      return (
+        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-6 py-8 text-sm text-red-700 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200">
+          {postsErrorMessage}
+        </div>
+      );
+    }
+
+    if (!posts.length) {
+      return (
+        <div className="rounded-2xl border border-muted/40 bg-muted/10 px-6 py-10 text-center text-sm text-muted-foreground">
+          Hozircha postlar topilmadi.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-6 md:grid-cols-2">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
       <section className="relative isolate overflow-hidden border-b border-slate-200/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100 dark:border-slate-800">
@@ -688,79 +767,69 @@ export default function HomePage() {
                 );
               })}
             </div>
-            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
-              {statsCards.map((card) => {
-                const Icon = card.icon;
+          </div>
+          <CodeRunnerCard />
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 py-16 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`group flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 text-foreground shadow-sm transition ${action.hoverClass}`}
+                >
+                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
+                    <Icon className="h-5 w-5" />
+                    {action.title}
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">{action.description}</p>
+                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <CodeRunnerCard />
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-16 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+          <div className="rounded-3xl border border-border bg-surface p-8 text-foreground shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Hamjamiyat vositalari</p>
+            <h2 className="mt-3 text-2xl font-semibold">Bir xil estetikadagi ish oqimlari</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Har bir bo'limda bir xil rang palitrasi va radiuslardan foydalanib, loyihangizni tartibli saqlang.
+            </p>
+            <div className="mt-8 space-y-4">
+              {builderHighlights.map((highlight) => {
+                const Icon = highlight.icon;
                 return (
-                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                  <div
+                    key={highlight.title}
+                    className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm shadow-sm"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary text-primary">
                       <Icon className="h-4 w-4" />
-                      {card.label}
                     </div>
-                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
-                    <p>{card.subtitle}</p>
+                    <div>
+                      <p className="font-semibold text-foreground">{highlight.title}</p>
+                      <p className="text-muted-foreground">{highlight.description}</p>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
-          <CodeRunnerCard />
-        </div>
-      </section>
-
-      <section className="max-w-6xl px-6 py-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
-                >
-                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
-                    <Icon className="h-5 w-5" />
-                    {action.title}
-                  </div>
-                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
-                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
-                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-          <CodeRunnerCard />
-        </div>
-      </section>
-
-      <section className="max-w-6xl px-6 py-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
-                >
-                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
-                    <Icon className="h-5 w-5" />
-                    {action.title}
-                  </div>
-                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
-                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
-                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
           <Link
             href="/containers"
-            className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-slate-100 shadow-xl transition hover:shadow-2xl dark:border-slate-700"
+            className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-slate-100 shadow-xl transition hover:shadow-2xl"
           >
             <div className="absolute inset-0 -z-10 opacity-80">
               <div className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-cyan-500/30 blur-3xl" />
@@ -774,12 +843,67 @@ export default function HomePage() {
             <p className="mt-3 max-w-xl text-sm text-slate-300">
               Izolyatsiyalangan Docker muhiti, resurs limitlari va xavfsizlik siyosatlari bilan tajribangizni real vaqt rejimida sinovdan o'tkazing.
             </p>
-            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 transition group-hover:bg-slate-200">
+            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 transition group-hover:bg-white">
               Boshlash
               <Rocket className="h-4 w-4" />
             </div>
           </Link>
         </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
+              Bosh sahifa
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Bosh sahifa</h1>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg dark:border-slate-700 dark:bg-slate-900/80">
+            <div className="space-y-4">
+              <h2 className="text-3xl font-semibold leading-tight text-slate-900 dark:text-white">
+                KnowHub Community: Dasturchilar Uchun Yangi Maydon
+              </h2>
+              <p className="text-base text-slate-600 dark:text-slate-300">
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/posts/create">Post Yaratish</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/wiki">Wiki'ni Ko'rish</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <Tabs value={sortType} onValueChange={(value) => setSortType(value as SortType)} className="space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Postlar</p>
+              <h2 className="text-2xl font-semibold text-foreground">Hamjamiyat lentasi</h2>
+              <p className="text-sm text-muted-foreground">
+                Turli saralashlarga o'tib eng so'nggi, trenddagi yoki obunangizdagi muhokamalarni kuzating.
+              </p>
+            </div>
+            <TabsList className="flex w-full flex-wrap gap-2 rounded-full border border-muted/30 bg-muted/20 p-1 sm:w-auto">
+              {visibleTabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="px-5 py-2 text-sm font-semibold">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {visibleTabs.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+              {renderPostsGrid()}
+            </TabsContent>
+          ))}
+        </Tabs>
       </section>
 
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
