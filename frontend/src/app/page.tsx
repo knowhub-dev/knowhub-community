@@ -6,7 +6,9 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import PostCard from "@/components/PostCard";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AxiosError } from "axios";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -19,7 +21,6 @@ import {
   MessageCircle,
   PenSquare,
   Play,
-  Rocket,
   Server,
   Sparkles,
   TrendingUp,
@@ -266,6 +267,62 @@ const timeAgo = (value?: string) => {
   return formatter.format(-Math.round(valueDiff), unit);
 };
 
+const activityTypeLabels: Record<ActivityEvent["type"], string> = {
+  post: "Yangi post",
+  comment: "Izoh",
+  badge: "Mukofot",
+};
+
+const activityIcon = (type: ActivityEvent["type"]) => {
+  switch (type) {
+    case "comment":
+      return <MessageCircle className="h-4 w-4 text-emerald-400" />;
+    case "badge":
+      return <Medal className="h-4 w-4 text-amber-400" />;
+    default:
+      return <Sparkles className="h-4 w-4 text-sky-400" />;
+  }
+};
+
+const activityDescription = (event: ActivityEvent) => {
+  if (event.type === "post" && event.payload?.title) {
+    return (
+      <Link
+        href={`/posts/${event.payload.slug ?? ""}`}
+        className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
+      >
+        {event.payload.title}
+      </Link>
+    );
+  }
+
+  if (event.type === "comment" && event.payload?.post) {
+    return (
+      <div>
+        <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
+          Izoh: {event.payload.post.title}
+        </p>
+        {event.payload.excerpt && (
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">{event.payload.excerpt}</p>
+        )}
+      </div>
+    );
+  }
+
+  if (event.type === "badge" && event.payload?.name) {
+    return (
+      <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
+        {event.payload.name}
+        {typeof event.payload.xp_reward === "number" && (
+          <span className="ml-2 text-xs font-semibold text-amber-500">+{event.payload.xp_reward} XP</span>
+        )}
+      </p>
+    );
+  }
+
+  return <span className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Faollik</span>;
+};
+
 function CodeRunnerCard() {
   const { user } = useAuth();
   const [language, setLanguage] = useState<string>(LANGUAGES[0].value);
@@ -302,8 +359,9 @@ function CodeRunnerCard() {
         stderr: response.data.stderr,
         status: response.data.status,
       });
-    } catch (error: any) {
-      const status = error?.response?.status;
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const status = axiosError?.response?.status;
       if (status === 429) {
         setResult({ message: "Siz belgilangan limitdan oshdingiz. Birozdan so'ng urinib ko'ring." });
       } else if (status === 401) {
@@ -553,52 +611,6 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
     return null;
   }
 
-  const iconForType = (type: ActivityEvent["type"]) => {
-    switch (type) {
-      case "comment":
-        return <MessageCircle className="h-4 w-4 text-emerald-400" />;
-      case "badge":
-        return <Medal className="h-4 w-4 text-amber-400" />;
-      default:
-        return <Sparkles className="h-4 w-4 text-sky-400" />;
-    }
-  };
-
-  const descriptionFor = (event: ActivityEvent) => {
-    if (event.type === "post" && event.payload?.title) {
-      return (
-        <Link
-          href={`/posts/${event.payload.slug ?? ""}`}
-          className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
-        >
-          {event.payload.title}
-        </Link>
-      );
-    }
-
-    if (event.type === "comment" && event.payload?.post) {
-      return (
-        <div>
-          <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Izoh: {event.payload.post.title}</p>
-          {event.payload.excerpt && <p className="text-xs text-muted-foreground dark:text-muted-foreground">{event.payload.excerpt}</p>}
-        </div>
-      );
-    }
-
-    if (event.type === "badge" && event.payload?.name) {
-      return (
-        <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
-          {event.payload.name}
-          {typeof event.payload.xp_reward === "number" && (
-            <span className="ml-2 text-xs font-semibold text-amber-500">+{event.payload.xp_reward} XP</span>
-          )}
-        </p>
-      );
-    }
-
-    return <span className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Faollik</span>;
-  };
-
   return (
     <section className="max-w-6xl px-6 pb-20 lg:px-8">
       <div className="flex items-center gap-3 pb-6">
@@ -611,7 +623,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
             key={`${event.type}-${event.id}`}
             className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
           >
-            <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{iconForType(event.type)}</div>
+            <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{activityIcon(event.type)}</div>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
                 {event.user ? (
@@ -627,7 +639,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
                 <span>•</span>
                 <span>{timeAgo(event.created_at)}</span>
               </div>
-              {descriptionFor(event)}
+              {activityDescription(event)}
             </div>
           </div>
         ))}
@@ -721,8 +733,8 @@ export default function HomePage() {
             setSystemStatus(null);
           }
         }
-      } catch (err: any) {
-        issues.push(err?.message ?? "Ma'lumotlarni yuklashda xatolik yuz berdi");
+      } catch (err: unknown) {
+        issues.push(err instanceof Error ? err.message : "Ma'lumotlarni yuklashda xatolik yuz berdi");
       } finally {
         if (!active) {
           return;
@@ -776,27 +788,50 @@ export default function HomePage() {
     [homeStats?.stats?.posts?.total, homeStats?.stats?.users?.total, homeStats?.stats?.wiki?.articles]
   );
 
+  const heroFeed = useMemo(() => feed.slice(0, 3), [feed]);
+  const heroTags = useMemo(() => trendingTags.slice(0, 3), [trendingTags]);
+
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
         href: "/posts/create",
-        title: "Fikr almashish",
-        description: "Muammolar va yechimlar bilan hamjamiyatni faollashtiring.",
-        icon: PenSquare,
+        title: "Savol yoki issue ochish",
+        description: "Stack Overflow formatida savol bering yoki GitHub muammosini baham ko'ring.",
+        icon: MessageCircle,
         accentClass: "text-cyan-600 dark:text-cyan-300",
         hoverClass: "hover:border-cyan-400/70 hover:shadow-lg",
-        ctaLabel: "Boshlash",
+        ctaLabel: "Savol yuborish",
         ctaClass: "text-cyan-500",
       },
       {
-        href: "/leaderboard",
-        title: "Liderlar taxtasi",
-        description: "Eng faol mualliflar va jamoadoshlar bilan tanishing.",
-        icon: Medal,
+        href: "/wiki",
+        title: "Wiki bo'limini boyitish",
+        description: "Atroflicha yechimlarni hujjatlashtirib, boshqalarga yo'l ko'rsating.",
+        icon: BookOpen,
         accentClass: "text-indigo-600 dark:text-indigo-300",
         hoverClass: "hover:border-indigo-400/70 hover:shadow-lg",
-        ctaLabel: "Reyting",
+        ctaLabel: "Maqola yozish",
         ctaClass: "text-indigo-500",
+      },
+      {
+        href: "/containers",
+        title: "Laboratoriya muhiti",
+        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
+        icon: Server,
+        accentClass: "text-emerald-600 dark:text-emerald-300",
+        hoverClass: "hover:border-emerald-400/70 hover:shadow-lg",
+        ctaLabel: "Labga o'tish",
+        ctaClass: "text-emerald-500",
+      },
+      {
+        href: "/leaderboard",
+        title: "Mentorlarni toping",
+        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
+        icon: Users,
+        accentClass: "text-sky-600 dark:text-sky-300",
+        hoverClass: "hover:border-sky-400/70 hover:shadow-lg",
+        ctaLabel: "Mentorlar",
+        ctaClass: "text-sky-500",
       },
     ],
     []
@@ -857,135 +892,212 @@ export default function HomePage() {
 
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <section className="relative isolate overflow-hidden border-b border-border/50 bg-gradient-to-br from-[hsl(var(--primary))] via-[hsla(var(--secondary),0.85)] to-[hsl(var(--primary))] text-white">
-        <div className="absolute inset-0 -z-10 opacity-70" aria-hidden="true">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(16,185,129,0.25),_transparent_55%)]" />
+      <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
+        <div className="absolute inset-0 -z-10 opacity-80" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(16,185,129,0.2),_transparent_55%)]" />
         </div>
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1.1fr,0.9fr] lg:px-8">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
-              KnowHub Community
-            </div>
-            <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-              Zamonaviy hamjamiyat uchun kiber platforma.
-            </h1>
-            <p className="max-w-2xl text-base text-white/80 sm:text-lg">
-              Tajribangizni ulashing, g'oyalaringizni mini-serverlarda sinang va real vaqt statistikasi bilan jamiyat pulsini kuzatib boring.
-              KnowHub sizga barcha qulayliklarni bitta bosh sahifada taqdim etadi.
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/posts/create"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[hsl(var(--primary))] transition hover:opacity-90"
-              >
-                Yangi post yozish
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/containers"
-                className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/20"
-              >
-                Mini-serverlarni boshlash
-                <Server className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-white/75">
-              {statsCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div key={card.label} className="rounded-xl border border-white/20 bg-white/5 p-4">
-                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
-                      <Icon className="h-4 w-4" />
-                      {card.label}
+        <div className="mx-auto max-w-6xl px-6 py-16 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/40 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground shadow-sm backdrop-blur dark:bg-white/10">
+                GitHub × Stack Overflow ruhi
+              </div>
+              <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
+                KnowHub Community: Dasturchilar Uchun Yangi Maydon
+              </h1>
+              <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi va Stack Overflow'dagi kabi savollarga aniq javoblar topiladi.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 rounded-full bg-white px-6 text-base font-semibold text-[hsl(var(--primary))] shadow-sm hover:bg-white/90"
+                >
+                  <Link href="/posts/create">
+                    Post yaratish
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="lg"
+                  className="gap-2 rounded-full border border-border/70 bg-transparent px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-white/20"
+                >
+                  <Link href="/wiki">
+                    Wiki'ni ko'rish
+                    <BookOpen className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid max-w-xl grid-cols-2 gap-3 text-xs text-muted-foreground sm:grid-cols-3">
+                {statsCards.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <div key={card.label} className="rounded-xl border border-border/60 bg-white/50 p-4 shadow-sm backdrop-blur dark:bg-[hsl(var(--card))]/80">
+                      <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                        <Icon className="h-4 w-4" />
+                        {card.label}
+                      </div>
+                      <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(card.value)}</p>
+                      <p>{card.subtitle}</p>
                     </div>
-                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
-                    <p>{card.subtitle}</p>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-5">
+              <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-muted-foreground">GitHub uslubidagi backlog</p>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
+                </div>
+                <div className="mt-6 space-y-3">
+                  {builderHighlights.map((highlight) => {
+                    const Icon = highlight.icon;
+                    return (
+                      <div key={highlight.title} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{highlight.title}</p>
+                          <p className="text-sm text-muted-foreground">{highlight.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-muted-foreground">Stack Overflow uslubidagi jonli muhokamalar</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {heroTags.length ? (
+                      heroTags.map((tag) => (
+                        <span
+                          key={tag.slug ?? tag.name}
+                          className="rounded-full border border-border/60 px-3 py-1 text-[hsl(var(--foreground))]"
+                        >
+                          #{tag.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="rounded-full border border-dashed border-border/60 px-3 py-1 text-muted-foreground">
+                        Yangi teglar kutilmoqda
+                      </span>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {heroFeed.length ? (
+                    heroFeed.map((event) => (
+                      <div
+                        key={`${event.type}-${event.id}`}
+                        className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4"
+                      >
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 font-semibold text-[hsl(var(--foreground))]">
+                            <span className="rounded-full bg-[hsl(var(--foreground))]/10 p-2">{activityIcon(event.type)}</span>
+                            {activityTypeLabels[event.type]}
+                          </div>
+                          <span>{timeAgo(event.created_at)}</span>
+                        </div>
+                        <div className="mt-2 text-sm">{activityDescription(event)}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="rounded-2xl border border-dashed border-border/70 bg-[hsl(var(--surface))] p-4 text-sm text-muted-foreground">
+                      Faollik tez orada paydo bo'ladi.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 py-12 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SystemStatusWidget status={systemStatus} />
           <CodeRunnerCard />
         </div>
       </section>
 
-      <section className="max-w-6xl px-6 py-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--surface))] p-5 text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
-                >
-                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
-                    <Icon className="h-5 w-5" />
-                    {action.title}
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">{action.description}</p>
-                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
-                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-          <SystemStatusWidget status={systemStatus} />
-        </div>
-      </section>
-
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
-          <div className="rounded-3xl border border-border bg-[hsl(var(--surface))] p-8 text-[hsl(var(--foreground))] shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Hamjamiyat vositalari</p>
-            <h2 className="mt-3 text-2xl font-semibold">Bir xil estetikadagi ish oqimlari</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Har bir bo'limda bir xil rang palitrasi va radiuslardan foydalanib, loyihangizni tartibli saqlang.
-            </p>
-            <div className="mt-8 space-y-4">
-              {builderHighlights.map((highlight) => {
-                const Icon = highlight.icon;
+        <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tezkor harakatlar</p>
+                <p className="text-lg font-semibold">GitHub va Stack Overflow ruhidagi oqimlar</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
                 return (
-                  <div
-                    key={highlight.title}
-                    className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 text-sm shadow-sm"
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--surface))] p-5 text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary text-primary">
-                      <Icon className="h-4 w-4" />
+                    <div className="flex items-center gap-3">
+                      <span className={`rounded-2xl bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="text-sm font-semibold">{action.title}</div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-foreground">{highlight.title}</p>
-                      <p className="text-muted-foreground">{highlight.description}</p>
-                    </div>
-                  </div>
+                    <p className="mt-3 text-sm text-muted-foreground">{action.description}</p>
+                    <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                      {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </Link>
                 );
               })}
             </div>
           </div>
-          <Link
-            href="/containers"
-            className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--foreground))] to-[hsl(var(--primary))] p-8 text-[hsl(var(--foreground))] shadow-xl transition hover:shadow-2xl"
-          >
-            <div className="absolute inset-0 -z-10 opacity-80">
-              <div className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-cyan-500/30 blur-3xl" />
-              <div className="absolute bottom-0 right-0 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Trend teglar</p>
+                <Link href="/tags" className="text-xs font-semibold text-[hsl(var(--primary))] hover:underline">
+                  Barchasi
+                </Link>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                {trendingTags.length ? (
+                  trendingTags.slice(0, 14).map((tag) => (
+                    <span
+                      key={tag.slug ?? tag.name}
+                      className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))]"
+                    >
+                      #{tag.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="rounded-full border border-dashed border-border/60 px-3 py-1 text-muted-foreground">
+                    Teglar yuklanmoqda...
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">
-              <Server className="h-5 w-5" />
-              O'z g'oyangizni sinang
+            <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Stack Overflow qoidalari</h3>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Savolingiz yoki yechimingiz hamjamiyat standartlariga mos bo'lishi uchun ushbu tezkor tekshiruvdan o'ting.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li>• Sarlavhaga muammo va kontekstni qo'shing.</li>
+                <li>• Kod parchalarini va kutilgan natijani aniq yozing.</li>
+                <li>• Taglardan foydalanib, qidiruvni yengillashtiring.</li>
+                <li>• GitHub PR'lardagi kabi qisqa changelog yozing.</li>
+              </ul>
             </div>
-            <h2 className="mt-6 text-2xl font-semibold text-white">Bir klikda shaxsiy mini serveringizni ishga tushiring.</h2>
-            <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-              Izolyatsiyalangan Docker muhiti, resurs limitlari va xavfsizlik siyosatlari bilan tajribangizni real vaqt rejimida sinovdan o'tkazing.
-            </p>
-            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-[hsl(var(--card))]/95 px-5 py-2 text-sm font-semibold text-[hsl(var(--foreground))] transition group-hover:bg-white">
-              Boshlash
-              <Rocket className="h-4 w-4" />
-            </div>
-          </Link>
+          </div>
         </div>
       </section>
 
@@ -1079,21 +1191,6 @@ export default function HomePage() {
                 {!queuePosts.length && <li className="text-xs text-muted-foreground">Keyingi postlar hali yo'q.</li>}
               </ul>
             </div>
-            {!!trendingTags.length && (
-              <div className="rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-5 shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70">
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Trend teglar</h3>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  {trendingTags.slice(0, 12).map((tag) => (
-                    <span
-                      key={tag.slug ?? tag.name}
-                      className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))] dark:border-border dark:bg-[hsl(var(--card))]/60 dark:text-muted-foreground"
-                    >
-                      #{tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>

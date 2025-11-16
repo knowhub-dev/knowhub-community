@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB; // <-- Muhim!
+use Illuminate\Support\Facades\Hash;
 use App\Models\Category;
 use App\Models\Tag;
 use App\Models\Level;
@@ -47,8 +48,21 @@ class DatabaseSeeder extends Seeder
         foreach ($levels as $lv) { Level::firstOrCreate(['name'=>$lv['name']], $lv); }
         
         // 4. ADMINNI YARATAMIZ
-        // UserFactory'dagi 'admin()' holatini (state) ishlatamiz
-        User::factory()->admin()->create();
+        // Default credentialar: admin@knowhub.uz / admin123
+        $adminLevelId = Level::orderByDesc('min_xp')->first()?->id ?? 1;
+
+        User::updateOrCreate(
+            ['email' => 'admin@knowhub.uz'],
+            [
+                'name' => 'KnowHub Admin',
+                'username' => 'admin',
+                'password' => Hash::make('admin123'),
+                'xp' => 5000,
+                'level_id' => $adminLevelId,
+                'is_admin' => 1,
+                'is_banned' => 0,
+            ]
+        );
 
         // 5. Oddiy Foydalanuvchilarni Yaratamiz
         // 20 ta oddiy foydalanuvchi yaratamiz
