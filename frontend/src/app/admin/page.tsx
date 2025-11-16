@@ -341,7 +341,7 @@ export default function AdminPage() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f6f4]">
+      <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--surface))]">
         <LoadingSpinner />
       </div>
     );
@@ -349,11 +349,11 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#f6f6f4]">
+      <div className="min-h-screen bg-[hsl(var(--surface))]">
         <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-24 text-center">
-          <Shield className="h-10 w-10 text-slate-400" />
-          <h1 className="text-2xl font-semibold text-slate-900">Ruxsat berilmagan</h1>
-          <p className="text-sm text-slate-500">
+          <Shield className="h-10 w-10 text-muted-foreground" />
+          <h1 className="text-2xl font-semibold text-[hsl(var(--foreground))]">Ruxsat berilmagan</h1>
+          <p className="text-sm text-muted-foreground">
             Bu bo'lim faqat admin huquqiga ega foydalanuvchilar uchun. Agar bu xato deb o'ylasangiz, bosh administrator bilan bog'laning.
           </p>
           <LinkButton href="/">Bosh sahifaga qaytish</LinkButton>
@@ -365,7 +365,7 @@ export default function AdminPage() {
   const renderDashboard = () => {
     if (statsLoading) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-10 text-center shadow-sm">
           <LoadingSpinner />
         </div>
       );
@@ -373,7 +373,7 @@ export default function AdminPage() {
 
     if (statsError) {
       return (
-        <div className="space-y-4 rounded-3xl border border-rose-200 bg-rose-50 p-8 text-rose-600 shadow-sm">
+        <div className="space-y-4 rounded-3xl border border-rose-200 bg-rose-50 p-8 text-rose-700 shadow-sm dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-200">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5" />
             <p className="font-semibold">{statsError}</p>
@@ -390,7 +390,7 @@ export default function AdminPage() {
 
     if (!stats) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-8 text-center text-sm text-muted-foreground shadow-sm">
           Hozircha statistik ma'lumot topilmadi.
         </div>
       );
@@ -423,15 +423,15 @@ export default function AdminPage() {
       <div className="space-y-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Jamiyat ko'rinishi</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">Jamiyat ko'rinishi</h2>
+            <p className="text-sm text-muted-foreground">
               Eng muhim metrikalar. {lastFetchedAt ? `Yangilandi: ${lastFetchedAt.toLocaleTimeString()}` : ''}
             </p>
           </div>
           <button
             onClick={loadStats}
             disabled={statsLoading}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--card))] px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:border-border hover:text-[hsl(var(--foreground))] disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${statsLoading ? 'animate-spin' : ''}`} />
             Yangilash
@@ -440,17 +440,17 @@ export default function AdminPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {insightCards.map((card) => (
-            <div key={card.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-slate-500">{card.title}</p>
-              <p className="mt-4 text-3xl font-semibold text-slate-900">{card.value}</p>
-              <p className="mt-2 text-xs text-slate-400">{card.caption}</p>
+            <div key={card.title} className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+              <p className="text-sm text-muted-foreground">{card.title}</p>
+              <p className="mt-4 text-3xl font-semibold text-[hsl(var(--foreground))]">{card.value}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{card.caption}</p>
             </div>
           ))}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-          <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Faoliyat dinamikasi</h3>
+          <div className="space-y-4 rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">Faoliyat dinamikasi</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <MetricLine label="Jami postlar" value={formatNumber(stats.posts.total)} trend={`+${formatNumber(stats.posts.trending ?? stats.posts.published)} trend`} />
               <MetricLine label="Jami kommentlar" value={formatNumber(stats.comments.total)} trend={`${formatNumber(stats.comments.pending)} kutmoqda`} />
@@ -459,8 +459,8 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Xavfsizlik ko'rsatkichi</h3>
+          <div className="space-y-4 rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">Xavfsizlik ko'rsatkichi</h3>
             <MetricLine label="Muvaffaqiyatsiz login" value={formatNumber(stats.security?.failed_logins_today)} trend={`${formatNumber(stats.security?.blocked_ips)} bloklangan IP`} />
             <MetricLine label="Shubhali faollik" value={formatNumber(stats.security?.suspicious_activity)} trend="Monitoring ostida" />
             <MetricLine label="Hisobotlar" value={formatNumber(stats.reports.pending)} trend={`${formatNumber(stats.reports.resolved)} hal qilindi`} />
@@ -473,7 +473,7 @@ export default function AdminPage() {
   const renderUserManagement = () => {
     if (usersLoading) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-10 text-center shadow-sm">
           <LoadingSpinner />
         </div>
       );
@@ -488,11 +488,11 @@ export default function AdminPage() {
     }
 
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5">
+      <div className="rounded-3xl border border-border bg-[hsl(var(--card))] shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Foydalanuvchilarni boshqarish</h3>
-            <p className="text-sm text-slate-500">Jami: {formatNumber(usersData.total)}</p>
+            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">Foydalanuvchilarni boshqarish</h3>
+            <p className="text-sm text-muted-foreground">Jami: {formatNumber(usersData.total)}</p>
           </div>
           <div className="relative w-full max-w-xs">
             <input
@@ -500,30 +500,30 @@ export default function AdminPage() {
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               placeholder="Ism, username yoki email..."
-              className="w-full rounded-full border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-slate-500 focus:outline-none focus:ring-0"
+              className="w-full rounded-full border border-border/70 bg-[hsl(var(--card))] py-2 pl-10 pr-4 text-sm focus:border-[hsl(var(--primary))] focus:outline-none focus:ring-0"
             />
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-border text-sm">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-slate-500">Foydalanuvchi</th>
-                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-slate-500">Holati</th>
-                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-slate-500">Faollik</th>
-                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-slate-500">Ro'yxatdan o'tgan</th>
-                <th className="px-6 py-3 text-right font-medium uppercase tracking-wider text-slate-500">Amallar</th>
+                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-muted-foreground">Foydalanuvchi</th>
+                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-muted-foreground">Holati</th>
+                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-muted-foreground">Faollik</th>
+                <th className="px-6 py-3 text-left font-medium uppercase tracking-wider text-muted-foreground">Ro'yxatdan o'tgan</th>
+                <th className="px-6 py-3 text-right font-medium uppercase tracking-wider text-muted-foreground">Amallar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-border/70 bg-[hsl(var(--card))]">
               {usersData.data.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50">
+                <tr key={user.id} className="hover:bg-muted">
                   <td className="px-6 py-4">
                     <div className="space-y-1">
-                      <p className="font-medium text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">@{user.username} · {user.email}</p>
+                      <p className="font-medium text-[hsl(var(--foreground))]">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">@{user.username} · {user.email}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -533,10 +533,10 @@ export default function AdminPage() {
                       {!user.is_admin && !user.is_banned && <StatusBadge tone="green">Aktiv</StatusBadge>}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-500">
+                  <td className="px-6 py-4 text-muted-foreground">
                     {user.posts_count} post · {user.comments_count} izoh
                   </td>
-                  <td className="px-6 py-4 text-slate-500">
+                  <td className="px-6 py-4 text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -573,25 +573,25 @@ export default function AdminPage() {
           </table>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">
+        <div className="flex flex-col gap-4 border-t border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
             {formatNumber(usersData.from)} — {formatNumber(usersData.to)} / {formatNumber(usersData.total)} foydalanuvchi
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setUserPage((p) => Math.max(1, p - 1))}
               disabled={userPage === 1}
-              className="rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400 disabled:opacity-50"
+              className="rounded-full border border-border/70 bg-[hsl(var(--card))] px-3 py-2 text-sm text-muted-foreground hover:border-border disabled:opacity-50"
             >
               Oldingisi
             </button>
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-muted-foreground">
               {userPage} / {usersData.last_page}
             </span>
             <button
               onClick={() => setUserPage((p) => Math.min(usersData.last_page, p + 1))}
               disabled={userPage === usersData.last_page}
-              className="rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400 disabled:opacity-50"
+              className="rounded-full border border-border/70 bg-[hsl(var(--card))] px-3 py-2 text-sm text-muted-foreground hover:border-border disabled:opacity-50"
             >
               Keyingisi
             </button>
@@ -604,7 +604,7 @@ export default function AdminPage() {
   const renderModeration = () => {
     if (statsLoading) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-10 text-center shadow-sm">
           <LoadingSpinner />
         </div>
       );
@@ -612,7 +612,7 @@ export default function AdminPage() {
 
     if (!stats) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-8 text-sm text-muted-foreground shadow-sm">
           Hozircha moderatsiya ma'lumotlari mavjud emas.
         </div>
       );
@@ -620,8 +620,8 @@ export default function AdminPage() {
 
     return (
       <div className="space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">Hisobotlar oqimi</h3>
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">Hisobotlar oqimi</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <SummaryCard title="Umumiy hisobotlar" value={formatNumber(stats.reports.total)} icon={Activity} tone="slate" />
             <SummaryCard title="Kutilayotgan" value={formatNumber(stats.reports.pending)} icon={AlertTriangle} tone="amber" />
@@ -630,13 +630,13 @@ export default function AdminPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h4 className="text-base font-semibold text-slate-900">Kommentlar moderatsiyasi</h4>
+          <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h4 className="text-base font-semibold text-[hsl(var(--foreground))]">Kommentlar moderatsiyasi</h4>
             <MetricLine label="Kutayotgan kommentlar" value={formatNumber(stats.comments.pending)} trend={`${formatNumber(stats.comments.new_today)} yangi bugun`} />
             <MetricLine label="Umumiy kommentlar" value={formatNumber(stats.comments.total)} trend={`${formatNumber(stats.comments.pending_moderation)} nazoratda`} />
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h4 className="text-base font-semibold text-slate-900">Xavfsizlik
+          <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h4 className="text-base font-semibold text-[hsl(var(--foreground))]">Xavfsizlik
             </h4>
             <MetricLine label="Bloklangan IP" value={formatNumber(stats.security?.blocked_ips)} trend={`${formatNumber(stats.security?.failed_logins_today)} muvaffaqiyatsiz login`} />
             <MetricLine label="Shubhali faollik" value={formatNumber(stats.security?.suspicious_activity)} trend="Doimiy monitoring" />
@@ -649,7 +649,7 @@ export default function AdminPage() {
   const renderSystem = () => {
     if (statsLoading) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-10 text-center shadow-sm">
           <LoadingSpinner />
         </div>
       );
@@ -657,7 +657,7 @@ export default function AdminPage() {
 
     if (!stats) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-8 text-sm text-muted-foreground shadow-sm">
           Tizim ma'lumotlari mavjud emas.
         </div>
       );
@@ -666,14 +666,14 @@ export default function AdminPage() {
     return (
       <div className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Server ko'rsatkichlari</h3>
+          <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">Server ko'rsatkichlari</h3>
             <MetricLine label="Uptime" value={stats.system.uptime} trend={`${formatNumber(stats.system.queue_jobs)} queue`} />
             <MetricLine label="Xotira ishlatilishi" value={stats.system.memory_usage} trend={`${formatNumber(stats.system.failed_jobs)} nosoz queue`} />
             <MetricLine label="Disk ishlatilishi" value={stats.system.disk_usage} trend="Monitoring ostida" />
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Performance</h3>
+          <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">Performance</h3>
             <MetricLine label="O`rtacha javob vaqti" value={stats.performance?.avg_response_time ?? '—'} trend={`${stats.performance?.cache_hit_rate ?? '—'} cache hit`} />
             <MetricLine label="Sekin so'rovlar" value={formatNumber(stats.performance?.slow_queries)} trend="Optimallashtirish rejasini ko'rib chiqing" />
             <MetricLine label="Kod bajarish o'rtacha" value={stats.code_runs?.avg_runtime ?? '—'} trend={`${formatNumber(stats.code_runs?.successful)} muvaffaqiyatli`} />
@@ -723,58 +723,58 @@ export default function AdminPage() {
 
     if (settingsLoading && !systemSettings) {
       return (
-        <div className="flex items-center justify-center rounded-3xl border border-slate-200 bg-white p-12 shadow-sm">
+        <div className="flex items-center justify-center rounded-3xl border border-border bg-[hsl(var(--card))] p-12 shadow-sm">
           <LoadingSpinner />
         </div>
       );
     }
 
     return (
-      <form onSubmit={handleSave} className="space-y-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <form onSubmit={handleSave} className="space-y-10 rounded-3xl border border-border bg-[hsl(var(--card))] p-8 shadow-sm">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Brending va SEO</h3>
-          <p className="mt-1 text-sm text-slate-500">Sayt logotipi, nomi va qidiruvga oid meta ma\'lumotlarni boshqaring.</p>
+          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">Brending va SEO</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Sayt logotipi, nomi va qidiruvga oid meta ma\'lumotlarni boshqaring.</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">Sayt nomi</span>
+              <span className="text-sm font-medium text-[hsl(var(--foreground))]">Sayt nomi</span>
               <input
                 value={siteTitle}
                 onChange={(event) => setSiteTitle(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 placeholder="KnowHub Community"
                 required
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">Tagline</span>
+              <span className="text-sm font-medium text-[hsl(var(--foreground))]">Tagline</span>
               <input
                 value={siteTagline}
                 onChange={(event) => setSiteTagline(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 placeholder="Dasturchilar hamjamiyati"
               />
             </label>
           </div>
           <div className="space-y-4">
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">Meta tavsif (description)</span>
+              <span className="text-sm font-medium text-[hsl(var(--foreground))]">Meta tavsif (description)</span>
               <textarea
                 value={seoDescription}
                 onChange={(event) => setSeoDescription(event.target.value)}
                 maxLength={160}
-                className="mt-2 h-28 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="mt-2 h-28 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 placeholder="KnowHub — dasturchilar uchun hamjamiyat."
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">Meta keywords (vergul bilan)</span>
+              <span className="text-sm font-medium text-[hsl(var(--foreground))]">Meta keywords (vergul bilan)</span>
               <input
                 value={seoKeywords}
                 onChange={(event) => setSeoKeywords(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 placeholder="knowhub, dasturlash, hamjamiyat"
               />
             </label>
@@ -785,14 +785,14 @@ export default function AdminPage() {
           {(['light', 'dark'] as Array<'light' | 'dark'>).map((type) => {
             const logo = branding[type];
             return (
-              <div key={type} className="rounded-2xl border border-slate-200 p-6">
+              <div key={type} className="rounded-2xl border border-border p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-900">{type === 'light' ? 'Light rejim logosi' : 'Dark rejim logosi'}</h4>
-                    <p className="text-xs text-slate-500">PNG, SVG yoki WebP (2MB gacha)</p>
+                    <h4 className="text-sm font-semibold text-[hsl(var(--foreground))]">{type === 'light' ? 'Light rejim logosi' : 'Dark rejim logosi'}</h4>
+                    <p className="text-xs text-muted-foreground">PNG, SVG yoki WebP (2MB gacha)</p>
                   </div>
                   <div className="flex gap-2">
-                    <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600">
+                    <label className="inline-flex cursor-pointer items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-indigo-300 hover:text-indigo-600">
                       Yuklash
                       <input
                         type="file"
@@ -812,11 +812,11 @@ export default function AdminPage() {
                     )}
                   </div>
                 </div>
-                <div className="mt-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50">
+                <div className="mt-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-border/70 bg-muted">
                   {logo ? (
                     <img src={logo.url} alt={`${type} logo preview`} className="max-h-20" />
                   ) : (
-                    <span className="text-xs text-slate-400">Logo yuklanmagan</span>
+                    <span className="text-xs text-muted-foreground">Logo yuklanmagan</span>
                   )}
                 </div>
               </div>
@@ -825,8 +825,8 @@ export default function AdminPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 p-6">
-            <h4 className="text-sm font-semibold text-slate-900">Faollik sozlamalari</h4>
+          <div className="rounded-2xl border border-border p-6">
+            <h4 className="text-sm font-semibold text-[hsl(var(--foreground))]">Faollik sozlamalari</h4>
             <div className="mt-4 space-y-3 text-sm">
               <label className="flex items-center justify-between">
                 <span>Ro'yxatdan o'tish ochiq</span>
@@ -834,7 +834,7 @@ export default function AdminPage() {
                   type="checkbox"
                   checked={registrationEnabled}
                   onChange={(event) => setRegistrationEnabled(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
                 />
               </label>
               <label className="flex items-center justify-between">
@@ -843,7 +843,7 @@ export default function AdminPage() {
                   type="checkbox"
                   checked={codeExecutionEnabled}
                   onChange={(event) => setCodeExecutionEnabled(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
                 />
               </label>
               <label className="flex items-center justify-between">
@@ -852,13 +852,13 @@ export default function AdminPage() {
                   type="checkbox"
                   checked={aiSuggestionsEnabled}
                   onChange={(event) => setAiSuggestionsEnabled(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
                 />
               </label>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 p-6">
-            <h4 className="text-sm font-semibold text-slate-900">Limitlar</h4>
+          <div className="rounded-2xl border border-border p-6">
+            <h4 className="text-sm font-semibold text-[hsl(var(--foreground))]">Limitlar</h4>
             <div className="mt-4 space-y-3 text-sm">
               <label className="block">
                 <span>Kunlik post limiti</span>
@@ -868,7 +868,7 @@ export default function AdminPage() {
                   max={100}
                   value={maxPostsPerDay}
                   onChange={(event) => setMaxPostsPerDay(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </label>
               <label className="block">
@@ -879,7 +879,7 @@ export default function AdminPage() {
                   max={500}
                   value={maxCommentsPerDay}
                   onChange={(event) => setMaxCommentsPerDay(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </label>
               <label className="flex items-center justify-between">
@@ -888,7 +888,7 @@ export default function AdminPage() {
                   type="checkbox"
                   checked={maintenanceMode}
                   onChange={(event) => setMaintenanceMode(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
                 />
               </label>
             </div>
@@ -909,14 +909,14 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f6f4] text-slate-900">
+    <div className="min-h-screen bg-[hsl(var(--surface))] text-[hsl(var(--foreground))]">
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-10 lg:grid-cols-[240px,1fr]">
           <aside className="lg:sticky lg:top-10">
-            <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="space-y-6 rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">Admin panel</h1>
-                <p className="mt-1 text-sm text-slate-500">Jamiyatni boshqarish uchun minimalistik markaz.</p>
+                <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">Admin panel</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Jamiyatni boshqarish uchun minimalistik markaz.</p>
               </div>
               <nav className="flex flex-col gap-2">
                 {tabs.map((tab) => (
@@ -925,15 +925,15 @@ export default function AdminPage() {
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`flex flex-col rounded-2xl border px-4 py-3 text-left transition ${
                       activeTab === tab.id
-                        ? 'border-slate-900 bg-slate-900 text-white'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                        ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white shadow-lg'
+                        : 'border-border bg-[hsl(var(--card))] text-muted-foreground hover:border-border/70 hover:text-[hsl(var(--foreground))]'
                     }`}
                   >
                     <div className="flex items-center gap-2 text-sm font-semibold">
                       <tab.icon className="h-4 w-4" />
                       {tab.name}
                     </div>
-                    <p className={`mt-1 text-xs ${activeTab === tab.id ? 'text-white/70' : 'text-slate-400'}`}>
+                    <p className={`mt-1 text-xs ${activeTab === tab.id ? 'text-white/70' : 'text-muted-foreground'}`}>
                       {tab.description}
                     </p>
                   </button>
@@ -965,10 +965,10 @@ function MetricLine({
   trend?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3">
-      <span className="text-xs uppercase tracking-wider text-slate-400">{label}</span>
-      <span className="text-lg font-semibold text-slate-900">{value}</span>
-      {trend && <span className="text-xs text-slate-500">{trend}</span>}
+    <div className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/60 px-4 py-3">
+      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="text-lg font-semibold text-[hsl(var(--foreground))]">{value}</span>
+      {trend && <span className="text-xs text-muted-foreground">{trend}</span>}
     </div>
   );
 }
@@ -985,19 +985,19 @@ function SummaryCard({
   tone: 'slate' | 'amber' | 'green';
 }) {
   const toneClasses = {
-    slate: 'text-slate-600 bg-slate-50',
+    slate: 'text-muted-foreground bg-muted',
     amber: 'text-amber-600 bg-amber-50',
     green: 'text-emerald-600 bg-emerald-50',
   } as const;
 
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm`}>
+    <div className={`flex items-center gap-3 rounded-2xl border border-border bg-[hsl(var(--card))] px-4 py-4 shadow-sm`}>
       <div className={`rounded-full ${toneClasses[tone]} p-2`}>
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-xs text-slate-500">{title}</p>
-        <p className="text-base font-semibold text-slate-900">{value}</p>
+        <p className="text-xs text-muted-foreground">{title}</p>
+        <p className="text-base font-semibold text-[hsl(var(--foreground))]">{value}</p>
       </div>
     </div>
   );
@@ -1034,7 +1034,7 @@ function IconButton({
     <button
       onClick={onClick}
       title={title}
-      className={`rounded-full border border-slate-200 p-2 transition ${toneClasses[tone]}`}
+      className={`rounded-full border border-border p-2 transition ${toneClasses[tone]}`}
     >
       {children}
     </button>
@@ -1045,7 +1045,7 @@ function LinkButton({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400 hover:text-slate-900"
+      className="inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-border hover:text-[hsl(var(--foreground))]"
     >
       {children}
     </a>
