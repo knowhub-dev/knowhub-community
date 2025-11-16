@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   checkUser: () => Promise<void>;
   isAdmin: boolean; // <-- BU HAM MUHIM
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,9 +89,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // 3. isAdmin qiymatini shu yerda, 'user.role'ga qarab hisoblaymiz
   const isAdmin = !!user && user.role === 'admin';
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser, isAdmin, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
