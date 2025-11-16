@@ -276,11 +276,11 @@ const activityTypeLabels: Record<ActivityEvent["type"], string> = {
 const activityIcon = (type: ActivityEvent["type"]) => {
   switch (type) {
     case "comment":
-      return <MessageCircle className="h-4 w-4 text-emerald-400" />;
+      return <MessageCircle className="h-4 w-4 text-[hsl(var(--secondary))]" />;
     case "badge":
-      return <Medal className="h-4 w-4 text-amber-400" />;
+      return <Medal className="h-4 w-4 text-[hsl(var(--accent-pink))]" />;
     default:
-      return <Sparkles className="h-4 w-4 text-sky-400" />;
+      return <Sparkles className="h-4 w-4 text-[hsl(var(--primary))]" />;
   }
 };
 
@@ -289,7 +289,7 @@ const activityDescription = (event: ActivityEvent) => {
     return (
       <Link
         href={`/posts/${event.payload.slug ?? ""}`}
-        className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
+        className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--primary))]"
       >
         {event.payload.title}
       </Link>
@@ -314,7 +314,7 @@ const activityDescription = (event: ActivityEvent) => {
       <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
         {event.payload.name}
         {typeof event.payload.xp_reward === "number" && (
-          <span className="ml-2 text-xs font-semibold text-amber-500">+{event.payload.xp_reward} XP</span>
+          <span className="ml-2 text-xs font-semibold text-[hsl(var(--accent-pink))]">+{event.payload.xp_reward} XP</span>
         )}
       </p>
     );
@@ -412,12 +412,12 @@ function CodeRunnerCard() {
       <div className="border-t border-border/40 bg-[hsl(var(--card))]/80 px-4 py-3 text-sm text-muted-foreground">
         {result ? (
           <div className="space-y-2">
-            {result.message && <p className="text-amber-300">{result.message}</p>}
+            {result.message && <p className="text-[hsl(var(--accent-pink))]">{result.message}</p>}
             {result.stdout && (
               <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--secondary))]">{result.stdout}</pre>
             )}
             {result.stderr && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-rose-400">{result.stderr}</pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--destructive))]">{result.stderr}</pre>
             )}
             {result.status && !result.message && (
               <p className="text-xs uppercase tracking-[0.3em] text-[hsl(var(--primary))]">Holat: {result.status}</p>
@@ -441,17 +441,17 @@ function SystemStatusWidget({ status }: { status: SystemStatusSummary | null }) 
   const statusCopy: Record<ServiceHealthStatus, { label: string; className: string; icon: ReactNode }> = {
     operational: {
       label: "Barqaror",
-      className: "bg-emerald-500/15 text-emerald-400",
+      className: "bg-[hsl(var(--secondary))]/15 text-[hsl(var(--secondary))]",
       icon: <CheckCircle className="h-4 w-4" />,
     },
     degraded: {
       label: "Sekin",
-      className: "bg-amber-500/15 text-amber-400",
+      className: "bg-[hsl(var(--accent-pink))]/15 text-[hsl(var(--accent-pink))]",
       icon: <AlertTriangle className="h-4 w-4" />,
     },
     outage: {
       label: "Nosoz",
-      className: "bg-rose-500/15 text-rose-400",
+      className: "bg-[hsl(var(--destructive))]/15 text-[hsl(var(--destructive))]",
       icon: <AlertTriangle className="h-4 w-4" />,
     },
   };
@@ -535,7 +535,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
     <section className="max-w-6xl px-6 pb-16 lg:px-8">
       <div className="flex items-center justify-between pb-6">
         <div className="flex items-center gap-3">
-          <Medal className="h-6 w-6 text-amber-400" />
+          <Medal className="h-6 w-6 text-[hsl(var(--accent-pink))]" />
           <h2 className="text-xl font-semibold">Hafta qahramonlari</h2>
         </div>
         {heroes?.range?.start && (
@@ -549,7 +549,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-cyan-500">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[hsl(var(--primary))]">
             <Sparkles className="h-4 w-4" /> XP sprinti
           </h3>
           <ul className="space-y-3 text-sm">
@@ -562,19 +562,19 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
                   <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--primary))]"
                   >
                     {entry.user.name}
                   </Link>
                 </div>
-                <span className="text-xs font-semibold text-cyan-500">+{formatNumber(entry.total_xp ?? 0)} XP</span>
+                <span className="text-xs font-semibold text-[hsl(var(--primary))]">+{formatNumber(entry.total_xp ?? 0)} XP</span>
               </li>
             ))}
             {!xpLeaders.length && <li className="text-xs text-muted-foreground">Hali XP bo'yicha ma'lumot yo'q.</li>}
           </ul>
         </div>
         <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-indigo-500">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[hsl(var(--accent-purple))]">
             <TrendingUp className="h-4 w-4" /> Trend mualliflar
           </h3>
           <ul className="space-y-3 text-sm">
@@ -587,13 +587,13 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
                   <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-indigo-500 dark:text-[hsl(var(--foreground))] dark:hover:text-indigo-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--accent-purple))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--accent-purple))]"
                   >
                     {entry.user.name}
                   </Link>
                 </div>
                 <div className="text-right text-xs text-muted-foreground dark:text-muted-foreground">
-                  <p className="font-semibold text-indigo-500 dark:text-indigo-300">{formatNumber(entry.total_score ?? 0)} ovoz</p>
+                  <p className="font-semibold text-[hsl(var(--accent-purple))]">{formatNumber(entry.total_score ?? 0)} ovoz</p>
                   <p>{formatNumber(entry.posts_count ?? 0)} post</p>
                 </div>
               </li>
@@ -614,14 +614,14 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
   return (
     <section className="max-w-6xl px-6 pb-20 lg:px-8">
       <div className="flex items-center gap-3 pb-6">
-        <Activity className="h-6 w-6 text-cyan-500" />
+        <Activity className="h-6 w-6 text-[hsl(var(--primary))]" />
         <h2 className="text-xl font-semibold">Hamjamiyat pulsi</h2>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {feed.map((event) => (
           <div
             key={`${event.type}-${event.id}`}
-            className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
+            className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--primary))]/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
           >
             <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{activityIcon(event.type)}</div>
             <div className="space-y-1 text-sm">
@@ -629,7 +629,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
                 {event.user ? (
                   <Link
                     href={`/profile/${event.user.username}`}
-                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-muted-foreground dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-muted-foreground dark:hover:text-[hsl(var(--primary))]"
                   >
                     {event.user.name}
                   </Link>
@@ -768,21 +768,21 @@ export default function HomePage() {
         value: homeStats?.stats?.posts?.total,
         subtitle: "Umumiy maqolalar",
         icon: PenSquare,
-        accentClass: "text-cyan-300",
+        accentClass: "text-[hsl(var(--primary))]",
       },
       {
         label: "A'zolar",
         value: homeStats?.stats?.users?.total,
         subtitle: "Faol hamjamiyat",
         icon: Users,
-        accentClass: "text-emerald-300",
+        accentClass: "text-[hsl(var(--secondary))]",
       },
       {
         label: "Wiki",
         value: homeStats?.stats?.wiki?.articles,
         subtitle: "Bilim maqolalari",
         icon: BookOpen,
-        accentClass: "text-indigo-300",
+        accentClass: "text-[hsl(var(--accent-purple))]",
       },
     ],
     [homeStats?.stats?.posts?.total, homeStats?.stats?.users?.total, homeStats?.stats?.wiki?.articles]
@@ -798,20 +798,40 @@ export default function HomePage() {
         title: "Savol yoki issue ochish",
         description: "Stack Overflow formatida savol bering yoki GitHub muammosini baham ko'ring.",
         icon: MessageCircle,
-        accentClass: "text-cyan-600 dark:text-cyan-300",
-        hoverClass: "hover:border-cyan-400/70 hover:shadow-lg",
+        accentClass: "text-[hsl(var(--primary))]",
+        hoverClass: "hover:border-[hsl(var(--primary))]/60 hover:bg-[hsl(var(--primary))]/5",
         ctaLabel: "Savol yuborish",
-        ctaClass: "text-cyan-500",
+        ctaClass: "text-[hsl(var(--primary))]",
       },
       {
         href: "/wiki",
         title: "Wiki bo'limini boyitish",
         description: "Atroflicha yechimlarni hujjatlashtirib, boshqalarga yo'l ko'rsating.",
         icon: BookOpen,
-        accentClass: "text-indigo-600 dark:text-indigo-300",
-        hoverClass: "hover:border-indigo-400/70 hover:shadow-lg",
+        accentClass: "text-[hsl(var(--accent-purple))]",
+        hoverClass: "hover:border-[hsl(var(--accent-purple))]/60 hover:bg-[hsl(var(--accent-purple))]/5",
         ctaLabel: "Maqola yozish",
-        ctaClass: "text-indigo-500",
+        ctaClass: "text-[hsl(var(--accent-purple))]",
+      },
+      {
+        href: "/containers",
+        title: "Laboratoriya muhiti",
+        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
+        icon: Server,
+        accentClass: "text-[hsl(var(--accent-green))]",
+        hoverClass: "hover:border-[hsl(var(--accent-green))]/60 hover:bg-[hsl(var(--accent-green))]/5",
+        ctaLabel: "Labga o'tish",
+        ctaClass: "text-[hsl(var(--accent-green))]",
+      },
+      {
+        href: "/leaderboard",
+        title: "Mentorlarni toping",
+        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
+        icon: Users,
+        accentClass: "text-[hsl(var(--secondary))]",
+        hoverClass: "hover:border-[hsl(var(--secondary))]/60 hover:bg-[hsl(var(--secondary))]/5",
+        ctaLabel: "Mentorlar",
+        ctaClass: "text-[hsl(var(--secondary))]",
       },
       {
         href: "/containers",
@@ -867,7 +887,7 @@ export default function HomePage() {
       const postsErrorMessage =
         postsError instanceof Error ? postsError.message : "Postlarni yuklashda xatolik yuz berdi.";
       return (
-        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-6 py-8 text-sm text-red-700 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200">
+        <div className="rounded-2xl border border-[hsl(var(--destructive))]/40 bg-[hsl(var(--destructive))]/10 px-6 py-8 text-sm text-[hsl(var(--destructive))] dark:border-[hsl(var(--destructive))]/50 dark:bg-[hsl(var(--destructive))]/15 dark:text-[hsl(var(--destructive-foreground))]">
           {postsErrorMessage}
         </div>
       );
@@ -900,7 +920,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6 py-16 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/40 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground shadow-sm backdrop-blur dark:bg-white/10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--card))]/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground shadow-sm backdrop-blur dark:bg-[hsl(var(--card))]/30">
                 GitHub × Stack Overflow ruhi
               </div>
               <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
@@ -913,7 +933,7 @@ export default function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  className="gap-2 rounded-full bg-white px-6 text-base font-semibold text-[hsl(var(--primary))] shadow-sm hover:bg-white/90"
+                  className="gap-2 rounded-full bg-[hsl(var(--primary-foreground))] px-6 text-base font-semibold text-[hsl(var(--primary))] shadow-sm hover:bg-[hsl(var(--primary-foreground))]/90"
                 >
                   <Link href="/posts/create">
                     Post yaratish
@@ -924,7 +944,7 @@ export default function HomePage() {
                   asChild
                   variant="secondary"
                   size="lg"
-                  className="gap-2 rounded-full border border-border/70 bg-transparent px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-white/20"
+                  className="gap-2 rounded-full border border-border/60 bg-[hsl(var(--surface))]/60 px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]/80"
                 >
                   <Link href="/wiki">
                     Wiki'ni ko'rish
@@ -936,7 +956,7 @@ export default function HomePage() {
                 {statsCards.map((card) => {
                   const Icon = card.icon;
                   return (
-                    <div key={card.label} className="rounded-xl border border-border/60 bg-white/50 p-4 shadow-sm backdrop-blur dark:bg-[hsl(var(--card))]/80">
+                    <div key={card.label} className="rounded-xl border border-border/70 bg-[hsl(var(--card))]/85 p-4 shadow-sm backdrop-blur dark:border-border/60 dark:bg-[hsl(var(--card))]/60">
                       <div className={`flex items-center gap-2 ${card.accentClass}`}>
                         <Icon className="h-4 w-4" />
                         {card.label}
@@ -1130,23 +1150,23 @@ export default function HomePage() {
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-emerald-500" />
-              <h2 className="text-xl font-semibold">Trend signallari</h2>
+        <div className="flex items-center gap-3">
+          <TrendingUp className="h-6 w-6 text-[hsl(var(--secondary))]" />
+          <h2 className="text-xl font-semibold">Trend signallari</h2>
+        </div>
+        {spotlightPost ? (
+          <Link
+            href={`/posts/${spotlightPost.slug}`}
+            className="group block overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-[hsl(var(--secondary))]/60 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] dark:border-border dark:bg-[hsl(var(--foreground))]/80"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-[hsl(var(--secondary))]">
+              Spotlight
+              {spotlightPost.score ? <span className="text-[hsl(var(--secondary))]">{spotlightPost.score} ovoz</span> : null}
             </div>
-            {spotlightPost ? (
-              <Link
-                href={`/posts/${spotlightPost.slug}`}
-                className="group block overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-emerald-400/60 hover:shadow-emerald-100 dark:border-border dark:bg-[hsl(var(--foreground))]/80"
-              >
-                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">
-                  Spotlight
-                  {spotlightPost.score ? <span className="text-emerald-400">{spotlightPost.score} ovoz</span> : null}
-                </div>
-                <h3 className="mt-4 text-2xl font-semibold text-[hsl(var(--foreground))] transition group-hover:text-emerald-500 dark:text-[hsl(var(--foreground))]">
-                  {spotlightPost.title}
-                </h3>
-                <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{buildSnippet(spotlightPost, 220)}</p>
+            <h3 className="mt-4 text-2xl font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">
+              {spotlightPost.title}
+            </h3>
+            <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{buildSnippet(spotlightPost, 220)}</p>
                 {spotlightPost.user && <p className="mt-4 text-xs text-muted-foreground">Muallif: {spotlightPost.user.name}</p>}
               </Link>
             ) : (
@@ -1159,11 +1179,11 @@ export default function HomePage() {
                 <Link
                   key={post.id}
                   href={`/posts/${post.slug}`}
-                  className="group rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-emerald-300/70 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
+                  className="group rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--secondary))]/60 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
                 >
-                  <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-emerald-500 dark:text-[hsl(var(--foreground))]">{post.title}</h4>
+                  <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">{post.title}</h4>
                   <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">{buildSnippet(post, 120)}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-500">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-[hsl(var(--secondary))]">
                     Batafsil <ArrowRight className="h-3 w-3" />
                   </span>
                 </Link>
@@ -1177,11 +1197,11 @@ export default function HomePage() {
                 {queuePosts.map((post) => (
                   <li
                     key={post.id}
-                    className="rounded-xl border border-transparent px-3 py-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10"
+                    className="rounded-xl border border-transparent px-3 py-2 transition hover:border-[hsl(var(--secondary))]/60 hover:bg-[hsl(var(--secondary))]/10 dark:hover:border-[hsl(var(--secondary))]/50 dark:hover:bg-[hsl(var(--secondary))]/15"
                   >
                     <Link
                       href={`/posts/${post.slug}`}
-                      className="font-medium text-[hsl(var(--foreground))] hover:text-emerald-500 dark:text-muted-foreground dark:hover:text-emerald-300"
+                      className="font-medium text-[hsl(var(--foreground))] hover:text-[hsl(var(--secondary))] dark:text-muted-foreground dark:hover:text-[hsl(var(--secondary))]"
                     >
                       {post.title}
                     </Link>
@@ -1200,7 +1220,7 @@ export default function HomePage() {
       <ActivityFeed feed={feed} />
 
       {error && (
-        <div className="mx-auto max-w-4xl rounded-2xl border border-amber-300/60 bg-amber-50 p-6 text-sm text-amber-700 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-200">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-[hsl(var(--accent-pink))]/40 bg-[hsl(var(--accent-pink))]/10 p-6 text-sm text-[hsl(var(--accent-pink))] dark:border-[hsl(var(--accent-pink))]/50 dark:bg-[hsl(var(--accent-pink))]/15 dark:text-[hsl(var(--accent-pink))]">
           {error}
         </div>
       )}
