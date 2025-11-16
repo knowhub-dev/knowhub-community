@@ -833,6 +833,26 @@ export default function HomePage() {
         ctaLabel: "Mentorlar",
         ctaClass: "text-[hsl(var(--secondary))]",
       },
+      {
+        href: "/containers",
+        title: "Laboratoriya muhiti",
+        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
+        icon: Server,
+        accentClass: "text-emerald-600 dark:text-emerald-300",
+        hoverClass: "hover:border-emerald-400/70 hover:shadow-lg",
+        ctaLabel: "Labga o'tish",
+        ctaClass: "text-emerald-500",
+      },
+      {
+        href: "/leaderboard",
+        title: "Mentorlarni toping",
+        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
+        icon: Users,
+        accentClass: "text-sky-600 dark:text-sky-300",
+        hoverClass: "hover:border-sky-400/70 hover:shadow-lg",
+        ctaLabel: "Mentorlar",
+        ctaClass: "text-sky-500",
+      },
     ],
     []
   );
