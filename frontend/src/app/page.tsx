@@ -833,26 +833,6 @@ export default function HomePage() {
         ctaLabel: "Mentorlar",
         ctaClass: "text-[hsl(var(--secondary))]",
       },
-      {
-        href: "/containers",
-        title: "Laboratoriya muhiti",
-        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
-        icon: Server,
-        accentClass: "text-emerald-600 dark:text-emerald-300",
-        hoverClass: "hover:border-emerald-400/70 hover:shadow-lg",
-        ctaLabel: "Labga o'tish",
-        ctaClass: "text-emerald-500",
-      },
-      {
-        href: "/leaderboard",
-        title: "Mentorlarni toping",
-        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
-        icon: Users,
-        accentClass: "text-sky-600 dark:text-sky-300",
-        hoverClass: "hover:border-sky-400/70 hover:shadow-lg",
-        ctaLabel: "Mentorlar",
-        ctaClass: "text-sky-500",
-      },
     ],
     []
   );
@@ -913,14 +893,14 @@ export default function HomePage() {
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
       <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
-        <div className="absolute inset-0 -z-10 opacity-80" aria-hidden="true">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(16,185,129,0.2),_transparent_55%)]" />
+        <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.25),_transparent_65%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.22),_transparent_60%)]" />
         </div>
         <div className="mx-auto max-w-6xl px-6 py-16 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--card))]/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground shadow-sm backdrop-blur dark:bg-[hsl(var(--card))]/30">
+            <div className="space-y-8 rounded-[32px] border border-border/60 bg-[hsl(var(--card))] p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))] px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
                 GitHub × Stack Overflow ruhi
               </div>
               <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
@@ -933,7 +913,7 @@ export default function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  className="gap-2 rounded-full bg-[hsl(var(--primary-foreground))] px-6 text-base font-semibold text-[hsl(var(--primary))] shadow-sm hover:bg-[hsl(var(--primary-foreground))]/90"
+                  className="gap-2 rounded-full px-6 text-base font-semibold shadow-[0_18px_45px_rgba(14,116,144,0.35)]"
                 >
                   <Link href="/posts/create">
                     Post yaratish
@@ -942,9 +922,9 @@ export default function HomePage() {
                 </Button>
                 <Button
                   asChild
-                  variant="secondary"
+                  variant="outline"
                   size="lg"
-                  className="gap-2 rounded-full border border-border/60 bg-[hsl(var(--surface))]/60 px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]/80"
+                  className="gap-2 rounded-full border-border px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]"
                 >
                   <Link href="/wiki">
                     Wiki'ni ko'rish
@@ -956,7 +936,7 @@ export default function HomePage() {
                 {statsCards.map((card) => {
                   const Icon = card.icon;
                   return (
-                    <div key={card.label} className="rounded-xl border border-border/70 bg-[hsl(var(--card))]/85 p-4 shadow-sm backdrop-blur dark:border-border/60 dark:bg-[hsl(var(--card))]/60">
+                    <div key={card.label} className="rounded-2xl border border-border/70 bg-[hsl(var(--surface))] p-4 shadow-sm dark:border-border/60 dark:bg-[hsl(var(--card))]/70">
                       <div className={`flex items-center gap-2 ${card.accentClass}`}>
                         <Icon className="h-4 w-4" />
                         {card.label}
@@ -978,7 +958,7 @@ export default function HomePage() {
                   {builderHighlights.map((highlight) => {
                     const Icon = highlight.icon;
                     return (
-                      <div key={highlight.title} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
+                      <div key={highlight.title} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
                           <Icon className="h-4 w-4" />
                         </div>
@@ -996,11 +976,11 @@ export default function HomePage() {
                   <p className="text-sm font-semibold text-muted-foreground">Stack Overflow uslubidagi jonli muhokamalar</p>
                   <div className="flex flex-wrap gap-2 text-xs">
                     {heroTags.length ? (
-                      heroTags.map((tag) => (
-                        <span
-                          key={tag.slug ?? tag.name}
-                          className="rounded-full border border-border/60 px-3 py-1 text-[hsl(var(--foreground))]"
-                        >
+                    heroTags.map((tag) => (
+                      <span
+                        key={tag.slug ?? tag.name}
+                        className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))]"
+                      >
                           #{tag.name}
                         </span>
                       ))
@@ -1016,7 +996,7 @@ export default function HomePage() {
                     heroFeed.map((event) => (
                       <div
                         key={`${event.type}-${event.id}`}
-                        className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4"
+                        className="rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-4"
                       >
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-2 font-semibold text-[hsl(var(--foreground))]">
@@ -1025,11 +1005,11 @@ export default function HomePage() {
                           </div>
                           <span>{timeAgo(event.created_at)}</span>
                         </div>
-                        <div className="mt-2 text-sm">{activityDescription(event)}</div>
+                        <div className="mt-2 text-sm text-[hsl(var(--foreground))]">{activityDescription(event)}</div>
                       </div>
                     ))
                   ) : (
-                    <p className="rounded-2xl border border-dashed border-border/70 bg-[hsl(var(--surface))] p-4 text-sm text-muted-foreground">
+                    <p className="rounded-2xl border border-dashed border-border/70 bg-[hsl(var(--card))] p-4 text-sm text-muted-foreground">
                       Faollik tez orada paydo bo'ladi.
                     </p>
                   )}
@@ -1063,7 +1043,7 @@ export default function HomePage() {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--surface))] p-5 text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
+                    className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--card))] p-5 text-[hsl(var(--foreground))] shadow-md shadow-[0_15px_35px_rgba(15,23,42,0.07)] transition ${action.hoverClass}`}
                   >
                     <div className="flex items-center gap-3">
                       <span className={`rounded-2xl bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
