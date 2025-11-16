@@ -67,10 +67,10 @@ export default function Navbar() {
 
   const navLinks = useMemo<NavLink[]>(
     () => [
-      { href: '/posts', label: 'Postlar' },
+      { href: '/posts', label: 'Blog' },
       { href: '/wiki', label: 'Wiki' },
       { href: '/containers', label: 'Mini-serverlar' },
-      { href: '/leaderboard', label: 'Leaderboard' },
+      { href: '/leaderboard', label: 'Liderlar' },
     ],
     [],
   );
@@ -101,154 +101,209 @@ export default function Navbar() {
         key={link.href}
         href={link.href}
         className={cn(
-          'relative inline-flex items-center text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground',
+          'group relative inline-flex items-center rounded-full px-4 py-2 text-sm font-medium tracking-wide text-muted-foreground transition',
+          'hover:text-foreground',
           isActive && 'text-foreground',
         )}
+        aria-current={isActive ? 'page' : undefined}
       >
-        <span className="px-1 py-1">
-          {link.label}
-          <span
-            className={cn(
-              'pointer-events-none absolute inset-x-1 bottom-0 h-0.5 origin-center rounded-full bg-gradient-to-r from-primary/70 via-secondary/60 to-primary/70 transition-opacity duration-300',
-              isActive ? 'opacity-100' : 'opacity-0',
-            )}
-          />
-        </span>
+        <span className="relative z-10">{link.label}</span>
+        <span
+          aria-hidden
+          className={cn(
+            'absolute inset-0 rounded-full bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/20 opacity-0 transition duration-200',
+            'group-hover:opacity-100',
+            isActive && 'opacity-100 shadow-inner shadow-primary/10',
+          )}
+        />
+        <span
+          aria-hidden
+          className={cn(
+            'absolute inset-x-6 -bottom-px h-0.5 rounded-full bg-primary/60 opacity-0 transition duration-200',
+            'group-hover:opacity-100',
+            isActive && 'opacity-100',
+          )}
+        />
       </Link>
     );
   };
 
-  return (
-    <nav className="sticky top-0 z-50">
-      <div className="relative border-b border-white/5 bg-surface/80 shadow-subtle backdrop-blur-md">
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-r from-primary/45 via-secondary/35 to-primary/45 opacity-70 blur-md" />
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-3">
-              {activeLogo ? (
-                <img src={activeLogo.url} alt="KnowHub logo" className="h-9 w-auto" />
-              ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-primary-light to-secondary text-sm font-semibold text-white shadow-neon">
-                  KH
-                </div>
-              )}
-              <span className="hidden text-lg font-semibold tracking-tight text-foreground sm:block">KnowHub</span>
-            </Link>
-            <div className="hidden items-center gap-6 md:flex">{navLinks.map(renderNavLink)}</div>
-          </div>
-
-          <div className="hidden flex-1 items-center justify-end gap-5 md:flex">
-            <SearchBar
-              className="w-full max-w-md"
-              variant={isDark ? 'inverted' : 'default'}
-            />
-            <NotificationDropdown />
+  const renderDesktopAuth = () => {
+    if (user) {
+      return (
+        <div className="flex items-center gap-3">
+          <Link
+            href="/posts/create"
+            className="hidden rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition hover:-translate-y-0.5 lg:flex lg:items-center lg:gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Yangi post
+          </Link>
+          <div ref={profileRef} className="relative">
             <button
               type="button"
-              onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
-              aria-label="Mavzuni almashtirish"
+              onClick={() => setIsProfileOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))]/80 px-2 py-1 text-sm text-foreground transition hover:border-[hsl(var(--primary))]"
             >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <img
+                src={user.avatar_url ?? '/default-avatar.png'}
+                alt={user.name}
+                className="h-9 w-9 rounded-full border border-border/70 object-cover"
+              />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
-            {user ? (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/posts/new"
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
-                >
-                  <Plus className="h-4 w-4" />
-                  Yangi post
-                </Link>
-                <div ref={profileRef} className="relative">
+            {isProfileOpen && (
+              <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-2xl border border-border/70 bg-[hsl(var(--card))]/95 shadow-xl backdrop-blur">
+                <div className="border-b border-border/60 px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                </div>
+                <div className="flex flex-col gap-1 p-2 text-sm text-muted-foreground">
+                  <Link
+                    href={`/profile/${user.username}`}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
+                  >
+                    <User className="h-4 w-4" />
+                    Profil
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Sozlamalar
+                  </Link>
                   <button
                     type="button"
-                    onClick={() => setIsProfileOpen((prev) => !prev)}
-                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
+                    onClick={logout}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-200"
                   >
-                    <img
-                      src={user.avatar_url ?? '/default-avatar.png'}
-                      alt={user.name}
-                      className="h-9 w-9 rounded-full border border-white/10 object-cover"
-                    />
-                    <ChevronDown className="h-4 w-4" />
+                    <LogOut className="h-4 w-4" />
+                    Chiqish
                   </button>
-                  {isProfileOpen && (
-                    <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface/95 shadow-subtle backdrop-blur">
-                      <div className="border-b border-white/5 px-4 py-3">
-                        <p className="text-sm font-semibold text-foreground">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">@{user.username}</p>
-                      </div>
-                      <div className="flex flex-col gap-1 p-2 text-sm text-muted-foreground">
-                        <Link
-                          href={`/profile/${user.username}`}
-                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
-                        >
-                          <User className="h-4 w-4" />
-                          Profil
-                        </Link>
-                        <Link
-                          href="/settings"
-                          className="flex items-center gap-2 rounded-md px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
-                        >
-                          <Settings className="h-4 w-4" />
-                          Sozlamalar
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={logout}
-                          className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-rose-300 transition hover:bg-rose-500/10 hover:text-rose-200"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Chiqish
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
-                >
-                  Kirish
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon transition-transform hover:-translate-y-0.5"
-                >
-                  <User className="h-4 w-4" />
-                  Ro'yxatdan o'tish
-                </Link>
               </div>
             )}
           </div>
+        </div>
+      );
+    }
 
-          <div className="flex items-center gap-3 md:hidden">
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/auth/login"
+          className="rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+        >
+          Kirish
+        </Link>
+        <Link
+          href="/auth/register"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition-transform hover:-translate-y-0.5"
+        >
+          <User className="h-4 w-4" />
+          Ro'yxatdan o'tish
+        </Link>
+      </div>
+    );
+  };
+
+  const renderMobileAuth = () => {
+    if (user) {
+      return (
+        <Link
+          href={`/profile/${user.username}`}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70"
+        >
+          <img src={user.avatar_url ?? '/default-avatar.png'} alt={user.name} className="h-8 w-8 rounded-full object-cover" />
+        </Link>
+      );
+    }
+
+    return (
+      <>
+        <Link
+          href="/auth/login"
+          className="hidden rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] sm:inline-flex"
+        >
+          Kirish
+        </Link>
+        <Link
+          href="/auth/register"
+          className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-3 py-1.5 text-xs font-semibold text-white"
+        >
+          <User className="h-3.5 w-3.5" />
+          Ro'yxatdan o'tish
+        </Link>
+      </>
+    );
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 border-b border-border/40 bg-[hsl(var(--background))]/90 backdrop-blur-xl">
+      <div className="container flex h-20 items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            {activeLogo ? (
+              <img src={activeLogo.url} alt="KnowHub logo" className="h-12 w-auto" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary-light to-secondary text-xl font-semibold text-white shadow-neon">
+                KH
+              </div>
+            )}
+            <div className="hidden flex-col leading-tight md:flex">
+              <span className="text-[1.65rem] font-bold tracking-tight text-foreground">KnowHub</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">community</span>
+            </div>
+          </Link>
+
+          <div className="hidden items-center gap-1 rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 p-1 shadow-inner md:flex">
+            {navLinks.map(renderNavLink)}
+          </div>
+        </div>
+
+        <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+          <SearchBar className="w-full max-w-md" variant={isDark ? 'inverted' : 'default'} />
+          <div className="flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 px-2.5 py-1.5 shadow-inner">
+            <NotificationDropdown />
+            <span className="h-6 w-px bg-[hsl(var(--border))]/60" />
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
               aria-label="Mavzuni almashtirish"
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button
-              type="button"
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40"
-              aria-label="Navigatsiyani ochish"
-            >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
+          {renderDesktopAuth()}
+        </div>
+
+        <div className="flex flex-1 items-center justify-end gap-2 lg:hidden">
+          <SearchBar className="hidden w-full max-w-xs sm:block" variant={isDark ? 'inverted' : 'default'} />
+          <NotificationDropdown />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+            aria-label="Mavzuni almashtirish"
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          {renderMobileAuth()}
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))]"
+            aria-label="Navigatsiyani ochish"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="border-b border-white/5 bg-surface/95 shadow-subtle backdrop-blur-md md:hidden">
+        <div className="border-b border-border/50 bg-[hsl(var(--background))]/95 shadow-subtle backdrop-blur-md lg:hidden">
           <div className="space-y-6 px-6 pb-6 pt-4">
             <SearchBar variant={isDark ? 'inverted' : 'default'} />
             <div className="flex flex-col gap-3">
@@ -259,8 +314,8 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      'rounded-xl border border-white/5 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground',
-                      isActive && 'border-primary/40 bg-primary/10 text-foreground',
+                      'rounded-2xl border border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground',
+                      isActive && 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-foreground',
                     )}
                     onClick={() => setIsOpen(false)}
                   >
@@ -269,36 +324,49 @@ export default function Navbar() {
                 );
               })}
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <NotificationDropdown />
-              {user ? (
-                <Link
-                  href="/posts/new"
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Mavzu</span>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                  aria-label="Mavzuni almashtirish"
                 >
-                  <Plus className="h-4 w-4" />
-                  Yangi post
-                </Link>
-              ) : (
-                <div className="flex flex-1 flex-col gap-2">
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <NotificationDropdown />
+                {user ? (
                   <Link
-                    href="/login"
+                    href="/posts/create"
                     onClick={() => setIsOpen(false)}
-                    className="rounded-full border border-white/10 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Yangi post
+                  </Link>
+                ) : (
+                  <div className="flex flex-1 flex-col gap-2">
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsOpen(false)}
+                    className="rounded-full border border-border/60 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground"
                   >
                     Kirish
                   </Link>
                   <Link
-                    href="/register"
+                    href="/auth/register"
                     onClick={() => setIsOpen(false)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-medium text-white shadow-neon"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
                   >
-                    <User className="h-4 w-4" />
-                    Ro'yxatdan o'tish
-                  </Link>
-                </div>
-              )}
+                      <User className="h-4 w-4" />
+                      Ro'yxatdan o'tish
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface NotificationPayload {
   post_slug?: string;
@@ -115,47 +116,48 @@ export default function NotificationDropdown() {
   return (
     <div ref={dropdownRef} className="relative">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors"
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-[hsl(var(--surface))]/80 text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
       >
-        <Bell className="w-6 h-6" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+        <Bell className="w-5 h-5" />
+        {typeof unreadCount === 'number' && unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-[hsl(var(--destructive))] px-1 text-[0.65rem] font-semibold text-[hsl(var(--destructive-foreground))]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Bildirishnomalar</h3>
-            {unreadCount > 0 && (
+        <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-3xl border border-border/70 bg-[hsl(var(--card))]/95 text-[hsl(var(--foreground))] shadow-2xl backdrop-blur">
+          <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+            <h3 className="text-sm font-semibold">Bildirishnomalar</h3>
+            {typeof unreadCount === 'number' && unreadCount > 0 && (
               <button
+                type="button"
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
-                className="flex items-center text-sm text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
+                className="flex items-center gap-1 text-xs font-semibold text-[hsl(var(--primary))] transition hover:text-[hsl(var(--primary-light))] disabled:opacity-50"
               >
-                <CheckCheck className="w-4 h-4 mr-1" />
+                <CheckCheck className="h-4 w-4" />
                 Barchasini o'qilgan deb belgilash
               </button>
             )}
           </div>
 
-          {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
             {isLoading ? (
-              <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mx-auto"></div>
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-[hsl(var(--primary))]" />
               </div>
             ) : notifications && notifications.length > 0 ? (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${
-                    !notification.read_at ? 'bg-indigo-50' : ''
-                  }`}
+                  className={cn(
+                    'border-b border-border/50 px-4 py-3 text-sm transition hover:bg-[hsl(var(--surface))]',
+                    !notification.read_at && 'bg-[hsl(var(--primary))]/5',
+                  )}
                 >
                   <Link
                     href={getNotificationLink(notification)}
@@ -170,26 +172,27 @@ export default function NotificationDropdown() {
                     <div className="flex items-start space-x-3">
                       <span className="text-lg">{getNotificationIcon(notification.type)}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900">
+                        <p className="text-sm font-semibold">
                           {notification.title}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {new Date(notification.created_at).toLocaleDateString('uz-UZ')}
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {new Date(notification.created_at).toLocaleString('uz-UZ')}
                         </p>
                       </div>
                       {!notification.read_at && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             markAsReadMutation.mutate(notification.id);
                           }}
-                          className="text-indigo-600 hover:text-indigo-700"
+                          className="text-[hsl(var(--primary))] transition hover:text-[hsl(var(--primary-light))]"
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -197,19 +200,18 @@ export default function NotificationDropdown() {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <div className="space-y-3 p-8 text-center text-sm text-muted-foreground">
+                <Bell className="mx-auto h-10 w-10 text-muted-foreground/40" />
                 <p>Bildirishnomalar yo'q</p>
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="border-t border-border/60 px-4 py-3">
             <Link
               href="/notifications"
               onClick={() => setIsOpen(false)}
-              className="block text-center text-sm text-indigo-600 hover:text-indigo-700"
+              className="block text-center text-sm font-semibold text-[hsl(var(--primary))] hover:text-[hsl(var(--primary-light))]"
             >
               Barcha bildirishnomalarni ko'rish
             </Link>

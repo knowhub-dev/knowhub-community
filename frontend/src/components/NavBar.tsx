@@ -99,11 +99,11 @@ export default function NavBar() {
               </div>
             ) : (
               <div className="ml-4 flex items-center space-x-4">
-                <Link href="/login" className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <Link href="/auth/login" className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                   <LogIn className="w-4 h-4 mr-2" />
                   Kirish
                 </Link>
-                <Link href="/register" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                <Link href="/auth/register" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Ro'yxatdan o'tish
                 </Link>
