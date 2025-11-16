@@ -4,6 +4,7 @@ import { type ReactNode, type ChangeEvent, type FormEvent, useCallback, useEffec
 import { useAuth } from '@/providers/AuthProvider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { isAxiosError } from 'axios';
 import {
   Activity,
   AlertTriangle,
@@ -77,6 +78,16 @@ interface AdminStats {
     suspicious_activity: number;
   };
 }
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? error.message ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  return fallback;
+};
 
 interface User {
   id: number;
@@ -218,9 +229,9 @@ export default function AdminPage() {
       const data = await getAdminStats();
       setStats(data);
       setLastFetchedAt(new Date());
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStats(null);
-      setStatsError(error?.response?.data?.message ?? error?.message ?? "Ma'lumotlarni yuklab bo'lmadi.");
+      setStatsError(getErrorMessage(error, "Ma'lumotlarni yuklab bo'lmadi."));
     } finally {
       setStatsLoading(false);
     }
@@ -276,8 +287,8 @@ export default function AdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
-    onError: (error: any) => {
-      alert('Xatolik: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      alert(`Xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
     },
   });
 
@@ -286,8 +297,8 @@ export default function AdminPage() {
     onSuccess: () => {
       refetchSystemSettings();
     },
-    onError: (error: any) => {
-      alert('Sozlamalarni yangilashda xatolik: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      alert(`Sozlamalarni yangilashda xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
     },
   });
 
@@ -296,8 +307,8 @@ export default function AdminPage() {
     onSuccess: () => {
       refetchSystemSettings();
     },
-    onError: (error: any) => {
-      alert('Logo yuklashda xatolik: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      alert(`Logo yuklashda xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
     },
   });
 
@@ -306,8 +317,8 @@ export default function AdminPage() {
     onSuccess: () => {
       refetchSystemSettings();
     },
-    onError: (error: any) => {
-      alert('Logo o\'chirishda xatolik: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      alert(`Logo o'chirishda xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
     },
   });
 

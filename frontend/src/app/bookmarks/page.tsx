@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/providers/AuthProvider';
 import { Post } from '@/types';
 import { Bookmark } from 'lucide-react';
+import Link from 'next/link';
 
 async function getBookmarks() {
   const res = await api.get('/bookmarks');
@@ -29,12 +30,12 @@ export default function BookmarksPage() {
           <p className="text-gray-600 mb-6">
             Saqlangan postlarni ko'rish uchun tizimga kiring
           </p>
-          <a
+          <Link
             href="/auth/login"
             className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Tizimga kirish
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -65,12 +66,12 @@ export default function BookmarksPage() {
           <p className="text-gray-600 mb-6">
             Postlarni saqlash uchun bookmark tugmasini bosing
           </p>
-          <a
+          <Link
             href="/posts"
             className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Postlarni ko'rish
-          </a>
+          </Link>
         </div>
       )}
     </div>
