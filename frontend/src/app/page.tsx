@@ -1,7 +1,12 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import PostCard from "@/components/PostCard";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -132,6 +137,25 @@ type QuickAction = {
   ctaClass: string;
 };
 
+type PaginatedPostsResponse = {
+  data: Post[];
+  meta?: Record<string, unknown>;
+};
+
+type SortType = "latest" | "popular" | "following";
+
+type FeedTab = {
+  value: SortType;
+  label: string;
+  authOnly?: boolean;
+};
+
+const FEED_TABS: FeedTab[] = [
+  { value: "latest", label: "So'nggilari" },
+  { value: "popular", label: "Trenddagilar" },
+  { value: "following", label: "Mening obunalarim", authOnly: true },
+];
+
 const LANGUAGE_SNIPPETS: Record<string, string> = {
   javascript: `function greet(name) {\n  return \`Salom, \${name}!\`;\n}\n\nconsole.log(greet('KnowHub'));`,
   python: `def greet(name):\n    return f"Salom, {name}!"\n\nprint(greet("KnowHub"))`,
@@ -143,6 +167,14 @@ const LANGUAGES = [
   { value: "python", label: "Python" },
   { value: "php", label: "PHP" },
 ];
+
+async function getPosts(params: { sort: SortType }) {
+  const sortParam = params.sort === "popular" ? "trending" : params.sort;
+  const response = await api.get<PaginatedPostsResponse>("/posts", {
+    params: { sort: sortParam, per_page: 6 },
+  });
+  return response.data;
+}
 
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
@@ -486,6 +518,31 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTagIndex, setActiveTagIndex] = useState(0);
+  const [sortType, setSortType] = useState<SortType>("latest");
+  const auth = useAuth();
+
+  const {
+    data: postsResponse,
+    isLoading: postsLoading,
+    isError: postsIsError,
+    error: postsError,
+  } = useQuery<PaginatedPostsResponse>({
+    queryKey: ["posts", sortType],
+    queryFn: () => getPosts({ sort: sortType }),
+  });
+
+  const posts = postsResponse?.data ?? [];
+
+  const visibleTabs = useMemo(
+    () => FEED_TABS.filter((tab) => (tab.authOnly ? auth.isAuthenticated : true)),
+    [auth.isAuthenticated],
+  );
+
+  useEffect(() => {
+    if (!auth.isAuthenticated && sortType === "following") {
+      setSortType("latest");
+    }
+  }, [auth.isAuthenticated, sortType]);
 
   const quickActions = useMemo(
     () => [
@@ -638,6 +695,38 @@ export default function HomePage() {
     []
   );
 
+  const renderPostsGrid = () => {
+    if (postsLoading) {
+      return <LoadingSpinner />;
+    }
+
+    if (postsIsError) {
+      const postsErrorMessage =
+        postsError instanceof Error ? postsError.message : "Postlarni yuklashda xatolik yuz berdi.";
+      return (
+        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-6 py-8 text-sm text-red-700 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200">
+          {postsErrorMessage}
+        </div>
+      );
+    }
+
+    if (!posts.length) {
+      return (
+        <div className="rounded-2xl border border-muted/40 bg-muted/10 px-6 py-10 text-center text-sm text-muted-foreground">
+          Hozircha postlar topilmadi.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-6 md:grid-cols-2">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
       <section className="relative isolate overflow-hidden border-b border-slate-200/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100 dark:border-slate-800">
@@ -780,6 +869,61 @@ export default function HomePage() {
             </div>
           </Link>
         </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
+              Bosh sahifa
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Bosh sahifa</h1>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg dark:border-slate-700 dark:bg-slate-900/80">
+            <div className="space-y-4">
+              <h2 className="text-3xl font-semibold leading-tight text-slate-900 dark:text-white">
+                KnowHub Community: Dasturchilar Uchun Yangi Maydon
+              </h2>
+              <p className="text-base text-slate-600 dark:text-slate-300">
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/posts/create">Post Yaratish</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/wiki">Wiki'ni Ko'rish</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <Tabs value={sortType} onValueChange={(value) => setSortType(value as SortType)} className="space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Postlar</p>
+              <h2 className="text-2xl font-semibold text-foreground">Hamjamiyat lentasi</h2>
+              <p className="text-sm text-muted-foreground">
+                Turli saralashlarga o'tib eng so'nggi, trenddagi yoki obunangizdagi muhokamalarni kuzating.
+              </p>
+            </div>
+            <TabsList className="flex w-full flex-wrap gap-2 rounded-full border border-muted/30 bg-muted/20 p-1 sm:w-auto">
+              {visibleTabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="px-5 py-2 text-sm font-semibold">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {visibleTabs.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+              {renderPostsGrid()}
+            </TabsContent>
+          ))}
+        </Tabs>
       </section>
 
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
