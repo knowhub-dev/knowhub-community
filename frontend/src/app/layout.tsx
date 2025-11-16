@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CookieNotice from "@/components/CookieNotice";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -39,6 +40,7 @@ export default function RootLayout({
                   {children}
                 </main>
                 <Footer />
+                <CookieNotice />
               </div>
             </AuthProvider>
           </QueryProvider>

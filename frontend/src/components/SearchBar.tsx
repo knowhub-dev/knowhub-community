@@ -1,10 +1,12 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import type { Post, User, WikiArticle } from '@/types';
+import { cn } from '@/lib/utils';
 
 type SearchPost = Pick<Post, 'id' | 'slug' | 'title' | 'score' | 'user'>;
 type SearchUser = Pick<User, 'id' | 'name' | 'username' | 'avatar_url'>;
@@ -23,6 +25,8 @@ interface SearchBarProps {
   variant?: 'default' | 'inverted';
 }
 
+const SECTION_LABEL_CLASS = 'px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em]';
+
 export default function SearchBar({
   onClose,
   className = '',
@@ -35,7 +39,6 @@ export default function SearchBar({
 
   const isInverted = variant === 'inverted';
 
-  // Search results
   const { data: results, isLoading } = useQuery({
     queryKey: ['search', query],
     queryFn: async () => {
@@ -46,7 +49,6 @@ export default function SearchBar({
     enabled: query.length >= 2,
   });
 
-  // Search suggestions
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (query.length >= 1) {
@@ -67,7 +69,6 @@ export default function SearchBar({
     return () => clearTimeout(debounce);
   }, [query]);
 
-  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -85,13 +86,26 @@ export default function SearchBar({
     if (onClose) onClose();
   };
 
+  const sectionLabelClass = cn(
+    SECTION_LABEL_CLASS,
+    isInverted ? 'text-white/70' : 'text-muted-foreground',
+  );
+
+  const resultRowClass = (extra?: string) =>
+    cn(
+      'rounded-xl px-3 py-2 text-sm transition',
+      isInverted ? 'text-white/90 hover:bg-white/10' : 'text-foreground hover:bg-muted/50',
+      extra,
+    );
+
   return (
-    <div ref={searchRef} className={`relative ${className}`}>
+    <div ref={searchRef} className={cn('relative text-sm', className)}>
       <div className="relative">
         <Search
-          className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform ${
-            isInverted ? 'text-white/60' : 'text-gray-400'
-          }`}
+          className={cn(
+            'pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors',
+            isInverted && 'text-white/70',
+          )}
         />
         <input
           type="text"
@@ -102,71 +116,59 @@ export default function SearchBar({
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className={`w-full rounded-lg border pl-10 pr-10 py-2 focus:border-transparent focus:ring-2 ${
+          className={cn(
+            'w-full rounded-2xl border px-10 py-2 text-sm shadow-sm transition focus:border-transparent focus:outline-none focus:ring-2',
             isInverted
-              ? 'border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:ring-fuchsia-400'
-              : 'border-gray-300 focus:ring-indigo-500'
-          }`}
+              ? 'border-white/30 bg-white/10 text-white placeholder:text-white/70 focus:ring-[hsla(var(--primary),0.7)]'
+              : 'border-input bg-background/80 text-foreground placeholder:text-muted-foreground focus:ring-[hsla(var(--primary),0.65)]',
+          )}
         />
         {query && (
           <button
+            type="button"
             onClick={() => {
               setQuery('');
               setIsOpen(false);
             }}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 transform ${
-              isInverted
-                ? 'text-white/60 hover:text-white'
-                : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={cn(
+              'absolute right-3 top-1/2 -translate-y-1/2 text-xs transition',
+              isInverted ? 'text-white/70 hover:text-white' : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* Search Results Dropdown */}
       {isOpen && (query.length >= 2 || suggestions.length > 0) && (
         <div
-          className={`absolute top-full left-0 right-0 z-50 mt-1 max-h-96 overflow-y-auto rounded-lg border shadow-lg ${
+          className={cn(
+            'absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-3xl border shadow-2xl backdrop-blur-sm',
             isInverted
-              ? 'border-white/10 bg-slate-950/90 text-white backdrop-blur'
-              : 'border-gray-200 bg-white'
-          }`}
+              ? 'border-white/10 bg-slate-950/90 text-white'
+              : 'border-border bg-[hsl(var(--card))] text-[hsl(var(--foreground))] shadow-[0_20px_60px_rgba(15,23,42,0.15)]',
+          )}
         >
           {isLoading && (
-            <div
-              className={`p-4 text-center ${
-                isInverted ? 'text-white/70' : 'text-gray-500'
-              }`}
-            >
+            <div className={cn('p-4 text-center text-sm', isInverted ? 'text-white/80' : 'text-muted-foreground')}>
               <div
-                className={`mx-auto h-6 w-6 animate-spin rounded-full border-b-2 ${
-                  isInverted ? 'border-fuchsia-300' : 'border-indigo-600'
-                }`}
-              ></div>
+                className={cn(
+                  'mx-auto h-6 w-6 animate-spin rounded-full border-b-2',
+                  isInverted ? 'border-white/80' : 'border-[hsl(var(--primary))]'
+                )}
+              />
             </div>
           )}
 
-          {/* Suggestions */}
           {suggestions.length > 0 && query.length < 2 && (
             <div className="p-2">
-              <div
-                className={`px-2 py-1 text-xs font-medium ${
-                  isInverted ? 'text-white/50' : 'text-gray-500'
-                }`}
-              >
-                Tavsiyalar
-              </div>
+              <div className={sectionLabelClass}>Tavsiyalar</div>
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
+                  type="button"
                   onClick={() => handleSearch(suggestion)}
-                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                    isInverted
-                      ? 'text-white/80 hover:bg-white/10'
-                      : 'hover:bg-gray-50'
-                  }`}
+                  className={resultRowClass()}
                 >
                   {suggestion}
                 </button>
@@ -174,35 +176,20 @@ export default function SearchBar({
             </div>
           )}
 
-          {/* Search Results */}
           {results && (
-            <div className="p-2">
+            <div className="space-y-3 p-2">
               {results.posts && results.posts.length > 0 && (
-                <div className="mb-4">
-                  <div
-                    className={`px-2 py-1 text-xs font-medium ${
-                      isInverted ? 'text-white/50' : 'text-gray-500'
-                    }`}
-                  >
-                    Postlar
-                  </div>
+                <div className="space-y-1">
+                  <div className={sectionLabelClass}>Postlar</div>
                   {results.posts.map((post) => (
                     <Link
                       key={post.id}
                       href={`/posts/${post.slug}`}
                       onClick={() => setIsOpen(false)}
-                      className={`block rounded px-3 py-2 transition ${
-                        isInverted
-                          ? 'text-white/80 hover:bg-white/10'
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={resultRowClass()}
                     >
-                      <div className="text-sm font-medium">{post.title}</div>
-                      <div
-                        className={`text-xs ${
-                          isInverted ? 'text-white/50' : 'text-gray-500'
-                        }`}
-                      >
+                      <div className="font-medium">{post.title}</div>
+                      <div className={cn('text-xs', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
                         {post.user.name} • {post.score} ↑
                       </div>
                     </Link>
@@ -211,37 +198,23 @@ export default function SearchBar({
               )}
 
               {results.users && results.users.length > 0 && (
-                <div className="mb-4">
-                  <div
-                    className={`px-2 py-1 text-xs font-medium ${
-                      isInverted ? 'text-white/50' : 'text-gray-500'
-                    }`}
-                  >
-                    Foydalanuvchilar
-                  </div>
+                <div className="space-y-1">
+                  <div className={sectionLabelClass}>Foydalanuvchilar</div>
                   {results.users.map((user) => (
                     <Link
                       key={user.id}
                       href={`/profile/${user.username}`}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center rounded px-3 py-2 transition ${
-                        isInverted
-                          ? 'text-white/80 hover:bg-white/10'
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={resultRowClass('flex items-center gap-3')}
                     >
                       <img
                         src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                         alt={user.name}
-                        className="w-8 h-8 rounded-full mr-3"
+                        className="h-8 w-8 rounded-full object-cover"
                       />
                       <div>
-                        <div className="text-sm font-medium">{user.name}</div>
-                        <div
-                          className={`text-xs ${
-                            isInverted ? 'text-white/50' : 'text-gray-500'
-                          }`}
-                        >
+                        <div className="font-medium">{user.name}</div>
+                        <div className={cn('text-xs', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
                           @{user.username}
                         </div>
                       </div>
@@ -251,31 +224,17 @@ export default function SearchBar({
               )}
 
               {results.wiki && results.wiki.length > 0 && (
-                <div>
-                  <div
-                    className={`px-2 py-1 text-xs font-medium ${
-                      isInverted ? 'text-white/50' : 'text-gray-500'
-                    }`}
-                  >
-                    Wiki
-                  </div>
+                <div className="space-y-1">
+                  <div className={sectionLabelClass}>Wiki</div>
                   {results.wiki.map((article) => (
                     <Link
                       key={article.id}
                       href={`/wiki/${article.slug}`}
                       onClick={() => setIsOpen(false)}
-                      className={`block rounded px-3 py-2 transition ${
-                        isInverted
-                          ? 'text-white/80 hover:bg-white/10'
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={resultRowClass()}
                     >
-                      <div className="text-sm font-medium">{article.title}</div>
-                      <div
-                        className={`text-xs ${
-                          isInverted ? 'text-white/50' : 'text-gray-500'
-                        }`}
-                      >
+                      <div className="font-medium">{article.title}</div>
+                      <div className={cn('text-xs', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
                         Wiki • Versiya {article.version}
                       </div>
                     </Link>
@@ -284,11 +243,7 @@ export default function SearchBar({
               )}
 
               {results.total === 0 && (
-                <div
-                  className={`p-4 text-center ${
-                    isInverted ? 'text-white/60' : 'text-gray-500'
-                  }`}
-                >
+                <div className={cn('px-3 py-4 text-center text-sm', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
                   Hech narsa topilmadi
                 </div>
               )}
