@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import PostCard from "@/components/PostCard";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   BookOpen,
+  CheckCircle,
   Code2,
   Medal,
   MessageCircle,
@@ -137,6 +139,27 @@ type QuickAction = {
   ctaClass: string;
 };
 
+type ServiceHealthStatus = "operational" | "degraded" | "outage";
+
+type ServiceHealth = {
+  name: string;
+  status: ServiceHealthStatus;
+  description: string;
+  latency_ms?: number | null;
+  checked_at?: string | null;
+  details?: Record<string, unknown>;
+};
+
+type SystemStatusSummary = {
+  services?: ServiceHealth[];
+  metrics?: {
+    uptime_seconds?: number | null;
+    active_users?: number | null;
+    queue_backlog?: number | null;
+  };
+  updated_at?: string | null;
+};
+
 type PaginatedPostsResponse = {
   data: Post[];
   meta?: Record<string, unknown>;
@@ -178,6 +201,18 @@ async function getPosts(params: { sort: SortType }) {
 
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
+
+const formatDuration = (seconds?: number | null) => {
+  if (!seconds || seconds <= 0) return "—";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const parts = [];
+  if (days) parts.push(`${days} kun`);
+  if (hours) parts.push(`${hours} soat`);
+  if (!days && minutes) parts.push(`${minutes} daq`);
+  return parts.slice(0, 2).join(" ") || "<1 daq";
+};
 
 const buildSnippet = (post: PostSummary, length = 160) => {
   const raw =
@@ -335,6 +370,96 @@ function CodeRunnerCard() {
             Tizimga kirib, so'ng kodni ishga tushiring. Natijalar shu yerda paydo bo'ladi.
           </p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SystemStatusWidget({ status }: { status: SystemStatusSummary | null }) {
+  const services = status?.services ?? [];
+  const metrics = status?.metrics ?? {};
+  const updatedAt = status?.updated_at;
+
+  const statusCopy: Record<ServiceHealthStatus, { label: string; className: string; icon: ReactNode }> = {
+    operational: {
+      label: "Barqaror",
+      className: "bg-emerald-500/15 text-emerald-400",
+      icon: <CheckCircle className="h-4 w-4" />,
+    },
+    degraded: {
+      label: "Sekin",
+      className: "bg-amber-500/15 text-amber-400",
+      icon: <AlertTriangle className="h-4 w-4" />,
+    },
+    outage: {
+      label: "Nosoz",
+      className: "bg-rose-500/15 text-rose-400",
+      icon: <AlertTriangle className="h-4 w-4" />,
+    },
+  };
+
+  const aggregateStatus = services.reduce<ServiceHealthStatus>((current, service) => {
+    if (service.status === "outage") return "outage";
+    if (service.status === "degraded" && current === "operational") return "degraded";
+    return current;
+  }, "operational");
+
+  const badge = statusCopy[aggregateStatus];
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-[hsl(var(--surface))] p-6 text-sm shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tizim holati</p>
+          <h3 className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">Real vaqt nazorati</h3>
+        </div>
+        <Link
+          href="/status"
+          className="inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+        >
+          Ko'rish <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <div className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+        <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}>
+          {badge.icon}
+          {badge.label}
+        </div>
+        <p className="text-xs text-muted-foreground">Yangilangan: {updatedAt ? new Date(updatedAt).toLocaleTimeString("uz-UZ") : "—"}</p>
+      </div>
+      <div className="mt-6 space-y-3">
+        {(services.length ? services.slice(0, 3) : new Array(3).fill(null)).map((service, index) => {
+          if (!service) {
+            return <div key={`skeleton-${index}`} className="h-14 animate-pulse rounded-2xl bg-[hsl(var(--card))]/70" />;
+          }
+          const copy = statusCopy[service.status];
+          return (
+            <div key={service.name} className="flex items-center justify-between rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))]">{service.name}</p>
+                <p className="text-xs text-muted-foreground">{service.description}</p>
+              </div>
+              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-widest ${copy.className}`}>
+                {copy.icon}
+                {copy.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-6 grid gap-3 text-center text-xs sm:grid-cols-3">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Faol a'zolar</p>
+          <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.active_users)}</p>
+        </div>
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Navbat</p>
+          <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.queue_backlog)}</p>
+        </div>
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Uptime</p>
+          <p className="mt-2 text-xl font-semibold text-[hsl(var(--foreground))]">{formatDuration(metrics.uptime_seconds)}</p>
+        </div>
       </div>
     </div>
   );
@@ -515,6 +640,7 @@ export default function HomePage() {
   const [homeStats, setHomeStats] = useState<HomepageStatsResponse | null>(null);
   const [heroes, setHeroes] = useState<WeeklyHeroesResponse | null>(null);
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortType, setSortType] = useState<SortType>("latest");
@@ -551,10 +677,11 @@ export default function HomePage() {
     (async () => {
       const issues: string[] = [];
       try {
-        const [statsResult, heroesResult, feedResult] = await Promise.allSettled([
+        const [statsResult, heroesResult, feedResult, statusResult] = await Promise.allSettled([
           api.get<HomepageStatsResponse>("/stats/homepage"),
           api.get<WeeklyHeroesResponse>("/stats/weekly-heroes"),
           api.get<ActivityFeedResponse>("/activity-feed", { params: { limit: 12 } }),
+          api.get<SystemStatusSummary>("/status/summary"),
         ]);
 
         if (statsResult.status === "fulfilled") {
@@ -582,6 +709,17 @@ export default function HomePage() {
           }
         } else if (active) {
           setFeed([]);
+        }
+
+        if (statusResult.status === "fulfilled") {
+          if (active) {
+            setSystemStatus(statusResult.value.data ?? null);
+          }
+        } else {
+          issues.push("Tizim holati yangilanmadi");
+          if (active) {
+            setSystemStatus(null);
+          }
         }
       } catch (err: any) {
         issues.push(err?.message ?? "Ma'lumotlarni yuklashda xatolik yuz berdi");
@@ -651,13 +789,13 @@ export default function HomePage() {
         ctaClass: "text-cyan-500",
       },
       {
-        href: "/wiki",
-        title: "Wiki'ni boyiting",
-        description: "Yangi maqola va tajribalarni qo'shib, bilim bazasini kengaytiring.",
-        icon: BookOpen,
+        href: "/leaderboard",
+        title: "Liderlar taxtasi",
+        description: "Eng faol mualliflar va jamoadoshlar bilan tanishing.",
+        icon: Medal,
         accentClass: "text-indigo-600 dark:text-indigo-300",
         hoverClass: "hover:border-indigo-400/70 hover:shadow-lg",
-        ctaLabel: "Ko'rish",
+        ctaLabel: "Reyting",
         ctaClass: "text-indigo-500",
       },
     ],
@@ -795,7 +933,7 @@ export default function HomePage() {
               );
             })}
           </div>
-          <CodeRunnerCard />
+          <SystemStatusWidget status={systemStatus} />
         </div>
       </section>
 
@@ -848,35 +986,6 @@ export default function HomePage() {
               <Rocket className="h-4 w-4" />
             </div>
           </Link>
-        </div>
-      </section>
-
-      <section className="max-w-6xl px-6 pb-12 lg:px-8">
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground dark:text-muted-foreground">
-              Bosh sahifa
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-[hsl(var(--foreground))] dark:text-white">Bosh sahifa</h1>
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-8 shadow-lg dark:border-border dark:bg-[hsl(var(--foreground))]/80">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-semibold leading-tight text-[hsl(var(--foreground))] dark:text-white">
-                KnowHub Community: Dasturchilar Uchun Yangi Maydon
-              </h2>
-              <p className="text-base text-muted-foreground dark:text-muted-foreground">
-                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi.
-              </p>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link href="/posts/create">Post Yaratish</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/wiki">Wiki'ni Ko'rish</Link>
-              </Button>
-            </div>
-          </div>
         </div>
       </section>
 

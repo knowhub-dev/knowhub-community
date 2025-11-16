@@ -30,6 +30,20 @@ const VERSION_STYLES: Record<ChangelogEntry['type'], string> = {
 export default function ChangelogPage() {
   const changelog: ChangelogEntry[] = [
     {
+      version: '1.1.1',
+      date: '2025-01-20',
+      type: 'patch',
+      title: 'Bosh sahifa tartibga keltirildi',
+      description:
+        'Takroriy CTA va komponentlar olib tashlandi, tizim holati vidjeti backenddan jonli maʼlumot oladi va navbar har bir qurilmada autentifikatsiya amallarini ko‘rsatadi.',
+      changes: [
+        { type: 'changed', description: 'Bosh sahifa hero, tezkor harakatlar va spotlight bloklari dublikat kod va CTA lardan tozalandi' },
+        { type: 'added', description: 'SystemStatus API va vidjeti orqali real vaqt tizim holati ko‘rsatildi' },
+        { type: 'changed', description: 'Navbar dizayni yangilanib, mobil va desktopda kirish/ro‘yxatdan o‘tish tugmalari doimiy ko‘rinadigan bo‘ldi' },
+        { type: 'fixed', description: 'Frontend tizim holati vidjeti endi backenddagi haqiqiy ko‘rsatkichlarga tayanadi' },
+      ],
+    },
+    {
       version: '1.1.0',
       date: '2025-01-18',
       type: 'minor',

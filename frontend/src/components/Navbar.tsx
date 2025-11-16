@@ -131,10 +131,10 @@ export default function Navbar() {
   const renderDesktopAuth = () => {
     if (user) {
       return (
-        <>
+        <div className="flex items-center gap-3">
           <Link
-            href="/posts/new"
-            className="hidden rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon transition hover:-translate-y-0.5 lg:flex lg:items-center lg:gap-2"
+            href="/posts/create"
+            className="hidden rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition hover:-translate-y-0.5 lg:flex lg:items-center lg:gap-2"
           >
             <Plus className="h-4 w-4" />
             Yangi post
@@ -143,32 +143,32 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsProfileOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
+              className="flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))]/80 px-2 py-1 text-sm text-foreground transition hover:border-[hsl(var(--primary))]"
             >
               <img
                 src={user.avatar_url ?? '/default-avatar.png'}
                 alt={user.name}
-                className="h-9 w-9 rounded-full border border-white/10 object-cover"
+                className="h-9 w-9 rounded-full border border-border/70 object-cover"
               />
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
             {isProfileOpen && (
-              <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 shadow-xl backdrop-blur">
-                <div className="border-b border-white/5 px-4 py-3">
+              <div className="absolute right-0 top-12 w-64 overflow-hidden rounded-2xl border border-border/70 bg-[hsl(var(--card))]/95 shadow-xl backdrop-blur">
+                <div className="border-b border-border/60 px-4 py-3">
                   <p className="text-sm font-semibold text-foreground">{user.name}</p>
                   <p className="text-xs text-muted-foreground">@{user.username}</p>
                 </div>
                 <div className="flex flex-col gap-1 p-2 text-sm text-muted-foreground">
                   <Link
                     href={`/profile/${user.username}`}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
                   >
                     <User className="h-4 w-4" />
                     Profil
                   </Link>
                   <Link
                     href="/settings"
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-white/5 hover:text-foreground"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
                   >
                     <Settings className="h-4 w-4" />
                     Sozlamalar
@@ -176,7 +176,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={logout}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-rose-300 transition hover:bg-rose-500/10 hover:text-rose-100"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-200"
                   >
                     <LogOut className="h-4 w-4" />
                     Chiqish
@@ -185,7 +185,38 @@ export default function Navbar() {
               </div>
             )}
           </div>
-        </>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/login"
+          className="rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+        >
+          Kirish
+        </Link>
+        <Link
+          href="/register"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition-transform hover:-translate-y-0.5"
+        >
+          <User className="h-4 w-4" />
+          Ro'yxatdan o'tish
+        </Link>
+      </div>
+    );
+  };
+
+  const renderMobileAuth = () => {
+    if (user) {
+      return (
+        <Link
+          href={`/profile/${user.username}`}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70"
+        >
+          <img src={user.avatar_url ?? '/default-avatar.png'} alt={user.name} className="h-8 w-8 rounded-full object-cover" />
+        </Link>
       );
     }
 
@@ -193,15 +224,15 @@ export default function Navbar() {
       <>
         <Link
           href="/login"
-          className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+          className="hidden rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] sm:inline-flex"
         >
           Kirish
         </Link>
         <Link
           href="/register"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-transform hover:-translate-y-0.5"
+          className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-3 py-1.5 text-xs font-semibold text-white"
         >
-          <User className="h-4 w-4" />
+          <User className="h-3.5 w-3.5" />
           Ro'yxatdan o'tish
         </Link>
       </>
@@ -209,7 +240,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/40 bg-[hsl(var(--background))]/90 backdrop-blur-xl">
       <div className="container flex h-20 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
@@ -226,27 +257,48 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 shadow-inner md:flex">
+          <div className="hidden items-center gap-1 rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 p-1 shadow-inner md:flex">
             {navLinks.map(renderNavLink)}
           </div>
         </div>
 
         <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
           <SearchBar className="w-full max-w-md" variant={isDark ? 'inverted' : 'default'} />
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 shadow-inner">
+          <div className="flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 px-2.5 py-1.5 shadow-inner">
             <NotificationDropdown />
-            <span className="h-6 w-px bg-white/10" />
+            <span className="h-6 w-px bg-[hsl(var(--border))]/60" />
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-foreground transition hover:border-primary/40 hover:text-primary"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
               aria-label="Mavzuni almashtirish"
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <span className="h-6 w-px bg-white/10" />
-            {renderDesktopAuth()}
           </div>
+          {renderDesktopAuth()}
+        </div>
+
+        <div className="flex flex-1 items-center justify-end gap-2 lg:hidden">
+          <SearchBar className="hidden w-full max-w-xs sm:block" variant={isDark ? 'inverted' : 'default'} />
+          <NotificationDropdown />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+            aria-label="Mavzuni almashtirish"
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          {renderMobileAuth()}
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))]"
+            aria-label="Navigatsiyani ochish"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-2 lg:hidden">
@@ -272,7 +324,7 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="border-b border-white/5 bg-surface/95 shadow-subtle backdrop-blur-md lg:hidden">
+        <div className="border-b border-border/50 bg-[hsl(var(--background))]/95 shadow-subtle backdrop-blur-md lg:hidden">
           <div className="space-y-6 px-6 pb-6 pt-4">
             <SearchBar variant={isDark ? 'inverted' : 'default'} />
             <div className="flex flex-col gap-3">
@@ -283,8 +335,8 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      'rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-foreground',
-                      isActive && 'border-primary/40 bg-primary/10 text-foreground',
+                      'rounded-2xl border border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground',
+                      isActive && 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-foreground',
                     )}
                     onClick={() => setIsOpen(false)}
                   >
@@ -299,7 +351,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
                   aria-label="Mavzuni almashtirish"
                 >
                   {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -309,9 +361,9 @@ export default function Navbar() {
                 <NotificationDropdown />
                 {user ? (
                   <Link
-                    href="/posts/new"
+                    href="/posts/create"
                     onClick={() => setIsOpen(false)}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
                   >
                     <Plus className="h-4 w-4" />
                     Yangi post
@@ -321,14 +373,14 @@ export default function Navbar() {
                     <Link
                       href="/login"
                       onClick={() => setIsOpen(false)}
-                      className="rounded-full border border-white/10 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                      className="rounded-full border border-border/60 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground"
                     >
                       Kirish
                     </Link>
                     <Link
                       href="/register"
                       onClick={() => setIsOpen(false)}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
                     >
                       <User className="h-4 w-4" />
                       Ro'yxatdan o'tish
