@@ -1,28 +1,15 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import type { User as BaseUser } from '@/types';
 
-// 1. Foydalanuvchi interfeysiga 'role' maydonini qo'shamiz
-interface User {
-  id: number;
-  name: string;
-  username: string;
-  email?: string;
-  avatar_url?: string;
-  xp: number;
-  bio?: string;
-  website_url?: string;
-  github_url?: string;
-  linkedin_url?: string;
-  resume?: string;
-  stats?: any;
-  created_at?: string;
-  role?: 'admin' | 'user'; // <-- ENG MUHIM QO'SHIMCHA
+interface AuthUser extends BaseUser {
+  role?: 'admin' | 'user';
 }
 
 // 2. Kontekstga 'isAdmin'ni qo'shamiz
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, username: string, email: string, password: string) => Promise<void>;
@@ -34,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   const checkUser = async () => {
@@ -43,14 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         // Bu manzil to'g'ri (api.ts da /api/v1 prefiksi bor)
-        const response = await api.get('/profile/me'); 
-        
-        // Bizda "data" o'rami yo'q, buni oldin to'g'irlagandik
-        setUser(response.data.data); 
+        const response = await api.get<{ data: AuthUser } | AuthUser>('/profile/me');
+        const payload = response.data;
+        const normalizedUser = 'data' in payload ? payload.data : payload;
+        setUser(normalizedUser);
       } else {
         setUser(null);
       }
-    } catch (error) {
+    } catch {
       localStorage.removeItem('auth_token');
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
@@ -64,7 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await api.post('/auth/email/login', { email, password });
+    const response = await api.post<{ token: string; user: AuthUser }>('/auth/email/login', {
+      email,
+      password,
+    });
     const { token, user: userData } = response.data;
     localStorage.setItem('auth_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -72,7 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    const response = await api.post('/auth/email/register', { name, username, email, password });
+    const response = await api.post<{ token: string; user: AuthUser }>('/auth/email/register', {
+      name,
+      username,
+      email,
+      password,
+    });
     const { token, user: userData } = response.data;
     localStorage.setItem('auth_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -82,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await api.post('/auth/email/logout');
-    } catch (error) {
+    } catch {
       // Ignore
     } finally {
       localStorage.removeItem('auth_token');

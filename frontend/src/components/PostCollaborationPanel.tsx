@@ -10,6 +10,7 @@ import type {
 } from "@/types";
 import { Activity, Loader2, Save, Users } from "lucide-react";
 import clsx from "clsx";
+import { isAxiosError } from "axios";
 
 export interface PostCollaborationPanelProps {
   postSlug: string;
@@ -18,6 +19,16 @@ export interface PostCollaborationPanelProps {
 }
 
 type SyncState = "idle" | "saving" | "saved" | "error";
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? error.message ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  return fallback;
+};
 
 export default function PostCollaborationPanel({
   postSlug,
@@ -56,7 +67,6 @@ export default function PostCollaborationPanel({
         clearTimeout(syncStatusResetRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -72,14 +82,14 @@ export default function PostCollaborationPanel({
       try {
         const res = await api.get("/profile/me");
         if (!mountedRef.current) return;
-        const payload = res.data as { data?: User } | User;
-        const userData = (payload as any)?.data ?? payload;
-        setCurrentUser(userData as User);
-      } catch (err: any) {
-        if (err?.response?.status !== 401) {
-          const message = err?.response?.data?.message ?? err?.message ?? "Profilni yuklashda xatolik";
-          setError(message);
+        const payload = res.data as { data?: User | null } | User;
+        const userData = ("data" in payload ? payload.data : payload) ?? null;
+        setCurrentUser(userData);
+      } catch (error) {
+        if (isAxiosError(error) && error.response?.status === 401) {
+          return;
         }
+        setError(getErrorMessage(error, "Profilni yuklashda xatolik"));
       } finally {
         if (mountedRef.current) {
           setAuthChecked(true);
@@ -90,6 +100,7 @@ export default function PostCollaborationPanel({
     loadMe();
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!authChecked) return;
 
@@ -106,9 +117,9 @@ export default function PostCollaborationPanel({
     }
 
     fetchActiveSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authChecked, currentUser?.id]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!joined || !session || session.status !== "active") return;
 
@@ -139,10 +150,9 @@ export default function PostCollaborationPanel({
             setSyncState("idle");
           }
         }, 1500);
-      } catch (err: any) {
+      } catch (error) {
         if (!mountedRef.current) return;
-        const message = err?.response?.data?.message ?? err?.message ?? "Sinxronlash jarayonida xatolik";
-        setError(message);
+        setError(getErrorMessage(error, "Sinxronlash jarayonida xatolik"));
         setSyncState("error");
       }
     }, 800);
@@ -152,9 +162,9 @@ export default function PostCollaborationPanel({
         clearTimeout(syncTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content, joined, session?.id]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (session?.status !== "active") {
       stopRealtime();
@@ -162,7 +172,6 @@ export default function PostCollaborationPanel({
         setJoined(false);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.status]);
 
   const participantMap = useMemo(() => {
@@ -196,9 +205,9 @@ export default function PostCollaborationPanel({
         stopRealtime();
       }
       setJoined(isParticipant);
-    } catch (err: any) {
+    } catch (error) {
       if (!mountedRef.current) return;
-      if (err?.response?.status === 404) {
+      if (isAxiosError(error) && error.response?.status === 404) {
         setSession(null);
         setJoined(false);
         setContent(initialContent);
@@ -207,8 +216,7 @@ export default function PostCollaborationPanel({
         lastEventIdRef.current = null;
         stopRealtime();
       } else {
-        const message = err?.response?.data?.message ?? err?.message ?? "Hamkorlik sessiyasini yuklab bo'lmadi";
-        setError(message);
+        setError(getErrorMessage(error, "Hamkorlik sessiyasini yuklab bo'lmadi"));
       }
     } finally {
       if (mountedRef.current) {
@@ -238,11 +246,11 @@ export default function PostCollaborationPanel({
     heartbeatIntervalRef.current = setInterval(async () => {
       try {
         await api.post(`/collaborations/${sessionId}/heartbeat`);
-      } catch (err: any) {
-        if (err?.response?.status === 404 || err?.response?.status === 409) {
+      } catch (error) {
+        if (isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 409)) {
           stopRealtime();
           setJoined(false);
-          if (err?.response?.status === 404) {
+          if (error.response?.status === 404) {
             setSession(null);
           } else {
             setSession((prev) =>
@@ -285,9 +293,9 @@ export default function PostCollaborationPanel({
             }
           });
         }
-      } catch (err: any) {
+      } catch (error) {
         if (!mountedRef.current) return;
-        if (err?.response?.status === 404) {
+        if (isAxiosError(error) && error.response?.status === 404) {
           shouldContinue = false;
           stopRealtime();
           setSession(null);
@@ -324,10 +332,9 @@ export default function PostCollaborationPanel({
       setEvents([]);
       lastEventIdRef.current = null;
       startRealtime(sessionData.id);
-    } catch (err: any) {
+    } catch (error) {
       if (!mountedRef.current) return;
-      const message = err?.response?.data?.message ?? err?.message ?? "Sessiyani boshlashda xatolik";
-      setError(message);
+      setError(getErrorMessage(error, "Sessiyani boshlashda xatolik"));
     } finally {
       if (mountedRef.current) {
         setActionLoading(false);
@@ -355,10 +362,9 @@ export default function PostCollaborationPanel({
       setEvents([]);
       lastEventIdRef.current = null;
       startRealtime(sessionData.id);
-    } catch (err: any) {
+    } catch (error) {
       if (!mountedRef.current) return;
-      const message = err?.response?.data?.message ?? err?.message ?? "Sessiyaga qo'shilish muvaffaqiyatsiz";
-      setError(message);
+      setError(getErrorMessage(error, "Sessiyaga qo'shilish muvaffaqiyatsiz"));
     } finally {
       if (mountedRef.current) {
         setActionLoading(false);

@@ -4,11 +4,16 @@ import { Search, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import type { Post, User, WikiArticle } from '@/types';
+
+type SearchPost = Pick<Post, 'id' | 'slug' | 'title' | 'score' | 'user'>;
+type SearchUser = Pick<User, 'id' | 'name' | 'username' | 'avatar_url'>;
+type SearchWikiArticle = Pick<WikiArticle, 'id' | 'slug' | 'title' | 'version'>;
 
 interface SearchResult {
-  posts?: any[];
-  wiki?: any[];
-  users?: any[];
+  posts?: SearchPost[];
+  wiki?: SearchWikiArticle[];
+  users?: SearchUser[];
   total: number;
 }
 
@@ -46,9 +51,11 @@ export default function SearchBar({
     const fetchSuggestions = async () => {
       if (query.length >= 1) {
         try {
-          const res = await api.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+          const res = await api.get<{ suggestions: string[] }>(
+            `/search/suggestions?q=${encodeURIComponent(query)}`,
+          );
           setSuggestions(res.data.suggestions);
-        } catch (error) {
+        } catch {
           setSuggestions([]);
         }
       } else {
@@ -179,7 +186,7 @@ export default function SearchBar({
                   >
                     Postlar
                   </div>
-                  {results.posts.map((post: any) => (
+                  {results.posts.map((post) => (
                     <Link
                       key={post.id}
                       href={`/posts/${post.slug}`}
@@ -212,7 +219,7 @@ export default function SearchBar({
                   >
                     Foydalanuvchilar
                   </div>
-                  {results.users.map((user: any) => (
+                  {results.users.map((user) => (
                     <Link
                       key={user.id}
                       href={`/profile/${user.username}`}
@@ -252,7 +259,7 @@ export default function SearchBar({
                   >
                     Wiki
                   </div>
-                  {results.wiki.map((article: any) => (
+                  {results.wiki.map((article) => (
                     <Link
                       key={article.id}
                       href={`/wiki/${article.slug}`}

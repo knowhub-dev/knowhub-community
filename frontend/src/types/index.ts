@@ -76,7 +76,7 @@ export interface CollaborationSession {
 export interface CollaborationEvent {
   id: number;
   type: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   user_id: number;
   created_at: string;
 }

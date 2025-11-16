@@ -6,12 +6,19 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import Link from 'next/link';
 
+interface NotificationPayload {
+  post_slug?: string;
+  comment_id?: number;
+  follower_username?: string;
+  [key: string]: string | number | null | undefined;
+}
+
 interface Notification {
   id: number;
   type: string;
   title: string;
   message: string;
-  data: any;
+  data?: NotificationPayload;
   read_at: string | null;
   created_at: string;
 }

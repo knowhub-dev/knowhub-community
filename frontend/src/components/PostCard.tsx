@@ -38,7 +38,7 @@ const formatDate = (value: string) => {
       month: 'short',
       day: 'numeric',
     }).format(new Date(value));
-  } catch (error) {
+  } catch {
     return value;
   }
 };
@@ -55,6 +55,11 @@ type PostCardProps =
       variant: 'skeleton';
       className?: string;
     };
+
+type EnrichedPost = Post & {
+  views?: number;
+  views_count?: number;
+};
 
 const baseCardStyles =
   'group relative overflow-hidden rounded-lg border border-border/60 bg-surface/60 shadow-subtle backdrop-blur-md transition-all duration-200';
@@ -95,13 +100,15 @@ function SkeletonCard({ className }: { className?: string }) {
   );
 }
 
-export default function PostCard(props: PostCardProps) {
-  if (props.variant === 'skeleton') {
-    return <SkeletonCard className={props.className} />;
-  }
-
-  const { post, variant = 'standard', className } = props;
-
+function PostCardContent({
+  post,
+  variant,
+  className,
+}: {
+  post: Post;
+  variant: Exclude<PostCardVariant, 'skeleton'>;
+  className?: string;
+}) {
   const formattedDate = useMemo(() => formatDate(post.created_at), [post.created_at]);
   const readTime = useMemo(
     () => estimateReadTime(post.content_markdown),
@@ -112,9 +119,8 @@ export default function PostCard(props: PostCardProps) {
     [post.content_markdown, variant],
   );
   const views = useMemo(() => {
-    const raw = (post as unknown as { views?: number; views_count?: number }).views;
-    const alt = (post as unknown as { views?: number; views_count?: number }).views_count;
-    return raw ?? alt ?? Math.max(post.score * 12, 48);
+    const { views, views_count, score } = post as EnrichedPost;
+    return views ?? views_count ?? Math.max(score * 12, 48);
   }, [post]);
 
   const cardClasses = cn(baseCardStyles, variantStyles[variant], className);
@@ -233,4 +239,13 @@ export default function PostCard(props: PostCardProps) {
       </div>
     </article>
   );
+}
+
+export default function PostCard(props: PostCardProps) {
+  if (props.variant === 'skeleton') {
+    return <SkeletonCard className={props.className} />;
+  }
+
+  const { post, variant = 'standard', className } = props;
+  return <PostCardContent post={post} variant={variant} className={className} />;
 }
