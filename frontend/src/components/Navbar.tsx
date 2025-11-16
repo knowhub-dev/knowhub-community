@@ -67,10 +67,10 @@ export default function Navbar() {
 
   const navLinks = useMemo<NavLink[]>(
     () => [
-      { href: '/posts', label: 'Postlar' },
+      { href: '/posts', label: 'Blog' },
       { href: '/wiki', label: 'Wiki' },
       { href: '/containers', label: 'Mini-serverlar' },
-      { href: '/leaderboard', label: 'Leaderboard' },
+      { href: '/leaderboard', label: 'Liderlar' },
     ],
     [],
   );
@@ -101,17 +101,26 @@ export default function Navbar() {
         key={link.href}
         href={link.href}
         className={cn(
-          'group relative inline-flex items-center rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground',
-          'hover:bg-foreground/5 hover:border-foreground/5',
-          isActive &&
-            'border-primary/40 bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/20 text-foreground shadow-lg shadow-primary/10',
+          'group relative inline-flex items-center rounded-full px-4 py-2 text-sm font-medium tracking-wide text-muted-foreground transition',
+          'hover:text-foreground',
+          isActive && 'text-foreground',
         )}
+        aria-current={isActive ? 'page' : undefined}
       >
-        <span>{link.label}</span>
+        <span className="relative z-10">{link.label}</span>
         <span
+          aria-hidden
           className={cn(
-            'absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-gradient-to-r from-primary to-secondary opacity-0 transition-opacity duration-200',
-            'group-hover:opacity-70',
+            'absolute inset-0 rounded-full bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/20 opacity-0 transition duration-200',
+            'group-hover:opacity-100',
+            isActive && 'opacity-100 shadow-inner shadow-primary/10',
+          )}
+        />
+        <span
+          aria-hidden
+          className={cn(
+            'absolute inset-x-6 -bottom-px h-0.5 rounded-full bg-primary/60 opacity-0 transition duration-200',
+            'group-hover:opacity-100',
             isActive && 'opacity-100',
           )}
         />
@@ -119,13 +128,13 @@ export default function Navbar() {
     );
   };
 
-  const renderAuthActions = () => {
+  const renderDesktopAuth = () => {
     if (user) {
       return (
-        <div className="flex items-center gap-3">
+        <>
           <Link
             href="/posts/new"
-            className="hidden rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all hover:-translate-y-0.5 lg:inline-flex lg:items-center lg:gap-2"
+            className="hidden rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white shadow-neon transition hover:-translate-y-0.5 lg:flex lg:items-center lg:gap-2"
           >
             <Plus className="h-4 w-4" />
             Yangi post
@@ -134,7 +143,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsProfileOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-foreground transition hover:border-primary/40"
             >
               <img
                 src={user.avatar_url ?? '/default-avatar.png'}
@@ -176,12 +185,12 @@ export default function Navbar() {
               </div>
             )}
           </div>
-        </div>
+        </>
       );
     }
 
     return (
-      <div className="flex items-center gap-2">
+      <>
         <Link
           href="/login"
           className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
@@ -195,69 +204,70 @@ export default function Navbar() {
           <User className="h-4 w-4" />
           Ro'yxatdan o'tish
         </Link>
-      </div>
+      </>
     );
   };
 
   return (
-    <nav className="sticky top-0 z-50">
-      <div className="relative border-b border-white/5 bg-surface/85 shadow-subtle backdrop-blur-xl">
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-r from-primary/45 via-secondary/35 to-primary/45 opacity-70 blur-md" />
-        <div className="container flex h-20 items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-3">
-              {activeLogo ? (
-                <img src={activeLogo.url} alt="KnowHub logo" className="h-11 w-auto" />
-              ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary-light to-secondary text-lg font-semibold text-white shadow-neon">
-                  KH
-                </div>
-              )}
-              <span className="hidden text-2xl font-semibold tracking-tight text-foreground md:block">KnowHub</span>
-            </Link>
-            <div className="hidden items-center gap-2 rounded-full border border-white/5 bg-white/5 p-1 shadow-inner lg:flex">
-              {navLinks.map(renderNavLink)}
+    <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur-xl">
+      <div className="container flex h-20 items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            {activeLogo ? (
+              <img src={activeLogo.url} alt="KnowHub logo" className="h-12 w-auto" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary-light to-secondary text-xl font-semibold text-white shadow-neon">
+                KH
+              </div>
+            )}
+            <div className="hidden flex-col leading-tight md:flex">
+              <span className="text-[1.65rem] font-bold tracking-tight text-foreground">KnowHub</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">community</span>
             </div>
-          </div>
+          </Link>
 
-          <div className="hidden flex-1 items-center justify-end gap-4 lg:flex">
-            <SearchBar className="w-full max-w-md" variant={isDark ? 'inverted' : 'default'} />
-            <div className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-2.5 py-1.5 shadow-inner">
-              <NotificationDropdown />
-              <span className="h-5 w-px bg-white/10" />
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-foreground transition hover:border-primary/40 hover:text-primary"
-                aria-label="Mavzuni almashtirish"
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-              <span className="h-5 w-px bg-white/10" />
-              {renderAuthActions()}
-            </div>
+          <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 shadow-inner md:flex">
+            {navLinks.map(renderNavLink)}
           </div>
+        </div>
 
-          <div className="flex flex-1 items-center justify-end gap-3 lg:hidden">
-            <SearchBar className="hidden w-full max-w-xs sm:block" variant={isDark ? 'inverted' : 'default'} />
+        <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+          <SearchBar className="w-full max-w-md" variant={isDark ? 'inverted' : 'default'} />
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 shadow-inner">
             <NotificationDropdown />
+            <span className="h-6 w-px bg-white/10" />
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-foreground transition hover:border-primary/40 hover:text-primary"
               aria-label="Mavzuni almashtirish"
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button
-              type="button"
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40"
-              aria-label="Navigatsiyani ochish"
-            >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            <span className="h-6 w-px bg-white/10" />
+            {renderDesktopAuth()}
           </div>
+        </div>
+
+        <div className="flex flex-1 items-center justify-end gap-2 lg:hidden">
+          <SearchBar className="hidden w-full max-w-xs sm:block" variant={isDark ? 'inverted' : 'default'} />
+          <NotificationDropdown />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40 hover:text-primary"
+            aria-label="Mavzuni almashtirish"
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition hover:border-primary/40"
+            aria-label="Navigatsiyani ochish"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
