@@ -53,7 +53,7 @@ export default function Sidebar({
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </button>
 
-      <nav className="mt-4 flex flex-1 flex-col gap-2">
+      <nav className="mt-2 flex flex-1 flex-col gap-1.5">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
           const Icon = item.icon;
@@ -63,16 +63,18 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                'group relative flex items-center gap-3 rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:border-white/10 hover:text-foreground hover:ring-2 hover:ring-primary/25',
-                collapsed && 'justify-center gap-0 px-0 py-2',
+                'group relative flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-200',
+                'hover:border-white/10 hover:bg-foreground/5 hover:text-foreground',
+                'after:absolute after:inset-y-2 after:-left-1 after:w-1 after:rounded-full after:bg-primary/60 after:opacity-0 after:transition-opacity',
+                collapsed && 'justify-center gap-0 px-0 py-2.5 after:hidden',
                 isActive &&
-                  'border-primary/30 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/20 text-foreground shadow-neon',
+                  'border-primary/30 bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/20 text-foreground shadow-lg shadow-primary/10 after:opacity-100',
               )}
             >
               <span
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg border border-white/5 bg-white/5 text-foreground transition group-hover:border-primary/40 group-hover:text-primary',
-                  isActive && 'border-transparent bg-gradient-to-br from-primary/60 via-primary/40 to-secondary/40 text-white',
+                  'flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-foreground transition group-hover:border-primary/40 group-hover:text-primary',
+                  isActive && 'border-transparent bg-gradient-to-br from-primary/70 via-primary/50 to-secondary/50 text-white shadow-primary/20',
                 )}
               >
                 <Icon className="h-4 w-4" />
