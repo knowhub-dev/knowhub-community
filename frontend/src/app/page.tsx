@@ -282,9 +282,9 @@ function CodeRunnerCard() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/40 bg-slate-950/40 shadow-xl backdrop-blur dark:border-slate-700/60">
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border/40 bg-[hsl(var(--card))]/70 shadow-xl backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-cyan-200">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--primary))]">
           <Code2 className="h-4 w-4" />
           Live kod yurgizgich
         </div>
@@ -292,7 +292,7 @@ function CodeRunnerCard() {
           <select
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
-            className="rounded-lg border border-cyan-300/40 bg-slate-900/60 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-cyan-100 focus:border-cyan-200 focus:outline-none"
+            className="rounded-lg border border-border/60 bg-transparent px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground focus:border-[hsl(var(--primary))] focus:outline-none"
           >
             {LANGUAGES.map((item) => (
               <option key={item.value} value={item.value}>
@@ -303,7 +303,7 @@ function CodeRunnerCard() {
           <button
             onClick={handleRun}
             disabled={running}
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-800/50 disabled:text-cyan-200"
+            className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-1.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >
             <Play className={`h-4 w-4 ${running ? "animate-pulse" : ""}`} />
             {running ? "Bajarilmoqda" : "Run"}
@@ -314,24 +314,24 @@ function CodeRunnerCard() {
         value={source}
         onChange={(event) => setSource(event.target.value)}
         spellCheck={false}
-        className="min-h-[180px] flex-1 resize-none border-t border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-3 text-sm text-slate-100 focus:outline-none"
+        className="min-h-[180px] flex-1 resize-none border-t border-border/40 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--surface))] to-[hsl(var(--background))] px-4 py-3 text-sm text-[hsl(var(--foreground))] focus:outline-none"
       />
-      <div className="border-t border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-200">
+      <div className="border-t border-border/40 bg-[hsl(var(--card))]/80 px-4 py-3 text-sm text-muted-foreground">
         {result ? (
           <div className="space-y-2">
             {result.message && <p className="text-amber-300">{result.message}</p>}
             {result.stdout && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-emerald-300">{result.stdout}</pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--secondary))]">{result.stdout}</pre>
             )}
             {result.stderr && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-rose-300">{result.stderr}</pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-rose-400">{result.stderr}</pre>
             )}
             {result.status && !result.message && (
-              <p className="text-xs uppercase tracking-wider text-cyan-300">Holat: {result.status}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-[hsl(var(--primary))]">Holat: {result.status}</p>
             )}
           </div>
         ) : (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Tizimga kirib, so'ng kodni ishga tushiring. Natijalar shu yerda paydo bo'ladi.
           </p>
         )}
@@ -356,7 +356,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
           <h2 className="text-xl font-semibold">Hafta qahramonlari</h2>
         </div>
         {heroes?.range?.start && (
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-medium text-muted-foreground dark:text-muted-foreground">
             {new Date(heroes.range.start).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}
             {heroes.range.end
               ? ` — ${new Date(heroes.range.end).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}`
@@ -365,7 +365,7 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
         )}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-sm transition dark:border-slate-700/70 dark:bg-slate-900/70">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-cyan-500">
             <Sparkles className="h-4 w-4" /> XP sprinti
           </h3>
@@ -373,13 +373,13 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
             {xpLeaders.map((entry, index) => (
               <li
                 key={`${entry.user.id}-xp`}
-                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+                className="flex items-center justify-between rounded-xl bg-[hsl(var(--surface))] px-3 py-2 dark:bg-[hsl(var(--card))]/60"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
+                  <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-slate-900 transition hover:text-cyan-600 dark:text-slate-100 dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
                   >
                     {entry.user.name}
                   </Link>
@@ -387,10 +387,10 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
                 <span className="text-xs font-semibold text-cyan-500">+{formatNumber(entry.total_xp ?? 0)} XP</span>
               </li>
             ))}
-            {!xpLeaders.length && <li className="text-xs text-slate-500">Hali XP bo'yicha ma'lumot yo'q.</li>}
+            {!xpLeaders.length && <li className="text-xs text-muted-foreground">Hali XP bo'yicha ma'lumot yo'q.</li>}
           </ul>
         </div>
-        <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-sm transition dark:border-slate-700/70 dark:bg-slate-900/70">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-indigo-500">
             <TrendingUp className="h-4 w-4" /> Trend mualliflar
           </h3>
@@ -398,24 +398,24 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
             {authors.map((entry, index) => (
               <li
                 key={`${entry.user.id}-authors`}
-                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+                className="flex items-center justify-between rounded-xl bg-[hsl(var(--surface))] px-3 py-2 dark:bg-[hsl(var(--card))]/60"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
+                  <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-slate-900 transition hover:text-indigo-500 dark:text-slate-100 dark:hover:text-indigo-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-indigo-500 dark:text-[hsl(var(--foreground))] dark:hover:text-indigo-300"
                   >
                     {entry.user.name}
                   </Link>
                 </div>
-                <div className="text-right text-xs text-slate-500 dark:text-slate-300">
+                <div className="text-right text-xs text-muted-foreground dark:text-muted-foreground">
                   <p className="font-semibold text-indigo-500 dark:text-indigo-300">{formatNumber(entry.total_score ?? 0)} ovoz</p>
                   <p>{formatNumber(entry.posts_count ?? 0)} post</p>
                 </div>
               </li>
             ))}
-            {!authors.length && <li className="text-xs text-slate-500">Bu hafta trend mualliflar aniqlanmadi.</li>}
+            {!authors.length && <li className="text-xs text-muted-foreground">Bu hafta trend mualliflar aniqlanmadi.</li>}
           </ul>
         </div>
       </div>
@@ -444,7 +444,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
       return (
         <Link
           href={`/posts/${event.payload.slug ?? ""}`}
-          className="font-medium text-slate-900 transition hover:text-cyan-600 dark:text-slate-100 dark:hover:text-cyan-300"
+          className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-[hsl(var(--foreground))] dark:hover:text-cyan-300"
         >
           {event.payload.title}
         </Link>
@@ -454,15 +454,15 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
     if (event.type === "comment" && event.payload?.post) {
       return (
         <div>
-          <p className="font-medium text-slate-900 dark:text-slate-100">Izoh: {event.payload.post.title}</p>
-          {event.payload.excerpt && <p className="text-xs text-slate-500 dark:text-slate-400">{event.payload.excerpt}</p>}
+          <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Izoh: {event.payload.post.title}</p>
+          {event.payload.excerpt && <p className="text-xs text-muted-foreground dark:text-muted-foreground">{event.payload.excerpt}</p>}
         </div>
       );
     }
 
     if (event.type === "badge" && event.payload?.name) {
       return (
-        <p className="font-medium text-slate-900 dark:text-slate-100">
+        <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
           {event.payload.name}
           {typeof event.payload.xp_reward === "number" && (
             <span className="ml-2 text-xs font-semibold text-amber-500">+{event.payload.xp_reward} XP</span>
@@ -471,7 +471,7 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
       );
     }
 
-    return <span className="font-medium text-slate-900 dark:text-slate-100">Faollik</span>;
+    return <span className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Faollik</span>;
   };
 
   return (
@@ -484,20 +484,20 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
         {feed.map((event) => (
           <div
             key={`${event.type}-${event.id}`}
-            className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-slate-700/70 dark:bg-slate-900/70"
+            className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
           >
-            <div className="mt-1 rounded-full bg-slate-900/80 p-2 dark:bg-slate-800/80">{iconForType(event.type)}</div>
+            <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{iconForType(event.type)}</div>
             <div className="space-y-1 text-sm">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
                 {event.user ? (
                   <Link
                     href={`/profile/${event.user.username}`}
-                    className="font-medium text-slate-700 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-cyan-600 dark:text-muted-foreground dark:hover:text-cyan-300"
                   >
                     {event.user.name}
                   </Link>
                 ) : (
-                  <span className="font-medium text-slate-500">Anonim</span>
+                  <span className="font-medium text-muted-foreground">Anonim</span>
                 )}
                 <span>•</span>
                 <span>{timeAgo(event.created_at)}</span>
@@ -719,44 +719,44 @@ export default function HomePage() {
 
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <section className="relative isolate overflow-hidden border-b border-slate-200/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100 dark:border-slate-800">
-        <div className="absolute inset-0 -z-10 opacity-60" aria-hidden="true">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.15),_transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(244,114,182,0.12),_transparent_55%)]" />
+      <section className="relative isolate overflow-hidden border-b border-border/50 bg-gradient-to-br from-[hsl(var(--primary))] via-[hsla(var(--secondary),0.85)] to-[hsl(var(--primary))] text-white">
+        <div className="absolute inset-0 -z-10 opacity-70" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(16,185,129,0.25),_transparent_55%)]" />
         </div>
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1.1fr,0.9fr] lg:px-8">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
               KnowHub Community
             </div>
             <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
               Zamonaviy hamjamiyat uchun kiber platforma.
             </h1>
-            <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
+            <p className="max-w-2xl text-base text-white/80 sm:text-lg">
               Tajribangizni ulashing, g'oyalaringizni mini-serverlarda sinang va real vaqt statistikasi bilan jamiyat pulsini kuzatib boring.
               KnowHub sizga barcha qulayliklarni bitta bosh sahifada taqdim etadi.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/posts/create"
-                className="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[hsl(var(--primary))] transition hover:opacity-90"
               >
                 Yangi post yozish
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/containers"
-                className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/20"
+                className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/20"
               >
                 Mini-serverlarni boshlash
                 <Server className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
+            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-white/75">
               {statsCards.map((card) => {
                 const Icon = card.icon;
                 return (
-                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div key={card.label} className="rounded-xl border border-white/20 bg-white/5 p-4">
                     <div className={`flex items-center gap-2 ${card.accentClass}`}>
                       <Icon className="h-4 w-4" />
                       {card.label}
@@ -781,7 +781,7 @@ export default function HomePage() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 text-foreground shadow-sm transition ${action.hoverClass}`}
+                  className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--surface))] p-5 text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
                 >
                   <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
                     <Icon className="h-5 w-5" />
@@ -801,7 +801,7 @@ export default function HomePage() {
 
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
-          <div className="rounded-3xl border border-border bg-surface p-8 text-foreground shadow-sm">
+          <div className="rounded-3xl border border-border bg-[hsl(var(--surface))] p-8 text-[hsl(var(--foreground))] shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Hamjamiyat vositalari</p>
             <h2 className="mt-3 text-2xl font-semibold">Bir xil estetikadagi ish oqimlari</h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -813,7 +813,7 @@ export default function HomePage() {
                 return (
                   <div
                     key={highlight.title}
-                    className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm shadow-sm"
+                    className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 text-sm shadow-sm"
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary text-primary">
                       <Icon className="h-4 w-4" />
@@ -829,7 +829,7 @@ export default function HomePage() {
           </div>
           <Link
             href="/containers"
-            className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-slate-100 shadow-xl transition hover:shadow-2xl"
+            className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--foreground))] to-[hsl(var(--primary))] p-8 text-[hsl(var(--foreground))] shadow-xl transition hover:shadow-2xl"
           >
             <div className="absolute inset-0 -z-10 opacity-80">
               <div className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-cyan-500/30 blur-3xl" />
@@ -840,10 +840,10 @@ export default function HomePage() {
               O'z g'oyangizni sinang
             </div>
             <h2 className="mt-6 text-2xl font-semibold text-white">Bir klikda shaxsiy mini serveringizni ishga tushiring.</h2>
-            <p className="mt-3 max-w-xl text-sm text-slate-300">
+            <p className="mt-3 max-w-xl text-sm text-muted-foreground">
               Izolyatsiyalangan Docker muhiti, resurs limitlari va xavfsizlik siyosatlari bilan tajribangizni real vaqt rejimida sinovdan o'tkazing.
             </p>
-            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-slate-900 transition group-hover:bg-white">
+            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-[hsl(var(--card))]/95 px-5 py-2 text-sm font-semibold text-[hsl(var(--foreground))] transition group-hover:bg-white">
               Boshlash
               <Rocket className="h-4 w-4" />
             </div>
@@ -854,17 +854,17 @@ export default function HomePage() {
       <section className="max-w-6xl px-6 pb-12 lg:px-8">
         <div className="space-y-6">
           <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground dark:text-muted-foreground">
               Bosh sahifa
             </p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Bosh sahifa</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-[hsl(var(--foreground))] dark:text-white">Bosh sahifa</h1>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg dark:border-slate-700 dark:bg-slate-900/80">
+          <div className="overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-8 shadow-lg dark:border-border dark:bg-[hsl(var(--foreground))]/80">
             <div className="space-y-4">
-              <h2 className="text-3xl font-semibold leading-tight text-slate-900 dark:text-white">
+              <h2 className="text-3xl font-semibold leading-tight text-[hsl(var(--foreground))] dark:text-white">
                 KnowHub Community: Dasturchilar Uchun Yangi Maydon
               </h2>
-              <p className="text-base text-slate-600 dark:text-slate-300">
+              <p className="text-base text-muted-foreground dark:text-muted-foreground">
                 Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi.
               </p>
             </div>
@@ -916,20 +916,20 @@ export default function HomePage() {
             {spotlightPost ? (
               <Link
                 href={`/posts/${spotlightPost.slug}`}
-                className="group block overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-emerald-400/60 hover:shadow-emerald-100 dark:border-slate-700 dark:bg-slate-900/80"
+                className="group block overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-emerald-400/60 hover:shadow-emerald-100 dark:border-border dark:bg-[hsl(var(--foreground))]/80"
               >
                 <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">
                   Spotlight
                   {spotlightPost.score ? <span className="text-emerald-400">{spotlightPost.score} ovoz</span> : null}
                 </div>
-                <h3 className="mt-4 text-2xl font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">
+                <h3 className="mt-4 text-2xl font-semibold text-[hsl(var(--foreground))] transition group-hover:text-emerald-500 dark:text-[hsl(var(--foreground))]">
                   {spotlightPost.title}
                 </h3>
-                <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{buildSnippet(spotlightPost, 220)}</p>
-                {spotlightPost.user && <p className="mt-4 text-xs text-slate-400">Muallif: {spotlightPost.user.name}</p>}
+                <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{buildSnippet(spotlightPost, 220)}</p>
+                {spotlightPost.user && <p className="mt-4 text-xs text-muted-foreground">Muallif: {spotlightPost.user.name}</p>}
               </Link>
             ) : (
-              <div className="rounded-3xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              <div className="rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground dark:border-border dark:text-muted-foreground">
                 Spotlight post mavjud emas.
               </div>
             )}
@@ -938,10 +938,10 @@ export default function HomePage() {
                 <Link
                   key={post.id}
                   href={`/posts/${post.slug}`}
-                  className="group rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm transition hover:border-emerald-300/70 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70"
+                  className="group rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-emerald-300/70 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
                 >
-                  <h4 className="text-base font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">{post.title}</h4>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">{buildSnippet(post, 120)}</p>
+                  <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-emerald-500 dark:text-[hsl(var(--foreground))]">{post.title}</h4>
+                  <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">{buildSnippet(post, 120)}</p>
                   <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-500">
                     Batafsil <ArrowRight className="h-3 w-3" />
                   </span>
@@ -950,8 +950,8 @@ export default function HomePage() {
             </div>
           </div>
           <div className="w-full max-w-md space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Monitoring navbat</h3>
+            <div className="rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-5 shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70">
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">Monitoring navbat</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 {queuePosts.map((post) => (
                   <li
@@ -960,24 +960,24 @@ export default function HomePage() {
                   >
                     <Link
                       href={`/posts/${post.slug}`}
-                      className="font-medium text-slate-700 hover:text-emerald-500 dark:text-slate-200 dark:hover:text-emerald-300"
+                      className="font-medium text-[hsl(var(--foreground))] hover:text-emerald-500 dark:text-muted-foreground dark:hover:text-emerald-300"
                     >
                       {post.title}
                     </Link>
-                    <p className="text-xs text-slate-400">{timeAgo(post.created_at)}</p>
+                    <p className="text-xs text-muted-foreground">{timeAgo(post.created_at)}</p>
                   </li>
                 ))}
-                {!queuePosts.length && <li className="text-xs text-slate-500">Keyingi postlar hali yo'q.</li>}
+                {!queuePosts.length && <li className="text-xs text-muted-foreground">Keyingi postlar hali yo'q.</li>}
               </ul>
             </div>
             {!!trendingTags.length && (
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-500">Trend teglar</h3>
+              <div className="rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-5 shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70">
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Trend teglar</h3>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   {trendingTags.slice(0, 12).map((tag) => (
                     <span
                       key={tag.slug ?? tag.name}
-                      className="rounded-full border border-slate-200/60 bg-slate-100/70 px-3 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"
+                      className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))] dark:border-border dark:bg-[hsl(var(--card))]/60 dark:text-muted-foreground"
                     >
                       #{tag.name}
                     </span>
@@ -1000,7 +1000,7 @@ export default function HomePage() {
       )}
 
       {loading && (
-        <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/80 p-6 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-6 text-sm text-muted-foreground shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70 dark:text-muted-foreground">
           Ma'lumotlar yuklanmoqda...
         </div>
       )}
