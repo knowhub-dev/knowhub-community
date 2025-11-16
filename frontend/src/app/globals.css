@@ -5,27 +5,29 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
-    --background: 240 14% 6.9%;
-    --surface: 233 21% 8.4%;
-    --foreground: 220 33% 96%;
+    color-scheme: light;
+    --background: 158 41% 97%;
+    --surface: 164 36% 94%;
+    --foreground: 176 24% 14%;
     --card: var(--surface);
     --card-foreground: var(--foreground);
     --popover: var(--surface);
     --popover-foreground: var(--foreground);
-    --primary: 243.4 75.4% 58.6%;
-    --primary-light: 238.7 83.5% 66.7%;
-    --secondary: 187.9 85.7% 53.3%;
-    --accent-pink: 328.6 85.5% 70.2%;
-    --accent-purple: 270.7 91% 65.1%;
-    --accent-green: 142.1 70.6% 45.3%;
-    --muted: 234 18% 16%;
-    --muted-foreground: 217 18% 72%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 232 27% 22%;
-    --input: 232 27% 22%;
-    --ring: 243.4 75.4% 58.6%;
+    --primary: 202 88% 44%;
+    --primary-light: 202 88% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 156 55% 36%;
+    --secondary-foreground: 156 32% 96%;
+    --accent-pink: 336 82% 68%;
+    --accent-purple: 268 72% 62%;
+    --accent-green: 148 60% 42%;
+    --muted: 164 30% 88%;
+    --muted-foreground: 170 12% 32%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 166 28% 80%;
+    --input: 166 28% 80%;
+    --ring: var(--primary);
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 22px;
@@ -38,26 +40,28 @@
 
   [data-theme="light"] {
     color-scheme: light;
-    --background: 210 40% 98%;
-    --surface: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --background: 158 41% 97%;
+    --surface: 164 36% 94%;
+    --foreground: 176 24% 14%;
     --card: var(--surface);
     --card-foreground: var(--foreground);
     --popover: var(--surface);
     --popover-foreground: var(--foreground);
-    --primary: 243.4 75.4% 58.6%;
-    --primary-light: 238.7 83.5% 66.7%;
-    --secondary: 187.9 85.7% 53.3%;
-    --accent-pink: 328.6 85.5% 70.2%;
-    --accent-purple: 270.7 91% 65.1%;
-    --accent-green: 142.1 70.6% 45.3%;
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 15% 35%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 31% 91%;
-    --input: 214 31% 91%;
-    --ring: 243.4 75.4% 58.6%;
+    --primary: 202 88% 44%;
+    --primary-light: 202 88% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 156 55% 36%;
+    --secondary-foreground: 156 32% 96%;
+    --accent-pink: 336 82% 68%;
+    --accent-purple: 268 72% 62%;
+    --accent-green: 148 60% 42%;
+    --muted: 164 30% 88%;
+    --muted-foreground: 170 12% 32%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 166 28% 80%;
+    --input: 166 28% 80%;
+    --ring: var(--primary);
   }
 
   *,
@@ -92,25 +96,25 @@
   }
 
   .dark {
-    --background: 222 47% 5%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 89% 58%;
-    --primary-foreground: 222 47% 5%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 220 35% 14%;
-    --muted-foreground: 214 15% 70%;
-    --accent: 199 89% 48%;
-    --accent-foreground: 222 47% 5%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 35% 18%;
-    --input: 220 35% 18%;
-    --ring: 199 89% 58%;
+    --background: 210 18% 9%;
+    --foreground: 165 18% 92%;
+    --card: 210 15% 13%;
+    --card-foreground: 165 18% 94%;
+    --popover: 210 15% 13%;
+    --popover-foreground: 165 18% 94%;
+    --primary: 200 90% 56%;
+    --primary-foreground: 215 30% 12%;
+    --secondary: 162 42% 32%;
+    --secondary-foreground: 150 28% 94%;
+    --muted: 210 14% 20%;
+    --muted-foreground: 170 10% 70%;
+    --accent: 198 76% 48%;
+    --accent-foreground: 215 30% 12%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 14% 26%;
+    --input: 210 14% 26%;
+    --ring: 200 90% 56%;
   }
 
   body {
