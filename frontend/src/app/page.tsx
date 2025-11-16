@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -779,6 +780,35 @@ export default function HomePage() {
               <Rocket className="h-4 w-4" />
             </div>
           </Link>
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
+              Bosh sahifa
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Bosh sahifa</h1>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg dark:border-slate-700 dark:bg-slate-900/80">
+            <div className="space-y-4">
+              <h2 className="text-3xl font-semibold leading-tight text-slate-900 dark:text-white">
+                KnowHub Community: Dasturchilar Uchun Yangi Maydon
+              </h2>
+              <p className="text-base text-slate-600 dark:text-slate-300">
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/posts/create">Post Yaratish</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/wiki">Wiki'ni Ko'rish</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
