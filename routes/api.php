@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\V1\{
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController, BrandingController
+    ProjectSubdomainController, BrandingController, SystemStatusController
 };
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
     Route::get('/settings/logo', [BrandingController::class, 'show']);
+    Route::get('/status/summary', [SystemStatusController::class, 'summary']);
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);

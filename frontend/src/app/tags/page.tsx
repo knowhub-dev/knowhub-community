@@ -1,10 +1,16 @@
 'use client';
+
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { Hash, TrendingUp, Search } from 'lucide-react';
+
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Hash, TrendingUp, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface Tag {
   id: number;
@@ -49,96 +55,107 @@ export default function TagsPage() {
     retry: 1,
   });
 
-  const filteredTags = (showTrending ? trendingTags : allTags)?.filter((tag: Tag) =>
-    tag.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredTags =
+    (showTrending ? trendingTags : allTags)?.filter((tag: Tag) =>
+      tag.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    ) ?? [];
 
-  if (allLoading || trendingLoading) return <LoadingSpinner />;
+  if (allLoading || trendingLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <div className="flex items-center justify-center mb-4">
-          <Hash className="w-12 h-12 text-indigo-600" />
+    <div className="mx-auto max-w-6xl space-y-12 px-6 py-12 sm:py-16">
+      <div className="text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-[hsl(var(--secondary))]/15 text-[hsl(var(--secondary))]">
+          <Hash className="h-8 w-8" />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Teglar</h1>
-        <p className="text-xl text-gray-600">
-          Mavzular bo'yicha postlarni topish va kuzatish
-        </p>
+        <div className="space-y-3">
+          <h1 className="text-4xl font-semibold tracking-tight text-[hsl(var(--foreground))]">
+            Teglar
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Mavzular bo'yicha postlarni toping, kuzating va hamjamiyat ritmini biling.
+          </p>
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-        <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-          <button
+      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex items-center gap-2 rounded-full bg-muted/40 p-1">
+          <Button
+            type="button"
+            variant={showTrending ? 'default' : 'ghost'}
             onClick={() => setShowTrending(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              showTrending 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={cn(
+              'gap-2 rounded-full px-5 text-sm font-medium',
+              showTrending ? 'shadow-[0_10px_40px_rgba(56,189,248,0.35)]' : 'text-muted-foreground',
+            )}
           >
-            <TrendingUp className="w-4 h-4 mr-2 inline" />
-            Trend Teglar
-          </button>
-          <button
+            <TrendingUp className="h-4 w-4" />
+            Trend teglar
+          </Button>
+          <Button
+            type="button"
+            variant={!showTrending ? 'default' : 'ghost'}
             onClick={() => setShowTrending(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              !showTrending 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={cn(
+              'gap-2 rounded-full px-5 text-sm font-medium',
+              !showTrending ? 'shadow-[0_10px_40px_rgba(16,185,129,0.35)]' : 'text-muted-foreground',
+            )}
           >
-            <Hash className="w-4 h-4 mr-2 inline" />
-            Barcha Teglar
-          </button>
+            <Hash className="h-4 w-4" />
+            Barcha teglar
+          </Button>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             placeholder="Teglarni qidirish..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="pl-9"
           />
         </div>
       </div>
 
-      {/* Tags Grid */}
       {filteredTags.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
-          {filteredTags.map((tag: Tag) => (
-            <Link
-              key={tag.slug}
-              href={`/posts?tag=${tag.slug}`}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
-            >
-              <Hash className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 mr-2" />
-              <span className="font-medium text-gray-900 group-hover:text-indigo-600">
-                {tag.name}
-              </span>
-              {tag.usage_count && (
-                <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                  {tag.usage_count}
-                </span>
-              )}
-            </Link>
-          ))}
+        <div className="rounded-3xl border border-border bg-[hsl(var(--surface))] p-6 shadow-inner">
+          <div className="flex flex-wrap gap-3">
+            {filteredTags.map((tag: Tag) => (
+              <Link
+                key={tag.slug}
+                href={`/posts?tag=${tag.slug}`}
+                className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-[hsl(var(--card))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+              >
+                <Hash className="h-4 w-4 text-muted-foreground transition group-hover:text-[hsl(var(--primary))]" />
+                <span>{tag.name}</span>
+                {typeof tag.usage_count === 'number' && (
+                  <Badge variant="secondary" className="rounded-full bg-muted text-xs font-semibold">
+                    {tag.usage_count}
+                  </Badge>
+                )}
+              </Link>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <Hash className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-10 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+            <Hash className="h-8 w-8" />
+          </div>
+          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
             {searchTerm ? 'Teglar topilmadi' : 'Teglar mavjud emas'}
           </h3>
-          <p className="text-gray-600">
-            {searchTerm 
-              ? 'Boshqa kalit so\'zlar bilan urinib ko\'ring' 
-              : 'Postlar yaratilganda teglar avtomatik paydo bo\'ladi'
-            }
+          <p className="mt-2 text-sm text-muted-foreground">
+            {searchTerm
+              ? "Boshqa kalit so'zlar bilan urinib ko'ring"
+              : "Postlar yaratilganda teglar avtomatik paydo bo'ladi"}
           </p>
         </div>
       )}
