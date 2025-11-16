@@ -36,6 +36,7 @@ class UserFactory extends Factory
             'name' => 'Admin User',
             'username' => 'admin',
             'email' => 'admin@knowhub.uz',
+            'password' => bcrypt('admin123'),
             'is_admin' => 1, // Bu ADMIN
             'level_id' => Level::max('id'), // Eng yuqori level
         ]);

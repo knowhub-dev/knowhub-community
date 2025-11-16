@@ -1,18 +1,26 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import PostCard from "@/components/PostCard";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AxiosError } from "axios";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   BookOpen,
+  CheckCircle,
   Code2,
   Medal,
   MessageCircle,
   PenSquare,
   Play,
-  Rocket,
   Server,
   Sparkles,
   TrendingUp,
@@ -132,6 +140,46 @@ type QuickAction = {
   ctaClass: string;
 };
 
+type ServiceHealthStatus = "operational" | "degraded" | "outage";
+
+type ServiceHealth = {
+  name: string;
+  status: ServiceHealthStatus;
+  description: string;
+  latency_ms?: number | null;
+  checked_at?: string | null;
+  details?: Record<string, unknown>;
+};
+
+type SystemStatusSummary = {
+  services?: ServiceHealth[];
+  metrics?: {
+    uptime_seconds?: number | null;
+    active_users?: number | null;
+    queue_backlog?: number | null;
+  };
+  updated_at?: string | null;
+};
+
+type PaginatedPostsResponse = {
+  data: Post[];
+  meta?: Record<string, unknown>;
+};
+
+type SortType = "latest" | "popular" | "following";
+
+type FeedTab = {
+  value: SortType;
+  label: string;
+  authOnly?: boolean;
+};
+
+const FEED_TABS: FeedTab[] = [
+  { value: "latest", label: "So'nggilari" },
+  { value: "popular", label: "Trenddagilar" },
+  { value: "following", label: "Mening obunalarim", authOnly: true },
+];
+
 const LANGUAGE_SNIPPETS: Record<string, string> = {
   javascript: `function greet(name) {\n  return \`Salom, \${name}!\`;\n}\n\nconsole.log(greet('KnowHub'));`,
   python: `def greet(name):\n    return f"Salom, {name}!"\n\nprint(greet("KnowHub"))`,
@@ -144,8 +192,28 @@ const LANGUAGES = [
   { value: "php", label: "PHP" },
 ];
 
+async function getPosts(params: { sort: SortType }) {
+  const sortParam = params.sort === "popular" ? "trending" : params.sort;
+  const response = await api.get<PaginatedPostsResponse>("/posts", {
+    params: { sort: sortParam, per_page: 6 },
+  });
+  return response.data;
+}
+
 const formatNumber = (value?: number) =>
   typeof value === "number" ? value.toLocaleString("en-US") : "—";
+
+const formatDuration = (seconds?: number | null) => {
+  if (!seconds || seconds <= 0) return "—";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const parts = [];
+  if (days) parts.push(`${days} kun`);
+  if (hours) parts.push(`${hours} soat`);
+  if (!days && minutes) parts.push(`${minutes} daq`);
+  return parts.slice(0, 2).join(" ") || "<1 daq";
+};
 
 const buildSnippet = (post: PostSummary, length = 160) => {
   const raw =
@@ -199,6 +267,62 @@ const timeAgo = (value?: string) => {
   return formatter.format(-Math.round(valueDiff), unit);
 };
 
+const activityTypeLabels: Record<ActivityEvent["type"], string> = {
+  post: "Yangi post",
+  comment: "Izoh",
+  badge: "Mukofot",
+};
+
+const activityIcon = (type: ActivityEvent["type"]) => {
+  switch (type) {
+    case "comment":
+      return <MessageCircle className="h-4 w-4 text-[hsl(var(--secondary))]" />;
+    case "badge":
+      return <Medal className="h-4 w-4 text-[hsl(var(--accent-pink))]" />;
+    default:
+      return <Sparkles className="h-4 w-4 text-[hsl(var(--primary))]" />;
+  }
+};
+
+const activityDescription = (event: ActivityEvent) => {
+  if (event.type === "post" && event.payload?.title) {
+    return (
+      <Link
+        href={`/posts/${event.payload.slug ?? ""}`}
+        className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--primary))]"
+      >
+        {event.payload.title}
+      </Link>
+    );
+  }
+
+  if (event.type === "comment" && event.payload?.post) {
+    return (
+      <div>
+        <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
+          Izoh: {event.payload.post.title}
+        </p>
+        {event.payload.excerpt && (
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">{event.payload.excerpt}</p>
+        )}
+      </div>
+    );
+  }
+
+  if (event.type === "badge" && event.payload?.name) {
+    return (
+      <p className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
+        {event.payload.name}
+        {typeof event.payload.xp_reward === "number" && (
+          <span className="ml-2 text-xs font-semibold text-[hsl(var(--accent-pink))]">+{event.payload.xp_reward} XP</span>
+        )}
+      </p>
+    );
+  }
+
+  return <span className="font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">Faollik</span>;
+};
+
 function CodeRunnerCard() {
   const { user } = useAuth();
   const [language, setLanguage] = useState<string>(LANGUAGES[0].value);
@@ -235,8 +359,9 @@ function CodeRunnerCard() {
         stderr: response.data.stderr,
         status: response.data.status,
       });
-    } catch (error: any) {
-      const status = error?.response?.status;
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const status = axiosError?.response?.status;
       if (status === 429) {
         setResult({ message: "Siz belgilangan limitdan oshdingiz. Birozdan so'ng urinib ko'ring." });
       } else if (status === 401) {
@@ -250,9 +375,9 @@ function CodeRunnerCard() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/40 bg-slate-950/40 shadow-xl backdrop-blur dark:border-slate-700/60">
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border/40 bg-[hsl(var(--card))]/70 shadow-xl backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-cyan-200">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--primary))]">
           <Code2 className="h-4 w-4" />
           Live kod yurgizgich
         </div>
@@ -260,7 +385,7 @@ function CodeRunnerCard() {
           <select
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
-            className="rounded-lg border border-cyan-300/40 bg-slate-900/60 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-cyan-100 focus:border-cyan-200 focus:outline-none"
+            className="rounded-lg border border-border/60 bg-transparent px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground focus:border-[hsl(var(--primary))] focus:outline-none"
           >
             {LANGUAGES.map((item) => (
               <option key={item.value} value={item.value}>
@@ -271,7 +396,7 @@ function CodeRunnerCard() {
           <button
             onClick={handleRun}
             disabled={running}
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-800/50 disabled:text-cyan-200"
+            className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-1.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >
             <Play className={`h-4 w-4 ${running ? "animate-pulse" : ""}`} />
             {running ? "Bajarilmoqda" : "Run"}
@@ -282,27 +407,117 @@ function CodeRunnerCard() {
         value={source}
         onChange={(event) => setSource(event.target.value)}
         spellCheck={false}
-        className="min-h-[180px] flex-1 resize-none border-t border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-3 text-sm text-slate-100 focus:outline-none"
+        className="min-h-[180px] flex-1 resize-none border-t border-border/40 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--surface))] to-[hsl(var(--background))] px-4 py-3 text-sm text-[hsl(var(--foreground))] focus:outline-none"
       />
-      <div className="border-t border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-200">
+      <div className="border-t border-border/40 bg-[hsl(var(--card))]/80 px-4 py-3 text-sm text-muted-foreground">
         {result ? (
           <div className="space-y-2">
-            {result.message && <p className="text-amber-300">{result.message}</p>}
+            {result.message && <p className="text-[hsl(var(--accent-pink))]">{result.message}</p>}
             {result.stdout && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-emerald-300">{result.stdout}</pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--secondary))]">{result.stdout}</pre>
             )}
             {result.stderr && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-900/80 p-3 text-xs text-rose-300">{result.stderr}</pre>
+              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--destructive))]">{result.stderr}</pre>
             )}
             {result.status && !result.message && (
-              <p className="text-xs uppercase tracking-wider text-cyan-300">Holat: {result.status}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-[hsl(var(--primary))]">Holat: {result.status}</p>
             )}
           </div>
         ) : (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Tizimga kirib, so'ng kodni ishga tushiring. Natijalar shu yerda paydo bo'ladi.
           </p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SystemStatusWidget({ status }: { status: SystemStatusSummary | null }) {
+  const services = status?.services ?? [];
+  const metrics = status?.metrics ?? {};
+  const updatedAt = status?.updated_at;
+
+  const statusCopy: Record<ServiceHealthStatus, { label: string; className: string; icon: ReactNode }> = {
+    operational: {
+      label: "Barqaror",
+      className: "bg-[hsl(var(--secondary))]/15 text-[hsl(var(--secondary))]",
+      icon: <CheckCircle className="h-4 w-4" />,
+    },
+    degraded: {
+      label: "Sekin",
+      className: "bg-[hsl(var(--accent-pink))]/15 text-[hsl(var(--accent-pink))]",
+      icon: <AlertTriangle className="h-4 w-4" />,
+    },
+    outage: {
+      label: "Nosoz",
+      className: "bg-[hsl(var(--destructive))]/15 text-[hsl(var(--destructive))]",
+      icon: <AlertTriangle className="h-4 w-4" />,
+    },
+  };
+
+  const aggregateStatus = services.reduce<ServiceHealthStatus>((current, service) => {
+    if (service.status === "outage") return "outage";
+    if (service.status === "degraded" && current === "operational") return "degraded";
+    return current;
+  }, "operational");
+
+  const badge = statusCopy[aggregateStatus];
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-[hsl(var(--surface))] p-6 text-sm shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tizim holati</p>
+          <h3 className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">Real vaqt nazorati</h3>
+        </div>
+        <Link
+          href="/status"
+          className="inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+        >
+          Ko'rish <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <div className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+        <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}>
+          {badge.icon}
+          {badge.label}
+        </div>
+        <p className="text-xs text-muted-foreground">Yangilangan: {updatedAt ? new Date(updatedAt).toLocaleTimeString("uz-UZ") : "—"}</p>
+      </div>
+      <div className="mt-6 space-y-3">
+        {(services.length ? services.slice(0, 3) : new Array(3).fill(null)).map((service, index) => {
+          if (!service) {
+            return <div key={`skeleton-${index}`} className="h-14 animate-pulse rounded-2xl bg-[hsl(var(--card))]/70" />;
+          }
+          const copy = statusCopy[service.status];
+          return (
+            <div key={service.name} className="flex items-center justify-between rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))]">{service.name}</p>
+                <p className="text-xs text-muted-foreground">{service.description}</p>
+              </div>
+              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-widest ${copy.className}`}>
+                {copy.icon}
+                {copy.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-6 grid gap-3 text-center text-xs sm:grid-cols-3">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Faol a'zolar</p>
+          <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.active_users)}</p>
+        </div>
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Navbat</p>
+          <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.queue_backlog)}</p>
+        </div>
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+          <p className="text-muted-foreground">Uptime</p>
+          <p className="mt-2 text-xl font-semibold text-[hsl(var(--foreground))]">{formatDuration(metrics.uptime_seconds)}</p>
+        </div>
       </div>
     </div>
   );
@@ -320,11 +535,11 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
     <section className="max-w-6xl px-6 pb-16 lg:px-8">
       <div className="flex items-center justify-between pb-6">
         <div className="flex items-center gap-3">
-          <Medal className="h-6 w-6 text-amber-400" />
+          <Medal className="h-6 w-6 text-[hsl(var(--accent-pink))]" />
           <h2 className="text-xl font-semibold">Hafta qahramonlari</h2>
         </div>
         {heroes?.range?.start && (
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-medium text-muted-foreground dark:text-muted-foreground">
             {new Date(heroes.range.start).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}
             {heroes.range.end
               ? ` — ${new Date(heroes.range.end).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" })}`
@@ -333,57 +548,57 @@ function WeeklyHeroes({ heroes }: { heroes: WeeklyHeroesResponse | null }) {
         )}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-sm transition dark:border-slate-700/70 dark:bg-slate-900/70">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-cyan-500">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[hsl(var(--primary))]">
             <Sparkles className="h-4 w-4" /> XP sprinti
           </h3>
           <ul className="space-y-3 text-sm">
             {xpLeaders.map((entry, index) => (
               <li
                 key={`${entry.user.id}-xp`}
-                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+                className="flex items-center justify-between rounded-xl bg-[hsl(var(--surface))] px-3 py-2 dark:bg-[hsl(var(--card))]/60"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
+                  <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-slate-900 transition hover:text-cyan-600 dark:text-slate-100 dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--primary))]"
                   >
                     {entry.user.name}
                   </Link>
                 </div>
-                <span className="text-xs font-semibold text-cyan-500">+{formatNumber(entry.total_xp ?? 0)} XP</span>
+                <span className="text-xs font-semibold text-[hsl(var(--primary))]">+{formatNumber(entry.total_xp ?? 0)} XP</span>
               </li>
             ))}
-            {!xpLeaders.length && <li className="text-xs text-slate-500">Hali XP bo'yicha ma'lumot yo'q.</li>}
+            {!xpLeaders.length && <li className="text-xs text-muted-foreground">Hali XP bo'yicha ma'lumot yo'q.</li>}
           </ul>
         </div>
-        <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-sm transition dark:border-slate-700/70 dark:bg-slate-900/70">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-indigo-500">
+        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-6 shadow-sm transition dark:border-border/70 dark:bg-[hsl(var(--card))]/70">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[hsl(var(--accent-purple))]">
             <TrendingUp className="h-4 w-4" /> Trend mualliflar
           </h3>
           <ul className="space-y-3 text-sm">
             {authors.map((entry, index) => (
               <li
                 key={`${entry.user.id}-authors`}
-                className="flex items-center justify-between rounded-xl bg-slate-100/70 px-3 py-2 dark:bg-slate-800/70"
+                className="flex items-center justify-between rounded-xl bg-[hsl(var(--surface))] px-3 py-2 dark:bg-[hsl(var(--card))]/60"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">#{index + 1}</span>
+                  <span className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">#{index + 1}</span>
                   <Link
                     href={`/profile/${entry.user.username}`}
-                    className="font-medium text-slate-900 transition hover:text-indigo-500 dark:text-slate-100 dark:hover:text-indigo-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--accent-purple))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--accent-purple))]"
                   >
                     {entry.user.name}
                   </Link>
                 </div>
-                <div className="text-right text-xs text-slate-500 dark:text-slate-300">
-                  <p className="font-semibold text-indigo-500 dark:text-indigo-300">{formatNumber(entry.total_score ?? 0)} ovoz</p>
+                <div className="text-right text-xs text-muted-foreground dark:text-muted-foreground">
+                  <p className="font-semibold text-[hsl(var(--accent-purple))]">{formatNumber(entry.total_score ?? 0)} ovoz</p>
                   <p>{formatNumber(entry.posts_count ?? 0)} post</p>
                 </div>
               </li>
             ))}
-            {!authors.length && <li className="text-xs text-slate-500">Bu hafta trend mualliflar aniqlanmadi.</li>}
+            {!authors.length && <li className="text-xs text-muted-foreground">Bu hafta trend mualliflar aniqlanmadi.</li>}
           </ul>
         </div>
       </div>
@@ -396,81 +611,35 @@ function ActivityFeed({ feed }: { feed: ActivityEvent[] }) {
     return null;
   }
 
-  const iconForType = (type: ActivityEvent["type"]) => {
-    switch (type) {
-      case "comment":
-        return <MessageCircle className="h-4 w-4 text-emerald-400" />;
-      case "badge":
-        return <Medal className="h-4 w-4 text-amber-400" />;
-      default:
-        return <Sparkles className="h-4 w-4 text-sky-400" />;
-    }
-  };
-
-  const descriptionFor = (event: ActivityEvent) => {
-    if (event.type === "post" && event.payload?.title) {
-      return (
-        <Link
-          href={`/posts/${event.payload.slug ?? ""}`}
-          className="font-medium text-slate-900 transition hover:text-cyan-600 dark:text-slate-100 dark:hover:text-cyan-300"
-        >
-          {event.payload.title}
-        </Link>
-      );
-    }
-
-    if (event.type === "comment" && event.payload?.post) {
-      return (
-        <div>
-          <p className="font-medium text-slate-900 dark:text-slate-100">Izoh: {event.payload.post.title}</p>
-          {event.payload.excerpt && <p className="text-xs text-slate-500 dark:text-slate-400">{event.payload.excerpt}</p>}
-        </div>
-      );
-    }
-
-    if (event.type === "badge" && event.payload?.name) {
-      return (
-        <p className="font-medium text-slate-900 dark:text-slate-100">
-          {event.payload.name}
-          {typeof event.payload.xp_reward === "number" && (
-            <span className="ml-2 text-xs font-semibold text-amber-500">+{event.payload.xp_reward} XP</span>
-          )}
-        </p>
-      );
-    }
-
-    return <span className="font-medium text-slate-900 dark:text-slate-100">Faollik</span>;
-  };
-
   return (
     <section className="max-w-6xl px-6 pb-20 lg:px-8">
       <div className="flex items-center gap-3 pb-6">
-        <Activity className="h-6 w-6 text-cyan-500" />
+        <Activity className="h-6 w-6 text-[hsl(var(--primary))]" />
         <h2 className="text-xl font-semibold">Hamjamiyat pulsi</h2>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {feed.map((event) => (
           <div
             key={`${event.type}-${event.id}`}
-            className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm transition hover:border-cyan-200/60 hover:shadow-lg dark:border-slate-700/70 dark:bg-slate-900/70"
+            className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--primary))]/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
           >
-            <div className="mt-1 rounded-full bg-slate-900/80 p-2 dark:bg-slate-800/80">{iconForType(event.type)}</div>
+            <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{activityIcon(event.type)}</div>
             <div className="space-y-1 text-sm">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
                 {event.user ? (
                   <Link
                     href={`/profile/${event.user.username}`}
-                    className="font-medium text-slate-700 transition hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
+                    className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))] dark:text-muted-foreground dark:hover:text-[hsl(var(--primary))]"
                   >
                     {event.user.name}
                   </Link>
                 ) : (
-                  <span className="font-medium text-slate-500">Anonim</span>
+                  <span className="font-medium text-muted-foreground">Anonim</span>
                 )}
                 <span>•</span>
                 <span>{timeAgo(event.created_at)}</span>
               </div>
-              {descriptionFor(event)}
+              {activityDescription(event)}
             </div>
           </div>
         ))}
@@ -483,39 +652,34 @@ export default function HomePage() {
   const [homeStats, setHomeStats] = useState<HomepageStatsResponse | null>(null);
   const [heroes, setHeroes] = useState<WeeklyHeroesResponse | null>(null);
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTagIndex, setActiveTagIndex] = useState(0);
+  const [sortType, setSortType] = useState<SortType>("latest");
+  const auth = useAuth();
 
-  const quickActions = useMemo(
-    () => [
-      {
-        title: "Fikr almashish",
-        description: "Tajriba, savol yoki yechim bilan hamjamiyatni ilhomlantiring.",
-        href: "/posts/create",
-        icon: PenSquare,
-        accent:
-          "border-cyan-500/40 bg-cyan-500/10 text-cyan-100 shadow-[0_0_25px_-12px_rgba(34,211,238,0.8)]",
-      },
-      {
-        title: "Mini serverni ishga tushiring",
-        description: "Ajratilgan resurslarda g'oyangizni sinovdan o'tkazing.",
-        href: "/containers",
-        icon: Zap,
-        accent:
-          "border-purple-500/40 bg-purple-500/10 text-purple-100 shadow-[0_0_25px_-12px_rgba(168,85,247,0.8)]",
-      },
-      {
-        title: "Wiki'ni boyiting",
-        description: "Jamiyat bilim bazasiga maqola yoki taklif qo'shing.",
-        href: "/wiki",
-        icon: Compass,
-        accent:
-          "border-sky-500/40 bg-sky-500/10 text-sky-100 shadow-[0_0_25px_-12px_rgba(56,189,248,0.8)]",
-      },
-    ],
-    []
+  const {
+    data: postsResponse,
+    isLoading: postsLoading,
+    isError: postsIsError,
+    error: postsError,
+  } = useQuery<PaginatedPostsResponse>({
+    queryKey: ["posts", sortType],
+    queryFn: () => getPosts({ sort: sortType }),
+  });
+
+  const posts = postsResponse?.data ?? [];
+
+  const visibleTabs = useMemo(
+    () => FEED_TABS.filter((tab) => (tab.authOnly ? auth.isAuthenticated : true)),
+    [auth.isAuthenticated],
   );
+
+  useEffect(() => {
+    if (!auth.isAuthenticated && sortType === "following") {
+      setSortType("latest");
+    }
+  }, [auth.isAuthenticated, sortType]);
 
   useEffect(() => {
     let active = true;
@@ -525,10 +689,11 @@ export default function HomePage() {
     (async () => {
       const issues: string[] = [];
       try {
-        const [statsResult, heroesResult, feedResult] = await Promise.allSettled([
+        const [statsResult, heroesResult, feedResult, statusResult] = await Promise.allSettled([
           api.get<HomepageStatsResponse>("/stats/homepage"),
           api.get<WeeklyHeroesResponse>("/stats/weekly-heroes"),
           api.get<ActivityFeedResponse>("/activity-feed", { params: { limit: 12 } }),
+          api.get<SystemStatusSummary>("/status/summary"),
         ]);
 
         if (statsResult.status === "fulfilled") {
@@ -557,8 +722,19 @@ export default function HomePage() {
         } else if (active) {
           setFeed([]);
         }
-      } catch (err: any) {
-        issues.push(err?.message ?? "Ma'lumotlarni yuklashda xatolik yuz berdi");
+
+        if (statusResult.status === "fulfilled") {
+          if (active) {
+            setSystemStatus(statusResult.value.data ?? null);
+          }
+        } else {
+          issues.push("Tizim holati yangilanmadi");
+          if (active) {
+            setSystemStatus(null);
+          }
+        }
+      } catch (err: unknown) {
+        issues.push(err instanceof Error ? err.message : "Ma'lumotlarni yuklashda xatolik yuz berdi");
       } finally {
         if (!active) {
           return;
@@ -573,7 +749,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const latestPosts = homeStats?.latest_posts ?? [];
+  const latestPosts = useMemo(() => homeStats?.latest_posts ?? [], [homeStats?.latest_posts]);
   const trendingTags = homeStats?.trending_tags ?? [];
 
   const { spotlightPost, secondaryPosts, queuePosts } = useMemo(() => {
@@ -592,220 +768,389 @@ export default function HomePage() {
         value: homeStats?.stats?.posts?.total,
         subtitle: "Umumiy maqolalar",
         icon: PenSquare,
-        accentClass: "text-cyan-300",
+        accentClass: "text-[hsl(var(--primary))]",
       },
       {
         label: "A'zolar",
         value: homeStats?.stats?.users?.total,
         subtitle: "Faol hamjamiyat",
         icon: Users,
-        accentClass: "text-emerald-300",
+        accentClass: "text-[hsl(var(--secondary))]",
       },
       {
         label: "Wiki",
         value: homeStats?.stats?.wiki?.articles,
         subtitle: "Bilim maqolalari",
         icon: BookOpen,
-        accentClass: "text-indigo-300",
+        accentClass: "text-[hsl(var(--accent-purple))]",
       },
     ],
     [homeStats?.stats?.posts?.total, homeStats?.stats?.users?.total, homeStats?.stats?.wiki?.articles]
   );
 
+  const heroFeed = useMemo(() => feed.slice(0, 3), [feed]);
+  const heroTags = useMemo(() => trendingTags.slice(0, 3), [trendingTags]);
+
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
         href: "/posts/create",
-        title: "Fikr almashish",
-        description: "Muammolar va yechimlar bilan hamjamiyatni faollashtiring.",
-        icon: PenSquare,
-        accentClass: "text-cyan-600 dark:text-cyan-300",
-        hoverClass: "hover:border-cyan-400/70 hover:shadow-lg",
-        ctaLabel: "Boshlash",
-        ctaClass: "text-cyan-500",
+        title: "Savol yoki issue ochish",
+        description: "Stack Overflow formatida savol bering yoki GitHub muammosini baham ko'ring.",
+        icon: MessageCircle,
+        accentClass: "text-[hsl(var(--primary))]",
+        hoverClass: "hover:border-[hsl(var(--primary))]/60 hover:bg-[hsl(var(--primary))]/5",
+        ctaLabel: "Savol yuborish",
+        ctaClass: "text-[hsl(var(--primary))]",
       },
       {
         href: "/wiki",
-        title: "Wiki'ni boyiting",
-        description: "Yangi maqola va tajribalarni qo'shib, bilim bazasini kengaytiring.",
+        title: "Wiki bo'limini boyitish",
+        description: "Atroflicha yechimlarni hujjatlashtirib, boshqalarga yo'l ko'rsating.",
         icon: BookOpen,
-        accentClass: "text-indigo-600 dark:text-indigo-300",
-        hoverClass: "hover:border-indigo-400/70 hover:shadow-lg",
-        ctaLabel: "Ko'rish",
-        ctaClass: "text-indigo-500",
+        accentClass: "text-[hsl(var(--accent-purple))]",
+        hoverClass: "hover:border-[hsl(var(--accent-purple))]/60 hover:bg-[hsl(var(--accent-purple))]/5",
+        ctaLabel: "Maqola yozish",
+        ctaClass: "text-[hsl(var(--accent-purple))]",
+      },
+      {
+        href: "/containers",
+        title: "Laboratoriya muhiti",
+        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
+        icon: Server,
+        accentClass: "text-[hsl(var(--accent-green))]",
+        hoverClass: "hover:border-[hsl(var(--accent-green))]/60 hover:bg-[hsl(var(--accent-green))]/5",
+        ctaLabel: "Labga o'tish",
+        ctaClass: "text-[hsl(var(--accent-green))]",
+      },
+      {
+        href: "/leaderboard",
+        title: "Mentorlarni toping",
+        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
+        icon: Users,
+        accentClass: "text-[hsl(var(--secondary))]",
+        hoverClass: "hover:border-[hsl(var(--secondary))]/60 hover:bg-[hsl(var(--secondary))]/5",
+        ctaLabel: "Mentorlar",
+        ctaClass: "text-[hsl(var(--secondary))]",
       },
     ],
     []
   );
 
+  const builderHighlights = useMemo(
+    () => [
+      {
+        title: "Faol monitoring",
+        description: "Trendlar, ovozlar va mini hodisalarni real vaqt rejimida kuzating.",
+        icon: Activity,
+      },
+      {
+        title: "Jamiyat bilan tez aloqa",
+        description: "Izohlar va chatlardan foydalanib, g'oyalarga zudlik bilan javob bering.",
+        icon: MessageCircle,
+      },
+      {
+        title: "Hamkorlik rejimlari",
+        description: "Guruhlaringizga mos bo'limlar va navbatchilik ro'yxatlari bilan ishlang.",
+        icon: Users,
+      },
+    ],
+    []
+  );
+
+  const renderPostsGrid = () => {
+    if (postsLoading) {
+      return <LoadingSpinner />;
+    }
+
+    if (postsIsError) {
+      const postsErrorMessage =
+        postsError instanceof Error ? postsError.message : "Postlarni yuklashda xatolik yuz berdi.";
+      return (
+        <div className="rounded-2xl border border-[hsl(var(--destructive))]/40 bg-[hsl(var(--destructive))]/10 px-6 py-8 text-sm text-[hsl(var(--destructive))] dark:border-[hsl(var(--destructive))]/50 dark:bg-[hsl(var(--destructive))]/15 dark:text-[hsl(var(--destructive-foreground))]">
+          {postsErrorMessage}
+        </div>
+      );
+    }
+
+    if (!posts.length) {
+      return (
+        <div className="rounded-2xl border border-muted/40 bg-muted/10 px-6 py-10 text-center text-sm text-muted-foreground">
+          Hozircha postlar topilmadi.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-6 md:grid-cols-2">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <section className="relative isolate overflow-hidden border-b border-slate-200/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100 dark:border-slate-800">
-        <div className="absolute inset-0 -z-10 opacity-60" aria-hidden="true">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.15),_transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(244,114,182,0.12),_transparent_55%)]" />
+      <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
+        <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.25),_transparent_65%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.22),_transparent_60%)]" />
         </div>
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1.1fr,0.9fr] lg:px-8">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
-              KnowHub Community
-            </div>
-            <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-              Zamonaviy hamjamiyat uchun kiber platforma.
-            </h1>
-            <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
-              Tajribangizni ulashing, g'oyalaringizni mini-serverlarda sinang va real vaqt statistikasi bilan jamiyat pulsini kuzatib boring.
-              KnowHub sizga barcha qulayliklarni bitta bosh sahifada taqdim etadi.
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/posts/create"
-                className="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-              >
-                Yangi post yozish
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/containers"
-                className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/20"
-              >
-                Mini-serverlarni boshlash
-                <Server className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
-              {statsCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
-                      <Icon className="h-4 w-4" />
-                      {card.label}
+        <div className="mx-auto max-w-6xl px-6 py-16 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+            <div className="space-y-8 rounded-[32px] border border-border/60 bg-[hsl(var(--card))] p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))] px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
+                GitHub × Stack Overflow ruhi
+              </div>
+              <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
+                KnowHub Community: Dasturchilar Uchun Yangi Maydon
+              </h1>
+              <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi va Stack Overflow'dagi kabi savollarga aniq javoblar topiladi.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 rounded-full px-6 text-base font-semibold shadow-[0_18px_45px_rgba(14,116,144,0.35)]"
+                >
+                  <Link href="/posts/create">
+                    Post yaratish
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="gap-2 rounded-full border-border px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]"
+                >
+                  <Link href="/wiki">
+                    Wiki'ni ko'rish
+                    <BookOpen className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid max-w-xl grid-cols-2 gap-3 text-xs text-muted-foreground sm:grid-cols-3">
+                {statsCards.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <div key={card.label} className="rounded-2xl border border-border/70 bg-[hsl(var(--surface))] p-4 shadow-sm dark:border-border/60 dark:bg-[hsl(var(--card))]/70">
+                      <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                        <Icon className="h-4 w-4" />
+                        {card.label}
+                      </div>
+                      <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(card.value)}</p>
+                      <p>{card.subtitle}</p>
                     </div>
-                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
-                    <p>{card.subtitle}</p>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid max-w-xl grid-cols-3 gap-3 text-xs text-slate-300">
-              {statsCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div key={card.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className={`flex items-center gap-2 ${card.accentClass}`}>
-                      <Icon className="h-4 w-4" />
-                      {card.label}
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold text-white">{formatNumber(card.value)}</p>
-                    <p>{card.subtitle}</p>
+            <div className="space-y-5">
+              <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-muted-foreground">GitHub uslubidagi backlog</p>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
+                </div>
+                <div className="mt-6 space-y-3">
+                  {builderHighlights.map((highlight) => {
+                    const Icon = highlight.icon;
+                    return (
+                      <div key={highlight.title} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{highlight.title}</p>
+                          <p className="text-sm text-muted-foreground">{highlight.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-muted-foreground">Stack Overflow uslubidagi jonli muhokamalar</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {heroTags.length ? (
+                    heroTags.map((tag) => (
+                      <span
+                        key={tag.slug ?? tag.name}
+                        className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))]"
+                      >
+                          #{tag.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="rounded-full border border-dashed border-border/60 px-3 py-1 text-muted-foreground">
+                        Yangi teglar kutilmoqda
+                      </span>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {heroFeed.length ? (
+                    heroFeed.map((event) => (
+                      <div
+                        key={`${event.type}-${event.id}`}
+                        className="rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-4"
+                      >
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 font-semibold text-[hsl(var(--foreground))]">
+                            <span className="rounded-full bg-[hsl(var(--foreground))]/10 p-2">{activityIcon(event.type)}</span>
+                            {activityTypeLabels[event.type]}
+                          </div>
+                          <span>{timeAgo(event.created_at)}</span>
+                        </div>
+                        <div className="mt-2 text-sm text-[hsl(var(--foreground))]">{activityDescription(event)}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="rounded-2xl border border-dashed border-border/70 bg-[hsl(var(--card))] p-4 text-sm text-muted-foreground">
+                      Faollik tez orada paydo bo'ladi.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 py-12 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SystemStatusWidget status={systemStatus} />
           <CodeRunnerCard />
         </div>
       </section>
 
-      <section className="max-w-6xl px-6 py-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
-                >
-                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
-                    <Icon className="h-5 w-5" />
-                    {action.title}
-                  </div>
-                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
-                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
-                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              );
-            })}
+      <section className="max-w-6xl px-6 pb-16 lg:px-8">
+        <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tezkor harakatlar</p>
+                <p className="text-lg font-semibold">GitHub va Stack Overflow ruhidagi oqimlar</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--card))] p-5 text-[hsl(var(--foreground))] shadow-md shadow-[0_15px_35px_rgba(15,23,42,0.07)] transition ${action.hoverClass}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`rounded-2xl bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="text-sm font-semibold">{action.title}</div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">{action.description}</p>
+                    <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                      {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <CodeRunnerCard />
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Trend teglar</p>
+                <Link href="/tags" className="text-xs font-semibold text-[hsl(var(--primary))] hover:underline">
+                  Barchasi
+                </Link>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                {trendingTags.length ? (
+                  trendingTags.slice(0, 14).map((tag) => (
+                    <span
+                      key={tag.slug ?? tag.name}
+                      className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))]"
+                    >
+                      #{tag.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="rounded-full border border-dashed border-border/60 px-3 py-1 text-muted-foreground">
+                    Teglar yuklanmoqda...
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Stack Overflow qoidalari</h3>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Savolingiz yoki yechimingiz hamjamiyat standartlariga mos bo'lishi uchun ushbu tezkor tekshiruvdan o'ting.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li>• Sarlavhaga muammo va kontekstni qo'shing.</li>
+                <li>• Kod parchalarini va kutilgan natijani aniq yozing.</li>
+                <li>• Taglardan foydalanib, qidiruvni yengillashtiring.</li>
+                <li>• GitHub PR'lardagi kabi qisqa changelog yozing.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-6xl px-6 py-16 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={`group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/70 ${action.hoverClass}`}
-                >
-                  <div className={`flex items-center gap-3 text-sm font-semibold ${action.accentClass}`}>
-                    <Icon className="h-5 w-5" />
-                    {action.title}
-                  </div>
-                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{action.description}</p>
-                  <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
-                    {action.ctaLabel} <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              );
-            })}
+      <section className="max-w-6xl px-6 pb-12 lg:px-8">
+        <Tabs value={sortType} onValueChange={(value) => setSortType(value as SortType)} className="space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Postlar</p>
+              <h2 className="text-2xl font-semibold text-foreground">Hamjamiyat lentasi</h2>
+              <p className="text-sm text-muted-foreground">
+                Turli saralashlarga o'tib eng so'nggi, trenddagi yoki obunangizdagi muhokamalarni kuzating.
+              </p>
+            </div>
+            <TabsList className="flex w-full flex-wrap gap-2 rounded-full border border-muted/30 bg-muted/20 p-1 sm:w-auto">
+              {visibleTabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="px-5 py-2 text-sm font-semibold">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
-          <Link
-            href="/containers"
-            className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-slate-100 shadow-xl transition hover:shadow-2xl dark:border-slate-700"
-          >
-            <div className="absolute inset-0 -z-10 opacity-80">
-              <div className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-cyan-500/30 blur-3xl" />
-              <div className="absolute bottom-0 right-0 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
-            </div>
-            <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">
-              <Server className="h-5 w-5" />
-              O'z g'oyangizni sinang
-            </div>
-            <h2 className="mt-6 text-2xl font-semibold text-white">Bir klikda shaxsiy mini serveringizni ishga tushiring.</h2>
-            <p className="mt-3 max-w-xl text-sm text-slate-300">
-              Izolyatsiyalangan Docker muhiti, resurs limitlari va xavfsizlik siyosatlari bilan tajribangizni real vaqt rejimida sinovdan o'tkazing.
-            </p>
-            <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 transition group-hover:bg-slate-200">
-              Boshlash
-              <Rocket className="h-4 w-4" />
-            </div>
-          </Link>
-        </div>
+          {visibleTabs.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+              {renderPostsGrid()}
+            </TabsContent>
+          ))}
+        </Tabs>
       </section>
 
       <section className="max-w-6xl px-6 pb-16 lg:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-emerald-500" />
-              <h2 className="text-xl font-semibold">Trend signallari</h2>
+        <div className="flex items-center gap-3">
+          <TrendingUp className="h-6 w-6 text-[hsl(var(--secondary))]" />
+          <h2 className="text-xl font-semibold">Trend signallari</h2>
+        </div>
+        {spotlightPost ? (
+          <Link
+            href={`/posts/${spotlightPost.slug}`}
+            className="group block overflow-hidden rounded-3xl border border-border bg-[hsl(var(--card))]/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-[hsl(var(--secondary))]/60 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] dark:border-border dark:bg-[hsl(var(--foreground))]/80"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-[hsl(var(--secondary))]">
+              Spotlight
+              {spotlightPost.score ? <span className="text-[hsl(var(--secondary))]">{spotlightPost.score} ovoz</span> : null}
             </div>
-            {spotlightPost ? (
-              <Link
-                href={`/posts/${spotlightPost.slug}`}
-                className="group block overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-emerald-400/60 hover:shadow-emerald-100 dark:border-slate-700 dark:bg-slate-900/80"
-              >
-                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">
-                  Spotlight
-                  {spotlightPost.score ? <span className="text-emerald-400">{spotlightPost.score} ovoz</span> : null}
-                </div>
-                <h3 className="mt-4 text-2xl font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">
-                  {spotlightPost.title}
-                </h3>
-                <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">{buildSnippet(spotlightPost, 220)}</p>
-                {spotlightPost.user && <p className="mt-4 text-xs text-slate-400">Muallif: {spotlightPost.user.name}</p>}
+            <h3 className="mt-4 text-2xl font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">
+              {spotlightPost.title}
+            </h3>
+            <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{buildSnippet(spotlightPost, 220)}</p>
+                {spotlightPost.user && <p className="mt-4 text-xs text-muted-foreground">Muallif: {spotlightPost.user.name}</p>}
               </Link>
             ) : (
-              <div className="rounded-3xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              <div className="rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground dark:border-border dark:text-muted-foreground">
                 Spotlight post mavjud emas.
               </div>
             )}
@@ -814,11 +1159,11 @@ export default function HomePage() {
                 <Link
                   key={post.id}
                   href={`/posts/${post.slug}`}
-                  className="group rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm transition hover:border-emerald-300/70 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70"
+                  className="group rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--secondary))]/60 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
                 >
-                  <h4 className="text-base font-semibold text-slate-900 transition group-hover:text-emerald-500 dark:text-slate-100">{post.title}</h4>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">{buildSnippet(post, 120)}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-500">
+                  <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">{post.title}</h4>
+                  <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">{buildSnippet(post, 120)}</p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-[hsl(var(--secondary))]">
                     Batafsil <ArrowRight className="h-3 w-3" />
                   </span>
                 </Link>
@@ -826,41 +1171,26 @@ export default function HomePage() {
             </div>
           </div>
           <div className="w-full max-w-md space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Monitoring navbat</h3>
+            <div className="rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-5 shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70">
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">Monitoring navbat</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 {queuePosts.map((post) => (
                   <li
                     key={post.id}
-                    className="rounded-xl border border-transparent px-3 py-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10"
+                    className="rounded-xl border border-transparent px-3 py-2 transition hover:border-[hsl(var(--secondary))]/60 hover:bg-[hsl(var(--secondary))]/10 dark:hover:border-[hsl(var(--secondary))]/50 dark:hover:bg-[hsl(var(--secondary))]/15"
                   >
                     <Link
                       href={`/posts/${post.slug}`}
-                      className="font-medium text-slate-700 hover:text-emerald-500 dark:text-slate-200 dark:hover:text-emerald-300"
+                      className="font-medium text-[hsl(var(--foreground))] hover:text-[hsl(var(--secondary))] dark:text-muted-foreground dark:hover:text-[hsl(var(--secondary))]"
                     >
                       {post.title}
                     </Link>
-                    <p className="text-xs text-slate-400">{timeAgo(post.created_at)}</p>
+                    <p className="text-xs text-muted-foreground">{timeAgo(post.created_at)}</p>
                   </li>
                 ))}
-                {!queuePosts.length && <li className="text-xs text-slate-500">Keyingi postlar hali yo'q.</li>}
+                {!queuePosts.length && <li className="text-xs text-muted-foreground">Keyingi postlar hali yo'q.</li>}
               </ul>
             </div>
-            {!!trendingTags.length && (
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-500">Trend teglar</h3>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  {trendingTags.slice(0, 12).map((tag) => (
-                    <span
-                      key={tag.slug ?? tag.name}
-                      className="rounded-full border border-slate-200/60 bg-slate-100/70 px-3 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"
-                    >
-                      #{tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
@@ -870,13 +1200,13 @@ export default function HomePage() {
       <ActivityFeed feed={feed} />
 
       {error && (
-        <div className="mx-auto max-w-4xl rounded-2xl border border-amber-300/60 bg-amber-50 p-6 text-sm text-amber-700 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-200">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-[hsl(var(--accent-pink))]/40 bg-[hsl(var(--accent-pink))]/10 p-6 text-sm text-[hsl(var(--accent-pink))] dark:border-[hsl(var(--accent-pink))]/50 dark:bg-[hsl(var(--accent-pink))]/15 dark:text-[hsl(var(--accent-pink))]">
           {error}
         </div>
       )}
 
       {loading && (
-        <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/80 p-6 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-[hsl(var(--card))]/80 p-6 text-sm text-muted-foreground shadow-sm dark:border-border dark:bg-[hsl(var(--card))]/70 dark:text-muted-foreground">
           Ma'lumotlar yuklanmoqda...
         </div>
       )}
