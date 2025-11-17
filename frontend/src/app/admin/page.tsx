@@ -133,6 +133,13 @@ interface SystemSettings {
   seo_meta_description?: string | null;
   seo_meta_keywords: string[];
   branding: BrandingSettings;
+  mini_services?: {
+    enabled: boolean;
+    min_xp_required: number;
+    max_per_user: number | null;
+    git_clone_enabled: boolean;
+    mysql_instances_per_user: number;
+  };
   solvera?: {
     enabled: boolean;
     api_base: string;
@@ -245,6 +252,11 @@ export default function AdminPage() {
   const [aiSuggestionsEnabled, setAiSuggestionsEnabled] = useState(true);
   const [maxPostsPerDay, setMaxPostsPerDay] = useState(10);
   const [maxCommentsPerDay, setMaxCommentsPerDay] = useState(50);
+  const [miniServicesEnabled, setMiniServicesEnabled] = useState(true);
+  const [miniServicesMinXp, setMiniServicesMinXp] = useState(0);
+  const [miniServicesMaxPerUser, setMiniServicesMaxPerUser] = useState<number | null>(null);
+  const [miniServicesGitClone, setMiniServicesGitClone] = useState(true);
+  const [miniServicesMysqlCount, setMiniServicesMysqlCount] = useState(2);
   const [solveraEnabled, setSolveraEnabled] = useState(true);
   const [solveraApiBase, setSolveraApiBase] = useState('');
   const [solveraModel, setSolveraModel] = useState('gtp-5');
@@ -315,6 +327,11 @@ export default function AdminPage() {
     setAiSuggestionsEnabled(Boolean(systemSettings.ai_suggestions_enabled));
     setMaxPostsPerDay(systemSettings.max_posts_per_day ?? 10);
     setMaxCommentsPerDay(systemSettings.max_comments_per_day ?? 50);
+    setMiniServicesEnabled(Boolean(systemSettings.mini_services?.enabled ?? true));
+    setMiniServicesMinXp(systemSettings.mini_services?.min_xp_required ?? 0);
+    setMiniServicesMaxPerUser(systemSettings.mini_services?.max_per_user ?? null);
+    setMiniServicesGitClone(Boolean(systemSettings.mini_services?.git_clone_enabled ?? true));
+    setMiniServicesMysqlCount(systemSettings.mini_services?.mysql_instances_per_user ?? 2);
     setSolveraEnabled(Boolean(systemSettings.solvera?.enabled ?? true));
     setSolveraApiBase(systemSettings.solvera?.api_base ?? '');
     setSolveraModel(systemSettings.solvera?.model ?? 'gtp-5');
@@ -820,6 +837,13 @@ export default function AdminPage() {
         ai_suggestions_enabled: aiSuggestionsEnabled,
         max_posts_per_day: Number(maxPostsPerDay),
         max_comments_per_day: Number(maxCommentsPerDay),
+        mini_services_enabled: miniServicesEnabled,
+        mini_services_min_xp: Number(miniServicesMinXp),
+        mini_services_git_clone_enabled: miniServicesGitClone,
+        mini_services_mysql_instances_per_user: Number(miniServicesMysqlCount),
+        ...(miniServicesMaxPerUser !== null
+          ? { mini_services_max_per_user: Number(miniServicesMaxPerUser) }
+          : {}),
         solvera_enabled: solveraEnabled,
         solvera_api_base: solveraApiBase || 'https://api.solvera.ai',
         solvera_model: solveraModel,
@@ -1015,6 +1039,76 @@ export default function AdminPage() {
               </label>
             </div>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-border p-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-[hsl(var(--foreground))]">Mini server platformasi</h4>
+              <p className="text-xs text-muted-foreground">XP talablarini, slotlar va Git klonlash qoidalarini boshqaring.</p>
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm font-semibold">
+              <span>Faol</span>
+              <input
+                type="checkbox"
+                checked={miniServicesEnabled}
+                onChange={(event) => setMiniServicesEnabled(event.target.checked)}
+                className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Minimal XP
+              <input
+                type="number"
+                min={0}
+                max={1000000}
+                value={miniServicesMinXp}
+                onChange={(event) => setMiniServicesMinXp(Number(event.target.value))}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </label>
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Maks. loyiha (foyd.)
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={miniServicesMaxPerUser ?? ''}
+                onChange={(event) =>
+                  setMiniServicesMaxPerUser(event.target.value ? Number(event.target.value) : null)
+                }
+                placeholder="Cheklanmagan"
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </label>
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              MySQL instansiyasi (foyd.)
+              <input
+                type="number"
+                min={1}
+                max={5}
+                value={miniServicesMysqlCount}
+                onChange={(event) => setMiniServicesMysqlCount(Number(event.target.value))}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </label>
+            <label className="flex items-center justify-between text-sm font-medium text-[hsl(var(--foreground))]">
+              <span>Git klonlashga ruxsat</span>
+              <input
+                type="checkbox"
+                checked={miniServicesGitClone}
+                onChange={(event) => setMiniServicesGitClone(event.target.checked)}
+                className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
+              />
+            </label>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            O&apos;zgarishlar foydalanuvchilarning mini server yaratish oqimiga darhol tatbiq etiladi. XP gati bajarilmasa, foydalanuvchiga
+            motivatsion ogohlantirish ko&apos;rsatiladi.
+          </p>
         </div>
 
         <div className="rounded-2xl border border-border p-6">

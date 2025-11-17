@@ -602,6 +602,13 @@ class AdminController extends Controller
                 'light' => $this->formatLogo(Settings::get('branding.logo.light')),
                 'dark' => $this->formatLogo(Settings::get('branding.logo.dark')),
             ],
+            'mini_services' => [
+                'enabled' => (bool) Settings::get('mini_services.enabled', true),
+                'min_xp_required' => (int) Settings::get('mini_services.min_xp_required', config('containers.min_xp_required', 0)),
+                'max_per_user' => (int) Settings::get('mini_services.max_per_user', config('containers.max_containers_per_user', 3)),
+                'git_clone_enabled' => (bool) Settings::get('mini_services.git_clone_enabled', config('containers.git_clone_enabled', true)),
+                'mysql_instances_per_user' => (int) Settings::get('mini_services.mysql_instances_per_user', config('containers.mysql_instances_per_user', 2)),
+            ],
             'solvera' => [
                 'enabled' => (bool) Settings::get('solvera.enabled', true),
                 'api_base' => Settings::get('solvera.api_base', 'https://api.solvera.ai'),
@@ -631,6 +638,11 @@ class AdminController extends Controller
             'site_tagline' => 'sometimes|string|max:200',
             'seo_meta_description' => 'sometimes|string|max:160',
             'seo_meta_keywords' => 'sometimes|array',
+            'mini_services_enabled' => 'sometimes|boolean',
+            'mini_services_min_xp' => 'sometimes|integer|min:0|max:1000000',
+            'mini_services_max_per_user' => 'sometimes|integer|min:1|max:20',
+            'mini_services_git_clone_enabled' => 'sometimes|boolean',
+            'mini_services_mysql_instances_per_user' => 'sometimes|integer|min:1|max:5',
             'solvera_enabled' => 'sometimes|boolean',
             'solvera_api_base' => 'sometimes|url',
             'solvera_model' => 'sometimes|string|max:120',
@@ -678,6 +690,26 @@ class AdminController extends Controller
 
         if (array_key_exists('seo_meta_keywords', $data)) {
             Settings::set('seo.meta_keywords', array_values($data['seo_meta_keywords']), 'json');
+        }
+
+        if (array_key_exists('mini_services_enabled', $data)) {
+            Settings::set('mini_services.enabled', (bool) $data['mini_services_enabled']);
+        }
+
+        if (array_key_exists('mini_services_min_xp', $data)) {
+            Settings::set('mini_services.min_xp_required', (int) $data['mini_services_min_xp']);
+        }
+
+        if (array_key_exists('mini_services_max_per_user', $data)) {
+            Settings::set('mini_services.max_per_user', (int) $data['mini_services_max_per_user']);
+        }
+
+        if (array_key_exists('mini_services_git_clone_enabled', $data)) {
+            Settings::set('mini_services.git_clone_enabled', (bool) $data['mini_services_git_clone_enabled']);
+        }
+
+        if (array_key_exists('mini_services_mysql_instances_per_user', $data)) {
+            Settings::set('mini_services.mysql_instances_per_user', (int) $data['mini_services_mysql_instances_per_user']);
         }
 
         if (array_key_exists('solvera_api_base', $data)) {

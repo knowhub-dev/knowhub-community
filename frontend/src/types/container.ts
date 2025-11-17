@@ -50,4 +50,11 @@ export interface ContainerOptions {
     reserved_subdomains?: string[];
     subdomain_min_length?: number;
     subdomain_max_length?: number;
+    mini_services?: {
+        enabled: boolean;
+        min_xp_required: number;
+        max_per_user: number | null;
+        git_clone_enabled: boolean;
+        mysql_instances_per_user: number;
+    };
 }
