@@ -1,7 +1,81 @@
+'use client';
+
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Users, Target, Heart, Code, Globe, Award } from 'lucide-react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
+type PublicStatsResponse = {
+  users?: { total?: number };
+  posts?: { total?: number };
+  comments?: { total?: number };
+  wiki?: { articles?: number };
+};
+
+type AboutContentResponse = {
+  hero?: { title?: string; subtitle?: string };
+  mission?: { title?: string; description?: string };
+  values?: { title?: string; description?: string };
+  features?: { title: string; description: string; icon: 'code' | 'users' | 'award' }[];
+  team?: { title: string; role: string; description: string; avatar_url?: string }[];
+  cta?: { title?: string; description?: string; primary_label?: string; secondary_label?: string };
+};
+
+const featureIconMap = {
+  code: Code,
+  users: Users,
+  award: Award,
+};
+
+async function fetchPublicStats() {
+  const res = await api.get('/stats/public');
+  return res.data as PublicStatsResponse;
+}
+
+async function fetchAboutContent() {
+  const res = await api.get('/content/about');
+  return res.data as AboutContentResponse;
+}
 
 export default function AboutPage() {
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery({ queryKey: ['stats', 'public'], queryFn: fetchPublicStats });
+
+  const {
+    data: content,
+    isLoading: contentLoading,
+    error: contentError,
+  } = useQuery({ queryKey: ['content', 'about'], queryFn: fetchAboutContent });
+
+  const isLoading = statsLoading || contentLoading;
+  const hasError = statsError || contentError;
+
+  const featureCards = useMemo(() => {
+    return content?.features ?? [];
+  }, [content?.features]);
+
+  const teamMembers = useMemo(() => {
+    return content?.team ?? [];
+  }, [content?.team]);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (hasError) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Ma'lumotlarni yuklashda xatolik yuz berdi</h2>
+        <p className="text-gray-600">Iltimos, sahifani qayta yuklab ko'ring.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-[hsl(var(--foreground))]">
       {/* Hero Section */}
@@ -75,7 +149,7 @@ export default function AboutPage() {
               reyting jadvalida yuqoriga chiqing.
             </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -99,6 +173,9 @@ export default function AboutPage() {
             <div className="text-muted-foreground">Wiki Maqolalar</div>
           </div>
         </div>
+        {!stats && (
+          <p className="text-center text-gray-600 mt-6">Statistik ma'lumotlar topilmadi.</p>
+        )}
       </div>
 
       {/* Team */}
@@ -158,14 +235,14 @@ export default function AboutPage() {
             className="inline-flex items-center px-8 py-3 bg-[hsl(var(--background))] text-[hsl(var(--primary))] rounded-lg font-semibold border border-transparent hover:bg-[hsl(var(--muted))] transition-colors"
           >
             <Users className="w-5 h-5 mr-2" />
-            Ro'yxatdan O'tish
+            {content?.cta?.primary_label || "Ro'yxatdan o'tish"}
           </Link>
           <Link
             href="/contact"
             className="inline-flex items-center px-8 py-3 border-2 border-[hsl(var(--primary-foreground))] text-[hsl(var(--primary-foreground))] rounded-lg font-semibold hover:bg-[hsl(var(--primary-foreground))] hover:text-[hsl(var(--primary))] transition-colors"
           >
             <Globe className="w-5 h-5 mr-2" />
-            Biz Bilan Bog'laning
+            {content?.cta?.secondary_label || "Biz bilan bog'laning"}
           </Link>
         </div>
       </div>

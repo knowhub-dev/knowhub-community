@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\{
     DashboardController, AdminController, StatsController, ActivityFeedController,
     ProjectSubdomainController, BrandingController, SystemStatusController
 };
+use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Middleware\CacheMiddleware;
@@ -30,6 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/stats/public', [StatsController::class, 'public']);
     Route::get('/stats/homepage', [StatsController::class, 'homepage']);
     Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
+    Route::get('/content/about', [ContentController::class, 'about']);
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
     Route::get('/settings/logo', [BrandingController::class, 'show']);
     Route::get('/status/summary', [SystemStatusController::class, 'summary']);
