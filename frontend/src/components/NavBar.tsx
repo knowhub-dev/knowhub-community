@@ -19,6 +19,8 @@ import {
 export default function NavBar() {
   const { user, logout } = useAuth();
 
+  const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? user?.username?.charAt(0)?.toUpperCase() ?? "?";
+
   return (
     <nav className="bg-[hsl(var(--background))] border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,14 +65,18 @@ export default function NavBar() {
 
           {/* Right navigation */}
           <div className="flex items-center">
-            <button className="p-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+            <button
+              className="p-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              aria-label="Sayt bo'ylab qidirish"
+              type="button"
+            >
               <Search className="w-5 h-5" />
             </button>
 
             {user ? (
               <div className="ml-4 flex items-center space-x-4">
                 <Link
-                  href="/posts/new"
+                  href="/posts/create"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                 >
                   <PenTool className="w-4 h-4 mr-2" />
@@ -78,12 +84,27 @@ export default function NavBar() {
                 </Link>
 
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
-                    <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full" />
+                  <button
+                    className="flex items-center space-x-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    type="button"
+                    aria-label="Profil menyusi"
+                  >
+                    {user.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name}
+                        className="h-8 w-8 rounded-full border border-border bg-[hsl(var(--surface))] object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-[hsl(var(--surface))] text-sm font-semibold text-[hsl(var(--foreground))]">
+                        {userInitial}
+                      </span>
+                    )}
                   </button>
 
-                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-[hsl(var(--popover))] ring-1 ring-[hsl(var(--primary))]/15 hidden group-hover:block">
-                    <div className="px-4 py-2 text-sm text-[hsl(var(--foreground))] border-b border-border bg-[hsl(var(--surface))]">
+                  <div className="absolute right-0 mt-2 w-48 rounded-md border border-border/70 bg-[hsl(var(--popover))] shadow-lg ring-1 ring-[hsl(var(--primary))]/15 hidden group-hover:block">
+                    <div className="px-4 py-2 text-sm text-[hsl(var(--foreground))] border-b border-border/70 bg-[hsl(var(--surface))]">
                       <p className="font-medium">{user.name}</p>
                       <p className="text-[hsl(var(--muted-foreground))]">@{user.username}</p>
                       <div className="flex items-center mt-1 text-[hsl(var(--foreground))]">
