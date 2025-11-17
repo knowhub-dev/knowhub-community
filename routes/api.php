@@ -158,6 +158,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/system/resources', [AdminController::class, 'systemResources']);
             Route::get('/system/containers', [AdminController::class, 'containerStats']);
 
+            // System monitoring
+            Route::get('/system/resources', [AdminController::class, 'systemResources']);
+            Route::get('/system/containers', [AdminController::class, 'containerStats']);
+
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);
             Route::get('/containers/options', [ContainerController::class, 'options']);

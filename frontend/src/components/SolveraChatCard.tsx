@@ -34,17 +34,15 @@ export function SolveraChatCard({ context, title, subtitle }: SolveraChatCardPro
   const [message, setMessage] = useState("Bugun nima ustida ishlayapsan? Qisqa yozib ber.");
   const [reply, setReply] = useState<string | null>(null);
 
-  const mutation = useMutation<ChatResponse, unknown, ChatPayload>(
-    async (payload) => {
+  const mutation = useMutation<ChatResponse, unknown, ChatPayload>({
+    mutationFn: async (payload) => {
       const response = await api.post<ChatResponse>('/ai/solvera/chat', payload);
       return response.data;
     },
-    {
-      onSuccess: (data) => {
-        setReply(data.reply);
-      },
-    }
-  );
+    onSuccess: (data) => {
+      setReply(data.reply);
+    },
+  });
 
   const disabled = useMemo(() => !message.trim() || mutation.isLoading, [message, mutation.isLoading]);
 
