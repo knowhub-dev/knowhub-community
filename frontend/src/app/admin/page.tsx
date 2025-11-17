@@ -25,7 +25,8 @@ interface AdminStats {
   users: {
     total: number;
     new_today: number;
-    active: number;
+    active?: number;
+    active_today?: number;
     new_this_week?: number;
     online_now?: number;
   };
@@ -399,8 +400,8 @@ export default function AdminPage() {
     const insightCards = [
       {
         title: "Faol a'zolar",
-        value: formatNumber(stats.users.active),
-        caption: `${formatNumber(stats.users.new_today)} ta yangi foydalanuvchi bugun qo'shildi`,
+        value: formatNumber(stats.users.active ?? stats.users.active_today),
+        caption: `${formatNumber(stats.users.new_today ?? stats.users.today ?? stats.users.active_today)} ta yangi foydalanuvchi bugun qo'shildi`,
       },
       {
         title: 'Bugungi postlar',

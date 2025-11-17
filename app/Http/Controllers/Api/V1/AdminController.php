@@ -47,6 +47,7 @@ class AdminController extends Controller
             return [
                 'users' => [
                     'total' => User::count(),
+                    'new_today' => User::whereDate('created_at', today())->count(),
                     'active_today' => User::whereDate('updated_at', today())->count(),
                     'new_this_week' => User::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
@@ -64,6 +65,7 @@ class AdminController extends Controller
                     'total' => Post::count(),
                     'published' => Post::where('status', 'published')->count(),
                     'draft' => Post::where('status', 'draft')->count(),
+                    'new_today' => Post::whereDate('created_at', today())->count(),
                     'today' => Post::whereDate('created_at', today())->count(),
                     'this_week' => Post::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'this_month' => Post::whereMonth('created_at', now()->month)->count(),
@@ -76,6 +78,7 @@ class AdminController extends Controller
                 ],
                 'comments' => [
                     'total' => Comment::count(),
+                    'new_today' => Comment::whereDate('created_at', today())->count(),
                     'today' => Comment::whereDate('created_at', today())->count(),
                     'this_week' => Comment::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'this_month' => Comment::whereMonth('created_at', now()->month)->count(),
@@ -88,6 +91,7 @@ class AdminController extends Controller
                 ],
                 'wiki' => [
                     'articles' => WikiArticle::count(),
+                    'new_today' => WikiArticle::whereDate('created_at', today())->count(),
                     'published' => WikiArticle::where('status', 'published')->count(),
                     'draft' => WikiArticle::where('status', 'draft')->count(),
                     'proposals' => DB::table('wiki_proposals')->where('status', 'pending')->count(),
