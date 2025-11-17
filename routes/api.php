@@ -151,6 +151,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
             Route::post('/branding/logo', [BrandingController::class, 'store']);
             Route::delete('/branding/logo', [BrandingController::class, 'destroy']);
+            Route::get('/system/resources', [SystemStatusController::class, 'systemResources']);
+            Route::get('/system/containers', [SystemStatusController::class, 'containerStats']);
 
             // System monitoring
             Route::get('/system/resources', [AdminController::class, 'systemResources']);
