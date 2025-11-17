@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { User } from '@/types';
@@ -8,24 +8,33 @@ import { Search, Filter, Users, Award, FileText, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import FollowButton from '@/components/FollowButton';
 
-async function getUsers(params: { search?: string; level?: string; sort?: string; page?: number }) {
+type LevelOption = { id: number; name: string; slug: string; icon?: string | null };
+
+type Filters = {
+  search: string;
+  level: number | '';
+  sort: string;
+  page: number;
+};
+
+async function getUsers(params: Filters) {
   const searchParams = new URLSearchParams();
   if (params.search) searchParams.append('search', params.search);
-  if (params.level) searchParams.append('level', params.level);
+  if (params.level) searchParams.append('level', String(params.level));
   if (params.sort) searchParams.append('sort', params.sort);
   if (params.page) searchParams.append('page', params.page.toString());
-  
+
   const res = await api.get(`/users?${searchParams.toString()}`);
   return res.data;
 }
 
 async function getLevels() {
   const res = await api.get('/levels');
-  return res.data;
+  return res.data?.data ?? [];
 }
 
 export default function UsersPage() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     search: '',
     level: '',
     sort: 'xp',
@@ -33,21 +42,32 @@ export default function UsersPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading, isError: usersError } = useQuery({
     queryKey: ['users', filters],
     queryFn: () => getUsers(filters),
   });
 
-  const { data: levels } = useQuery({
+  const { data: levels } = useQuery<LevelOption[]>({
     queryKey: ['levels'],
     queryFn: getLevels,
   });
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+  const handleFilterChange = (key: keyof Filters, value: string | number) => {
+    setFilters(prev => ({ ...prev, [key]: value as never, page: 1 }));
   };
 
+  const levelOptions = useMemo(() => levels ?? [], [levels]);
+
   if (usersLoading) return <LoadingSpinner />;
+
+  if (usersError) {
+    return (
+      <div className="max-w-3xl mx-auto text-center py-16">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-3">Foydalanuvchilarni yuklashda xatolik</h1>
+        <p className="text-gray-600">Iltimos, sahifani yangilab qayta urinib ko'ring.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -93,12 +113,12 @@ export default function UsersPage() {
                 </label>
                 <select
                   value={filters.level}
-                  onChange={(e) => handleFilterChange('level', e.target.value)}
+                  onChange={(e) => handleFilterChange('level', e.target.value ? Number(e.target.value) : '')}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">Barcha darajalar</option>
-                  {levels?.map((level: any) => (
-                    <option key={level.id} value={level.slug}>
+                  {levelOptions.map((level) => (
+                    <option key={level.id} value={level.id}>
                       {level.name}
                     </option>
                   ))}
@@ -239,7 +259,7 @@ export default function UsersPage() {
         <div className="flex justify-center mt-12">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => handleFilterChange('page', (filters.page - 1).toString())}
+              onClick={() => handleFilterChange('page', filters.page - 1)}
               disabled={filters.page <= 1}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
@@ -251,7 +271,7 @@ export default function UsersPage() {
             </span>
             
             <button
-              onClick={() => handleFilterChange('page', (filters.page + 1).toString())}
+              onClick={() => handleFilterChange('page', filters.page + 1)}
               disabled={filters.page >= users.meta.last_page}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >

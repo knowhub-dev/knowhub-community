@@ -10,6 +10,9 @@ return [
     'min_xp_required' => env('CONTAINER_MIN_XP', 500),
     'max_containers_per_user' => env('CONTAINER_MAX_PER_USER', 3),
 
+    'git_clone_enabled' => env('CONTAINER_GIT_CLONE_ENABLED', true),
+    'mysql_instances_per_user' => env('CONTAINER_MYSQL_INSTANCES', 2),
+
     'port_range' => [
         'start' => env('CONTAINER_PORT_START', 30000),
         'end' => env('CONTAINER_PORT_END', 31000),
