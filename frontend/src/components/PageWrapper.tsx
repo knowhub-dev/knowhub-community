@@ -39,7 +39,7 @@ export default function PageWrapper({
         {(title || description || actions) && (
           <header
             className={cn(
-              'flex flex-col gap-4 rounded-2xl border border-white/5 bg-surface/80 p-6 shadow-subtle backdrop-blur-md md:flex-row md:items-center md:justify-between',
+              'flex flex-col gap-4 rounded-2xl border border-border/70 bg-surface/90 p-6 shadow-subtle backdrop-blur-md md:flex-row md:items-center md:justify-between',
               headerClassName,
             )}
           >

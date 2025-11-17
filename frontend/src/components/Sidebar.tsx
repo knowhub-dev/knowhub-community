@@ -39,7 +39,7 @@ export default function Sidebar({
   return (
     <aside
       className={cn(
-        'relative flex h-full w-64 flex-col rounded-2xl border border-white/5 bg-surface/95 p-4 shadow-subtle backdrop-blur-lg transition-[width] duration-300 ease-out',
+        'relative flex h-full w-64 flex-col rounded-2xl border border-border/70 bg-surface/95 p-4 shadow-subtle backdrop-blur-lg transition-[width] duration-300 ease-out',
         collapsed && 'w-20 p-3',
         className,
       )}
@@ -47,7 +47,7 @@ export default function Sidebar({
       <button
         type="button"
         onClick={() => setCollapsed((prev) => !prev)}
-        className="absolute -right-3 top-6 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground shadow-subtle transition hover:border-primary/40 hover:text-foreground"
+        className="absolute -right-3 top-6 flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground shadow-subtle transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
         aria-label={collapsed ? 'Sidebarni kengaytirish' : 'Sidebarni yigish'}
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -75,7 +75,7 @@ export default function Sidebar({
             >
               <span
                 className={cn(
-                  'flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-foreground transition-all duration-200 group-hover:border-primary/40 group-hover:text-primary',
+                  'flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 bg-surface/85 text-foreground transition-all duration-200 group-hover:border-primary/50 group-hover:text-primary',
                   isActive && 'border-transparent bg-gradient-to-br from-primary/70 via-primary/50 to-secondary/60 text-white shadow-primary/20',
                 )}
               >
@@ -97,7 +97,7 @@ export default function Sidebar({
       </nav>
 
       {footer && (
-        <div className={cn('mt-6 border-t border-white/5 pt-4', collapsed && 'hidden')}>{footer}</div>
+        <div className={cn('mt-6 border-t border-border/70 pt-4', collapsed && 'hidden')}>{footer}</div>
       )}
     </aside>
   );

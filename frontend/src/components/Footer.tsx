@@ -17,7 +17,7 @@ const supportLinks = [
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-white/5 bg-surface/90 text-sm text-muted-foreground backdrop-blur-md">
+    <footer className="relative border-t border-border/70 bg-surface/95 text-sm text-muted-foreground backdrop-blur-md">
       <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/60 via-secondary/40 to-accent-purple/50" />
       <div className="container grid gap-10 py-12 lg:grid-cols-[2fr,1fr,1fr]">
         <div className="flex flex-col gap-6">
@@ -38,7 +38,7 @@ export default function Footer() {
               href="https://github.com/knowhub-dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
               aria-label="GitHub"
             >
               <Github className="h-5 w-5" />
@@ -47,7 +47,7 @@ export default function Footer() {
               href="https://t.me/knowhub_community"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
               aria-label="Telegram"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -58,7 +58,7 @@ export default function Footer() {
               href="https://www.youtube.com/@knowhub_uz"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
               aria-label="YouTube"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -69,7 +69,7 @@ export default function Footer() {
               href="https://www.instagram.com/knowhub_uz"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
               aria-label="Instagram"
             >
               <Instagram className="h-5 w-5" />
@@ -78,7 +78,7 @@ export default function Footer() {
               href="https://www.linkedin.com/company/knowhub"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface/85 text-muted-foreground transition hover:border-primary/50 hover:bg-surface/95 hover:text-foreground"
               aria-label="LinkedIn"
             >
               <Linkedin className="h-5 w-5" />
@@ -125,7 +125,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/5 bg-surface/80">
+      <div className="border-t border-border/70 bg-surface/90">
         <div className="container flex flex-col gap-3 py-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
           <p>&copy; {new Date().getFullYear()} KnowHub Community. Barcha huquqlar himoyalangan.</p>
           <div className="flex flex-wrap items-center gap-4">
