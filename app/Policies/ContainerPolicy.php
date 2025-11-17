@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Container;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
+use App\Support\Settings;
 
 class ContainerPolicy
 {
@@ -33,8 +34,8 @@ class ContainerPolicy
             return true;
         }
 
-        $minXp = (int) Config::get('containers.min_xp_required', 0);
-        $maxContainers = (int) Config::get('containers.max_containers_per_user', PHP_INT_MAX);
+        $minXp = (int) Settings::get('mini_services.min_xp_required', Config::get('containers.min_xp_required', 0));
+        $maxContainers = (int) Settings::get('mini_services.max_per_user', Config::get('containers.max_containers_per_user', PHP_INT_MAX));
 
         if ($user->xp < $minXp) {
             return false;

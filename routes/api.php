@@ -6,9 +6,9 @@ use App\Http\Controllers\Auth\EmailAuthController;
 use App\Http\Controllers\Api\V1\{
     PostController, CommentController, VoteController, TagController, CategoryController,
     WikiArticleController, CodeRunController, ProfileController, SearchController,
-    NotificationController, BookmarkController, FollowController, UserController,
+    NotificationController, BookmarkController, FollowController, UserController, LevelController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController, BrandingController, SystemStatusController
+    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController
 };
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
@@ -35,6 +35,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
     Route::get('/settings/logo', [BrandingController::class, 'show']);
     Route::get('/status/summary', [SystemStatusController::class, 'summary']);
+    Route::post('/ai/solvera/chat', [SolveraController::class, 'chat'])
+        ->middleware(RateLimitMiddleware::class . ':ai,20');
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -46,6 +48,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/tags', [TagController::class, 'index']);
         Route::get('/tags/{slug}', [TagController::class, 'show']);
         Route::get('/tags/trending', [TagController::class, 'trending']);
+
+        Route::get('/levels', [LevelController::class, 'index']);
 
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::get('/categories/{slug}', [CategoryController::class, 'show']);
@@ -147,6 +151,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
             Route::post('/branding/logo', [BrandingController::class, 'store']);
             Route::delete('/branding/logo', [BrandingController::class, 'destroy']);
+
+            // System monitoring
+            Route::get('/system/resources', [AdminController::class, 'systemResources']);
+            Route::get('/system/containers', [AdminController::class, 'containerStats']);
 
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);
