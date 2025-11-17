@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\V1\{
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController, LevelController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController, BrandingController, SystemStatusController
+    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController
 };
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
@@ -35,6 +35,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']);
     Route::get('/settings/logo', [BrandingController::class, 'show']);
     Route::get('/status/summary', [SystemStatusController::class, 'summary']);
+    Route::post('/ai/solvera/chat', [SolveraController::class, 'chat'])
+        ->middleware(RateLimitMiddleware::class . ':ai,20');
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);

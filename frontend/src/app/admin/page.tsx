@@ -133,6 +133,15 @@ interface SystemSettings {
   seo_meta_description?: string | null;
   seo_meta_keywords: string[];
   branding: BrandingSettings;
+  solvera?: {
+    enabled: boolean;
+    api_base: string;
+    model: string;
+    temperature: number;
+    max_tokens: number;
+    persona?: string | null;
+    has_api_key?: boolean;
+  };
 }
 
 async function getAdminStats(): Promise<AdminStats> {
@@ -236,6 +245,14 @@ export default function AdminPage() {
   const [aiSuggestionsEnabled, setAiSuggestionsEnabled] = useState(true);
   const [maxPostsPerDay, setMaxPostsPerDay] = useState(10);
   const [maxCommentsPerDay, setMaxCommentsPerDay] = useState(50);
+  const [solveraEnabled, setSolveraEnabled] = useState(true);
+  const [solveraApiBase, setSolveraApiBase] = useState('');
+  const [solveraModel, setSolveraModel] = useState('gtp-5');
+  const [solveraTemperature, setSolveraTemperature] = useState(0.25);
+  const [solveraMaxTokens, setSolveraMaxTokens] = useState(800);
+  const [solveraPersona, setSolveraPersona] = useState('');
+  const [solveraApiKeyInput, setSolveraApiKeyInput] = useState('');
+  const [hasSolveraKey, setHasSolveraKey] = useState(false);
   const [toolMessage, setToolMessage] = useState<string | null>(null);
   const [toolError, setToolError] = useState<string | null>(null);
 
@@ -298,6 +315,13 @@ export default function AdminPage() {
     setAiSuggestionsEnabled(Boolean(systemSettings.ai_suggestions_enabled));
     setMaxPostsPerDay(systemSettings.max_posts_per_day ?? 10);
     setMaxCommentsPerDay(systemSettings.max_comments_per_day ?? 50);
+    setSolveraEnabled(Boolean(systemSettings.solvera?.enabled ?? true));
+    setSolveraApiBase(systemSettings.solvera?.api_base ?? '');
+    setSolveraModel(systemSettings.solvera?.model ?? 'gtp-5');
+    setSolveraTemperature(systemSettings.solvera?.temperature ?? 0.25);
+    setSolveraMaxTokens(systemSettings.solvera?.max_tokens ?? 800);
+    setSolveraPersona(systemSettings.solvera?.persona ?? '');
+    setHasSolveraKey(Boolean(systemSettings.solvera?.has_api_key));
   }, [systemSettings]);
 
   const userStatusMutation = useMutation({
@@ -314,6 +338,7 @@ export default function AdminPage() {
     mutationFn: putSystemSettings,
     onSuccess: () => {
       refetchSystemSettings();
+      setSolveraApiKeyInput('');
     },
     onError: (error: unknown) => {
       alert(`Sozlamalarni yangilashda xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
@@ -795,6 +820,13 @@ export default function AdminPage() {
         ai_suggestions_enabled: aiSuggestionsEnabled,
         max_posts_per_day: Number(maxPostsPerDay),
         max_comments_per_day: Number(maxCommentsPerDay),
+        solvera_enabled: solveraEnabled,
+        solvera_api_base: solveraApiBase || 'https://api.solvera.ai',
+        solvera_model: solveraModel,
+        solvera_temperature: Number(solveraTemperature),
+        solvera_max_tokens: Number(solveraMaxTokens),
+        solvera_persona: solveraPersona,
+        ...(solveraApiKeyInput ? { solvera_api_key: solveraApiKeyInput } : {}),
       });
     };
 
@@ -981,6 +1013,93 @@ export default function AdminPage() {
                   className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
                 />
               </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h4 className="text-sm font-semibold text-[hsl(var(--foreground))]">SolVera AI sozlamalari</h4>
+              <p className="text-xs text-muted-foreground">gtp-5 modelini boshqarish, persona va API sozlamalarini yangilang.</p>
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--foreground))]">
+              <input
+                type="checkbox"
+                checked={solveraEnabled}
+                onChange={(event) => setSolveraEnabled(event.target.checked)}
+                className="h-4 w-4 rounded border-border/70 text-indigo-600 focus:ring-indigo-500"
+              />
+              Faol
+            </label>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              API bazaviy URL
+              <input
+                value={solveraApiBase}
+                onChange={(event) => setSolveraApiBase(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="https://api.solvera.ai"
+              />
+            </label>
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Model nomi
+              <input
+                value={solveraModel}
+                onChange={(event) => setSolveraModel(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="gtp-5"
+              />
+            </label>
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Temperatura (0 - 1)
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.05}
+                value={solveraTemperature}
+                onChange={(event) => setSolveraTemperature(Number(event.target.value))}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </label>
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Maksimal tokenlar
+              <input
+                type="number"
+                min={16}
+                max={32768}
+                value={solveraMaxTokens}
+                onChange={(event) => setSolveraMaxTokens(Number(event.target.value))}
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
+            <label className="block text-sm font-medium text-[hsl(var(--foreground))]">
+              Persona (yo'riqnoma)
+              <textarea
+                value={solveraPersona}
+                onChange={(event) => setSolveraPersona(event.target.value)}
+                className="mt-2 h-32 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="SolVera qanday ohangda javob berishi kerak?"
+              />
+            </label>
+            <div className="space-y-2 rounded-xl border border-dashed border-border/70 bg-[hsl(var(--muted))]/40 p-4 text-sm">
+              <p className="font-semibold text-[hsl(var(--foreground))]">API kaliti</p>
+              <input
+                type="password"
+                value={solveraApiKeyInput}
+                onChange={(event) => setSolveraApiKeyInput(event.target.value)}
+                placeholder={hasSolveraKey ? 'Saqlangan (yangilash uchun kiriting)' : 'Kalitni kiriting'}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+              <p className="text-xs text-muted-foreground">
+                Kalitni faqat yangilash yoki almashtirish kerak bo'lsa kiriting. Saqlangan holat: {hasSolveraKey ? 'mavjud' : 'kiritilmagan'}.
+              </p>
             </div>
           </div>
         </div>

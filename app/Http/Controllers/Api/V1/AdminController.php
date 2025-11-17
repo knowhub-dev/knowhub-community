@@ -602,6 +602,15 @@ class AdminController extends Controller
                 'light' => $this->formatLogo(Settings::get('branding.logo.light')),
                 'dark' => $this->formatLogo(Settings::get('branding.logo.dark')),
             ],
+            'solvera' => [
+                'enabled' => (bool) Settings::get('solvera.enabled', true),
+                'api_base' => Settings::get('solvera.api_base', 'https://api.solvera.ai'),
+                'model' => Settings::get('solvera.model', 'gtp-5'),
+                'temperature' => (float) Settings::get('solvera.temperature', 0.25),
+                'max_tokens' => (int) Settings::get('solvera.max_tokens', 800),
+                'persona' => Settings::get('solvera.persona', 'KnowHub hamjamiyati uchun yordamchi AI'),
+                'has_api_key' => (bool) Settings::get('solvera.api_key'),
+            ],
         ];
 
         return response()->json($settings);
@@ -622,6 +631,13 @@ class AdminController extends Controller
             'site_tagline' => 'sometimes|string|max:200',
             'seo_meta_description' => 'sometimes|string|max:160',
             'seo_meta_keywords' => 'sometimes|array',
+            'solvera_enabled' => 'sometimes|boolean',
+            'solvera_api_base' => 'sometimes|url',
+            'solvera_model' => 'sometimes|string|max:120',
+            'solvera_temperature' => 'sometimes|numeric|min:0|max:1',
+            'solvera_max_tokens' => 'sometimes|integer|min:16|max:32768',
+            'solvera_persona' => 'sometimes|string|max:4000',
+            'solvera_api_key' => 'sometimes|string|max:500',
         ]);
 
         $cacheKeys = [
@@ -633,6 +649,7 @@ class AdminController extends Controller
             'ai_suggestions_enabled',
             'email_notifications_enabled',
             'auto_moderation_enabled',
+            'solvera_enabled',
         ];
 
         foreach (array_intersect_key($data, array_flip($cacheKeys)) as $key => $value) {
@@ -661,6 +678,34 @@ class AdminController extends Controller
 
         if (array_key_exists('seo_meta_keywords', $data)) {
             Settings::set('seo.meta_keywords', array_values($data['seo_meta_keywords']), 'json');
+        }
+
+        if (array_key_exists('solvera_api_base', $data)) {
+            Settings::set('solvera.api_base', rtrim($data['solvera_api_base'], '/'));
+        }
+
+        if (array_key_exists('solvera_enabled', $data)) {
+            Settings::set('solvera.enabled', (bool) $data['solvera_enabled']);
+        }
+
+        if (array_key_exists('solvera_model', $data)) {
+            Settings::set('solvera.model', $data['solvera_model']);
+        }
+
+        if (array_key_exists('solvera_temperature', $data)) {
+            Settings::set('solvera.temperature', (float) $data['solvera_temperature']);
+        }
+
+        if (array_key_exists('solvera_max_tokens', $data)) {
+            Settings::set('solvera.max_tokens', (int) $data['solvera_max_tokens']);
+        }
+
+        if (array_key_exists('solvera_persona', $data)) {
+            Settings::set('solvera.persona', $data['solvera_persona']);
+        }
+
+        if (array_key_exists('solvera_api_key', $data)) {
+            Settings::set('solvera.api_key', $data['solvera_api_key']);
         }
 
         Log::info('System settings updated', [
