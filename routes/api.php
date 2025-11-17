@@ -147,6 +147,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
             Route::post('/branding/logo', [BrandingController::class, 'store']);
             Route::delete('/branding/logo', [BrandingController::class, 'destroy']);
+            Route::get('/system/resources', [SystemStatusController::class, 'systemResources']);
+            Route::get('/system/containers', [SystemStatusController::class, 'containerStats']);
 
             // Container Management Routes
             Route::get('/containers', [ContainerController::class, 'index']);

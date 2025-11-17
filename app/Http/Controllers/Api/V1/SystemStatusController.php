@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Container;
+use Illuminate\Database\Query\Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,37 @@ class SystemStatusController extends Controller
                 'queue_backlog' => $this->getQueueSize(),
             ],
             'updated_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function systemResources(): JsonResponse
+    {
+        [$memoryTotal, $memoryAvailable] = $this->getMemoryStats();
+        [$diskTotal, $diskUsed] = $this->getDiskStats();
+
+        return response()->json([
+            'cpu_usage' => $this->getCpuUsage(),
+            'memory_total' => $memoryTotal,
+            'memory_used' => max(0, $memoryTotal - $memoryAvailable),
+            'disk_total' => $diskTotal,
+            'disk_used' => $diskUsed,
+            'container_count' => Container::count(),
+            'active_users' => $this->getActiveUsersCount(),
+        ]);
+    }
+
+    public function containerStats(): JsonResponse
+    {
+        $statusCounts = Container::query()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return response()->json([
+            'total' => $statusCounts->sum(),
+            'running' => $statusCounts->get('running', 0),
+            'stopped' => $statusCounts->get('stopped', 0) + $statusCounts->get('stopping', 0),
+            'error' => $statusCounts->get('error', 0) + $statusCounts->get('failed', 0),
         ]);
     }
 
@@ -140,6 +173,70 @@ class SystemStatusController extends Controller
         }
 
         return null;
+    }
+
+    private function getCpuUsage(): float
+    {
+        $cores = (int) shell_exec('nproc 2>/dev/null') ?: 1;
+        $loadAverages = sys_getloadavg();
+        $load = $loadAverages[0] ?? 0;
+
+        return min(100, round(($load / max(1, $cores)) * 100, 2));
+    }
+
+    /**
+     * @return array{0: int, 1: int} Memory stats [totalMB, availableMB]
+     */
+    private function getMemoryStats(): array
+    {
+        $meminfoPath = '/proc/meminfo';
+        $totalKb = 0;
+        $availableKb = 0;
+
+        if (is_readable($meminfoPath)) {
+            foreach (@file($meminfoPath) ?: [] as $line) {
+                if (str_starts_with($line, 'MemTotal:')) {
+                    $totalKb = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+                if (str_starts_with($line, 'MemAvailable:')) {
+                    $availableKb = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+            }
+        }
+
+        $totalMb = (int) round($totalKb / 1024);
+        $availableMb = (int) round($availableKb / 1024);
+
+        return [$totalMb, $availableMb];
+    }
+
+    /**
+     * @return array{0: int, 1: int} Disk stats [totalMB, usedMB]
+     */
+    private function getDiskStats(): array
+    {
+        $diskTotalBytes = @disk_total_space('/') ?: 0;
+        $diskFreeBytes = @disk_free_space('/') ?: 0;
+
+        $diskUsedBytes = max(0, $diskTotalBytes - $diskFreeBytes);
+
+        return [
+            (int) round($diskTotalBytes / 1024 / 1024),
+            (int) round($diskUsedBytes / 1024 / 1024),
+        ];
+    }
+
+    private function getActiveUsersCount(): int
+    {
+        try {
+            return (int) DB::table('users')
+                ->where('updated_at', '>=', now()->subMinutes(5))
+                ->count();
+        } catch (Exception $exception) {
+            Log::warning('Status check: failed to count active users', ['error' => $exception->getMessage()]);
+        }
+
+        return 0;
     }
 
     private function servicePayload(string $name, string $status, string $description, ?float $latencyMs): array
