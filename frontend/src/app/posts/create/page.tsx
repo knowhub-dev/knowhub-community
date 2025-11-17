@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,8 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import Mention from '@tiptap/extension-mention';
+import AiSuggestionsPanel from '@/components/AiSuggestionsPanel';
+import { AiProgressUpdate, AiSuggestion, AiSuggestionStatus, createAiSuggestionStream } from '@/lib/services/ai-suggestions';
 
 interface Category {
   id: number;
@@ -60,6 +62,13 @@ export default function CreatePostPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [aiStatus, setAiStatus] = useState<AiSuggestionStatus>('idle');
+  const [aiProgress, setAiProgress] = useState<AiProgressUpdate | undefined>();
+  const [aiTransport, setAiTransport] = useState<'sse' | 'websocket'>('sse');
+  const [aiError, setAiError] = useState<string | undefined>();
+  const [aiReplayKey, setAiReplayKey] = useState(0);
+  const streamCleanupRef = useRef<() => void>();
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -247,6 +256,79 @@ export default function CreatePostPage() {
 
     return actions;
   }, [editor, imagePreview]);
+
+  useEffect(() => {
+    if (!content.trim()) {
+      setAiSuggestions([]);
+      setAiStatus('idle');
+      setAiProgress(undefined);
+      setAiError(undefined);
+      streamCleanupRef.current?.();
+      streamCleanupRef.current = undefined;
+      return;
+    }
+
+    const controller = new AbortController();
+    const debounceTimer = window.setTimeout(() => {
+      streamCleanupRef.current?.();
+      setAiProgress(undefined);
+      setAiError(undefined);
+
+      const cleanup = createAiSuggestionStream({
+        content,
+        transport: aiTransport,
+        signal: controller.signal,
+        onSuggestion: (suggestion) => {
+          setAiSuggestions((prev) => {
+            const existingIndex = prev.findIndex((item) => item.id === suggestion.id);
+            if (existingIndex !== -1) {
+              const updated = [...prev];
+              updated[existingIndex] = { ...updated[existingIndex], ...suggestion };
+              return updated;
+            }
+
+            return [suggestion, ...prev].slice(0, 20);
+          });
+        },
+        onStatusChange: (status) => {
+          setAiStatus(status);
+          if (status === 'rate_limited') {
+            setAiError('AI vaqtincha javob bera olmadi. Bir ozdan so\'ng qayta urinib ko\'ring.');
+          }
+          if (status === 'error') {
+            setAiError('AI tavsiyalar oqimida xatolik yuz berdi.');
+          }
+          if (status === 'done') {
+            streamCleanupRef.current?.();
+            streamCleanupRef.current = undefined;
+          }
+        },
+        onProgress: (payload) => setAiProgress(payload),
+        onError: (message) => setAiError(message),
+      });
+
+      streamCleanupRef.current = cleanup;
+    }, 600);
+
+    return () => {
+      controller.abort();
+      clearTimeout(debounceTimer);
+      streamCleanupRef.current?.();
+    };
+  }, [content, aiTransport, aiReplayKey]);
+
+  const handleApplySuggestion = (text: string) => {
+    if (!editor || !text) return;
+    editor.chain().focus().insertContent(text).run();
+  };
+
+  const handleRetryStream = () => {
+    setAiSuggestions([]);
+    setAiError(undefined);
+    setAiProgress(undefined);
+    setAiStatus('connecting');
+    setAiReplayKey((key) => key + 1);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -512,42 +594,58 @@ export default function CreatePostPage() {
               <label htmlFor="content-editor" className="block text-sm font-medium text-gray-700 mb-2">
                 Post kontenti *
               </label>
-              {!editor ? (
-                <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                  <div className="text-center">
-                    <div className="animate-spin w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-gray-600">Editor yuklanmoqda...</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    {toolbarGroups.map((group, groupIndex) => (
-                      <div key={`group-${groupIndex}`} className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-                        {group.map((action) => (
-                          <button
-                            key={action.label}
-                            type="button"
-                            onClick={action.command}
-                            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-sm border border-transparent hover:bg-white hover:border-gray-200 ${
-                              action.isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'text-gray-700'
-                            }`}
-                            title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
-                          >
-                            {action.icon}
-                            <span>{action.label}</span>
-                          </button>
+              <div className="grid gap-4 lg:grid-cols-4">
+                <div className="lg:col-span-3">
+                  {!editor ? (
+                    <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                      <div className="text-center">
+                        <div className="animate-spin w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p className="text-gray-600">Editor yuklanmoqda...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {toolbarGroups.map((group, groupIndex) => (
+                          <div key={`group-${groupIndex}`} className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                            {group.map((action) => (
+                              <button
+                                key={action.label}
+                                type="button"
+                                onClick={action.command}
+                                className={`flex items-center space-x-1 px-2 py-1 rounded-md text-sm border border-transparent hover:bg-white hover:border-gray-200 ${
+                                  action.isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'text-gray-700'
+                                }`}
+                                title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
+                              >
+                                {action.icon}
+                                <span>{action.label}</span>
+                              </button>
+                            ))}
+                          </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
-                  <div className="border border-gray-300 rounded-lg min-h-[384px]">
-                    <EditorContent id="content-editor" editor={editor} className="prose max-w-none p-4 focus:outline-none" />
+                      <div className="border border-gray-300 rounded-lg min-h-[384px]">
+                        <EditorContent id="content-editor" editor={editor} className="prose max-w-none p-4 focus:outline-none" />
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 text-sm text-gray-500">
+                    <p><strong>TipTap WYSIWYG Editor</strong> - toolbar orqali heading, matn uslublari, kod bloklari, ro'yxatlar, jadval va mention qo'shish mumkin. Qisqa tugmalar: <code>Mod+B</code>, <code>Mod+I</code>, <code>Shift+Tab</code>.</p>
                   </div>
                 </div>
-              )}
-              <div className="mt-3 text-sm text-gray-500">
-                <p><strong>TipTap WYSIWYG Editor</strong> - toolbar orqali heading, matn uslublari, kod bloklari, ro'yxatlar, jadval va mention qo'shish mumkin. Qisqa tugmalar: <code>Mod+B</code>, <code>Mod+I</code>, <code>Shift+Tab</code>.</p>
+                <div className="lg:col-span-1">
+                  <AiSuggestionsPanel
+                    suggestions={aiSuggestions}
+                    status={aiStatus}
+                    progress={aiProgress}
+                    transport={aiTransport}
+                    onTransportChange={setAiTransport}
+                    onApply={handleApplySuggestion}
+                    onRetry={handleRetryStream}
+                    errorMessage={aiError}
+                  />
+                </div>
               </div>
             </div>
 
