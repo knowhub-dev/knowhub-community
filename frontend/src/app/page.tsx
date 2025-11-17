@@ -892,10 +892,190 @@ export default function HomePage() {
 
   return (
     <main className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
-        <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.25),_transparent_65%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.22),_transparent_60%)]" />
+      {auth.isAuthenticated && (
+        <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
+          <div className="absolute inset-0 -z-10 opacity-80" aria-hidden="true">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.18),_transparent_65%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.18),_transparent_60%)]" />
+          </div>
+          <div className="mx-auto max-w-6xl px-6 py-12 lg:px-8">
+            <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+              <div className="space-y-6 rounded-[28px] border border-border/60 bg-[hsl(var(--card))]/90 p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))] px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
+                  Xush kelibsiz, {auth.user?.name ?? auth.user?.username ?? "a'zo"}
+                </div>
+                <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
+                  Shaxsiy lentani davom ettiring
+                </h1>
+                <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+                  GitHub’dagi kabi: kuzatayotganingiz, saqlaganlaringiz va yangi postlarni yozish uchun bitta markaz.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="gap-2 rounded-full px-6 text-base font-semibold shadow-[0_18px_45px_rgba(14,116,144,0.35)]"
+                  >
+                    <Link href="/posts/create">
+                      Post yaratish
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="gap-2 rounded-full border-border px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]"
+                  >
+                    <Link href="/dashboard">
+                      Mening dashboardim
+                      <TrendingUp className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="lg"
+                    className="gap-2 rounded-full text-base font-semibold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10"
+                  >
+                    <Link href="/bookmarks">
+                      Saqlanganlar
+                      <Medal className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+                <div className="grid max-w-xl grid-cols-2 gap-3 text-xs text-muted-foreground sm:grid-cols-3">
+                  {statsCards.map((card) => {
+                    const Icon = card.icon;
+                    return (
+                      <div key={card.label} className="rounded-2xl border border-border/70 bg-[hsl(var(--surface))] p-4 shadow-sm dark:border-border/60 dark:bg-[hsl(var(--card))]/70">
+                        <div className={`flex items-center gap-2 ${card.accentClass}`}>
+                          <Icon className="h-4 w-4" />
+                          {card.label}
+                        </div>
+                        <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(card.value)}</p>
+                        <p>{card.subtitle}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-5">
+                <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-muted-foreground">Siz uchun tezkor ishlar</p>
+                    <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {quickActions.slice(0, 3).map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <Link
+                          key={action.href}
+                          href={action.href}
+                          className={`group flex flex-col justify-between rounded-2xl border border-border bg-[hsl(var(--card))] p-4 text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-xl bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
+                              <Icon className="h-4 w-4" />
+                            </span>
+                            <div className="text-sm font-semibold">{action.title}</div>
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">{action.description}</p>
+                          <span className={`mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                            {action.ctaLabel} <ArrowRight className="h-3 w-3" />
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Joriy faollik</p>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface))] px-3 py-1 text-xs font-semibold text-[hsl(var(--secondary))]">
+                      <Sparkles className="h-4 w-4" />
+                      Live
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {heroFeed.length ? (
+                      heroFeed.map((event) => (
+                        <div key={`${event.type}-${event.id}`} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
+                          <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/10 p-2">{activityIcon(event.type)}</div>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {event.user ? (
+                                <Link href={`/profile/${event.user.username}`} className="font-medium text-[hsl(var(--foreground))] transition hover:text-[hsl(var(--primary))]">
+                                  {event.user.name}
+                                </Link>
+                              ) : (
+                                <span className="font-medium text-muted-foreground">Anonim</span>
+                              )}
+                              <span>•</span>
+                              <span>{timeAgo(event.created_at)}</span>
+                            </div>
+                            {activityDescription(event)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-border/60 px-4 py-6 text-center text-sm text-muted-foreground">
+                        Faollik yuklanmoqda...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-[1.6fr,1fr]">
+              <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Mening kuzatishim</p>
+                  <Link href="/following" className="text-xs font-semibold text-[hsl(var(--primary))] hover:underline">
+                    Obunalar
+                  </Link>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">Saqlangan yoki kuzatib borayotgan muhokamalaringizga tez qayting.</p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  {heroTags.length ? (
+                    heroTags.map((tag) => (
+                      <span
+                        key={tag.slug ?? tag.name}
+                        className="rounded-full border border-border/60 bg-[hsl(var(--surface))] px-3 py-1 text-[hsl(var(--foreground))]"
+                      >
+                        #{tag.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="rounded-full border border-dashed border-border/60 px-3 py-1 text-muted-foreground">
+                      Teglar yuklanmoqda...
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Stack Overflow qoidalari</h3>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Savolingiz yoki yechimingiz hamjamiyat standartlariga mos bo'lishi uchun ushbu tezkor tekshiruvdan o'ting.
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  <li>• Sarlavhaga muammo va kontekstni qo'shing.</li>
+                  <li>• Kod parchalarini va kutilgan natijani aniq yozing.</li>
+                  <li>• Taglardan foydalanib, qidiruvni yengillashtiring.</li>
+                  <li>• GitHub PR'lardagi kabi qisqa changelog yozing.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!auth.isAuthenticated && (
+        <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
+          <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.25),_transparent_65%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.22),_transparent_60%)]" />
         </div>
         <div className="mx-auto max-w-6xl px-6 py-16 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
@@ -1019,6 +1199,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       <section className="max-w-6xl px-6 py-12 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-2">
