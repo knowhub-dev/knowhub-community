@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use App\Support\Settings;
 use Throwable;
 use RuntimeException;
 
@@ -236,11 +237,13 @@ class ContainerController extends Controller
         $user = $request->user();
 
         $allowedImages = config('containers.allowed_images', []);
-        $maxContainers = (int) config('containers.max_containers_per_user', PHP_INT_MAX);
+        $maxContainers = (int) Settings::get('mini_services.max_per_user', config('containers.max_containers_per_user', PHP_INT_MAX));
         $currentCount = $user->containers()->count();
         $isAdmin = (bool) $user->is_admin;
         $remaining = $isAdmin ? null : max(0, $maxContainers - $currentCount);
         $reservedSubdomains = config('containers.reserved_subdomains', []);
+        $minXpRequired = (int) Settings::get('mini_services.min_xp_required', config('containers.min_xp_required', 0));
+        $mysqlInstances = (int) Settings::get('mini_services.mysql_instances_per_user', config('containers.mysql_instances_per_user', 2));
 
         return response()->json([
             'allowed_images' => $allowedImages,
@@ -248,13 +251,20 @@ class ContainerController extends Controller
             'current_count' => $currentCount,
             'remaining_slots' => $remaining,
             'can_create' => $user->can('create', Container::class),
-            'min_xp_required' => (int) config('containers.min_xp_required', 0),
+            'min_xp_required' => $minXpRequired,
             'max_env_vars' => (int) config('containers.max_env_vars', 0),
             'env_value_max_length' => (int) config('containers.env_value_max_length', 0),
             'domain_suffix' => config('containers.domain_suffix'),
             'reserved_subdomains' => $reservedSubdomains,
             'subdomain_min_length' => (int) config('containers.subdomain_min_length', 3),
             'subdomain_max_length' => (int) config('containers.subdomain_max_length', 30),
+            'mini_services' => [
+                'enabled' => (bool) Settings::get('mini_services.enabled', true),
+                'min_xp_required' => $minXpRequired,
+                'max_per_user' => $maxContainers,
+                'git_clone_enabled' => (bool) Settings::get('mini_services.git_clone_enabled', config('containers.git_clone_enabled', true)),
+                'mysql_instances_per_user' => $mysqlInstances,
+            ],
         ]);
     }
 
