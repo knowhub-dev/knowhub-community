@@ -8,6 +8,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import PostCard from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SolveraChatCard } from "@/components/SolveraChatCard";
 import type { AxiosError } from "axios";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -175,10 +176,10 @@ type FeedTab = {
 };
 
 const FEED_TABS: FeedTab[] = [
-  { value: "latest", label: "So'nggilari" },
-  { value: "popular", label: "Trenddagilar" },
-  { value: "following", label: "Mening obunalarim", authOnly: true },
-];
+      { value: "latest", label: "So'nggilari" },
+      { value: "popular", label: "Trenddagilar" },
+      { value: "following", label: "Mening obunalarim", authOnly: true },
+    ];
 
 const LANGUAGE_SNIPPETS: Record<string, string> = {
   javascript: `function greet(name) {\n  return \`Salom, \${name}!\`;\n}\n\nconsole.log(greet('KnowHub'));`,
@@ -796,7 +797,7 @@ export default function HomePage() {
       {
         href: "/posts/create",
         title: "Savol yoki issue ochish",
-        description: "Stack Overflow formatida savol bering yoki GitHub muammosini baham ko'ring.",
+        description: "Savolingizni yozing va SolVera takliflari bilan birga nashr qiling.",
         icon: MessageCircle,
         accentClass: "text-[hsl(var(--primary))]",
         hoverClass: "hover:border-[hsl(var(--primary))]/60 hover:bg-[hsl(var(--primary))]/5",
@@ -816,7 +817,7 @@ export default function HomePage() {
       {
         href: "/containers",
         title: "Laboratoriya muhiti",
-        description: "GitHub Codespacesga o'xshash mini-serverlarda tajriba o'tkazing.",
+        description: "Mini-serverlarda tajriba o'tkazing, kodlaringizni SolVera bilan sharhlang.",
         icon: Server,
         accentClass: "text-[hsl(var(--accent-green))]",
         hoverClass: "hover:border-[hsl(var(--accent-green))]/60 hover:bg-[hsl(var(--accent-green))]/5",
@@ -826,7 +827,7 @@ export default function HomePage() {
       {
         href: "/leaderboard",
         title: "Mentorlarni toping",
-        description: "Stack Overflow dagi kabi yetakchi a'zolardan maslahat oling.",
+        description: "Eng faol a'zolar va SolVera tavsiyalari bilan yo'nalishingizni toping.",
         icon: Users,
         accentClass: "text-[hsl(var(--secondary))]",
         hoverClass: "hover:border-[hsl(var(--secondary))]/60 hover:bg-[hsl(var(--secondary))]/5",
@@ -908,7 +909,7 @@ export default function HomePage() {
                   Shaxsiy lentani davom ettiring
                 </h1>
                 <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-                  GitHub’dagi kabi: kuzatayotganingiz, saqlaganlaringiz va yangi postlarni yozish uchun bitta markaz.
+                  SolVera bilan to'liq jihozlangan: kuzatayotganingiz, saqlaganlaringiz va yangi postlar uchun shaxsiy maydon.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
@@ -1055,15 +1056,15 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Stack Overflow qoidalari</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Hamjamiyat yozish qo'llanmasi</h3>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Savolingiz yoki yechimingiz hamjamiyat standartlariga mos bo'lishi uchun ushbu tezkor tekshiruvdan o'ting.
+                  Savolingiz yoki yechimingiz yanada tushunarli chiqishi uchun shu tekshiruvdan foydalaning. SolVera aynan shu struktura asosida tavsiya beradi.
                 </p>
                 <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                   <li>• Sarlavhaga muammo va kontekstni qo'shing.</li>
                   <li>• Kod parchalarini va kutilgan natijani aniq yozing.</li>
                   <li>• Taglardan foydalanib, qidiruvni yengillashtiring.</li>
-                  <li>• GitHub PR'lardagi kabi qisqa changelog yozing.</li>
+                  <li>• SolVera tavsiyasini qisqa changelog sifatida qo'shing.</li>
                 </ul>
               </div>
             </div>
@@ -1081,13 +1082,13 @@ export default function HomePage() {
           <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
             <div className="space-y-8 rounded-[32px] border border-border/60 bg-[hsl(var(--card))] p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))] px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-                GitHub × Stack Overflow ruhi
+                SolVera kuchaytirgan hamjamiyat
               </div>
               <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
                 KnowHub Community: Dasturchilar Uchun Yangi Maydon
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. Bu yerda sizning g'oyalaringiz kodga aylanadi va Stack Overflow'dagi kabi savollarga aniq javoblar topiladi.
+                Bilim ulashing, loyihalar yarating, hamjamiyat bilan rivojlaning. SolVera yozganlaringizni jilolab, savolingizni aniq ifodalashga yordam beradi.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button
@@ -1131,7 +1132,7 @@ export default function HomePage() {
             <div className="space-y-5">
               <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-muted-foreground">GitHub uslubidagi backlog</p>
+                  <p className="text-sm font-semibold text-muted-foreground">Tezkor backlog</p>
                   <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
                 </div>
                 <div className="mt-6 space-y-3">
@@ -1153,7 +1154,7 @@ export default function HomePage() {
               </div>
               <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-muted-foreground">Stack Overflow uslubidagi jonli muhokamalar</p>
+                  <p className="text-sm font-semibold text-muted-foreground">Hamjamiyatning jonli muhokamalari</p>
                   <div className="flex flex-wrap gap-2 text-xs">
                     {heroTags.length ? (
                     heroTags.map((tag) => (
@@ -1202,6 +1203,48 @@ export default function HomePage() {
       )}
 
       <section className="max-w-6xl px-6 py-12 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+          <div className="space-y-4 rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))/40] bg-[hsl(var(--primary))/10] px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">
+              SolVera
+              <span className="rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))]">Beta</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-[hsl(var(--foreground))] sm:text-3xl">Postlarni SolVera bilan jilolang</h2>
+            <p className="text-sm text-muted-foreground">
+              KnowHub jamoasining AI  modeli yozganlaringizni silliqlaydi, CTAlarni boyitadi va kod sharhlarini tezkor taklif qiladi.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4 text-sm">
+                <p className="font-semibold text-[hsl(var(--foreground))]">Yozish va qayta yozish</p>
+                <p className="text-xs text-muted-foreground">Sarlavha, muammo bayoni va changelogni SolVera bilan tayyorlang.</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4 text-sm">
+                <p className="font-semibold text-[hsl(var(--foreground))]">Kod uchun chaqmoq sharhlar</p>
+                <p className="text-xs text-muted-foreground">Snippetlaringizni tushuntirish yoki refaktor g'oyalarini olish.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/solvera"
+                className="inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] shadow-lg shadow-[hsl(var(--primary))/25] transition hover:brightness-110"
+              >
+                SolVera haqida batafsil
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/posts/create"
+                className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+              >
+                Post yaratish
+                <Sparkles className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+          <SolveraChatCard context={{ surface: "homepage" }} />
+        </div>
+      </section>
+
+      <section className="max-w-6xl px-6 py-12 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <SystemStatusWidget status={systemStatus} />
           <CodeRunnerCard />
@@ -1214,7 +1257,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tezkor harakatlar</p>
-                <p className="text-lg font-semibold">GitHub va Stack Overflow ruhidagi oqimlar</p>
+                <p className="text-lg font-semibold">KnowHub oqimlari</p>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -1267,15 +1310,15 @@ export default function HomePage() {
               </div>
             </div>
             <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Stack Overflow qoidalari</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Hamjamiyat yozish qo'llanmasi</h3>
               <p className="mt-3 text-sm text-muted-foreground">
-                Savolingiz yoki yechimingiz hamjamiyat standartlariga mos bo'lishi uchun ushbu tezkor tekshiruvdan o'ting.
+                Savolingiz yoki yechimingiz yanada tushunarli chiqishi uchun shu tekshiruvdan foydalaning. SolVera aynan shu struktura asosida tavsiya beradi.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>• Sarlavhaga muammo va kontekstni qo'shing.</li>
                 <li>• Kod parchalarini va kutilgan natijani aniq yozing.</li>
                 <li>• Taglardan foydalanib, qidiruvni yengillashtiring.</li>
-                <li>• GitHub PR'lardagi kabi qisqa changelog yozing.</li>
+                <li>• SolVera tavsiyasini qisqa changelog sifatida qo'shing.</li>
               </ul>
             </div>
           </div>

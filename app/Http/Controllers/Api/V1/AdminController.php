@@ -14,6 +14,7 @@ use App\Models\Notification;
 use App\Models\Vote;
 use App\Models\Follow;
 use App\Models\Bookmark;
+use App\Models\Container;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -42,7 +43,7 @@ class AdminController extends Controller
     public function dashboard()
     {
         $cacheKey = 'admin:dashboard:stats';
-        
+
         $stats = Cache::remember($cacheKey, 300, function () {
             return [
                 'users' => [
@@ -51,6 +52,7 @@ class AdminController extends Controller
                     'active_today' => User::whereDate('updated_at', today())->count(),
                     'new_this_week' => User::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
+                    'active' => User::where('updated_at', '>=', now()->subDays(7))->count(),
                     'banned' => User::where('is_banned', true)->count(),
                     'admins' => User::where('is_admin', true)->count(),
                     'online_now' => User::where('updated_at', '>=', now()->subMinutes(5))->count(),
@@ -83,6 +85,8 @@ class AdminController extends Controller
                     'this_week' => Comment::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'this_month' => Comment::whereMonth('created_at', now()->month)->count(),
                     'high_score' => Comment::where('score', '>', 5)->count(),
+                    'pending' => 0,
+                    'pending_moderation' => 0,
                     'avg_score' => round(Comment::avg('score'), 2),
                     'top_commenters' => User::withCount('comments')
                         ->orderByDesc('comments_count')
@@ -170,6 +174,11 @@ class AdminController extends Controller
                         ->limit(5)
                         ->get(['id', 'title', 'slug', 'bookmarks_count']),
                 ],
+                'reports' => [
+                    'total' => 0,
+                    'pending' => 0,
+                    'resolved' => 0,
+                ],
                 'system' => [
                     'php_version' => PHP_VERSION,
                     'laravel_version' => app()->version(),
@@ -198,6 +207,34 @@ class AdminController extends Controller
         });
 
         return response()->json($stats);
+    }
+
+    public function systemResources()
+    {
+        $memory = $this->getMemoryStats();
+        $disk = $this->getDiskStats();
+
+        return response()->json([
+            'cpu_usage' => $this->getCpuUsagePercentage(),
+            'memory_total' => $memory['total'],
+            'memory_used' => $memory['used'],
+            'disk_total' => $disk['total'],
+            'disk_used' => $disk['used'],
+            'container_count' => Container::count(),
+            'active_users' => User::where('updated_at', '>=', now()->subMinutes(5))->count(),
+        ]);
+    }
+
+    public function containerStats()
+    {
+        $total = Container::count();
+
+        return response()->json([
+            'total' => $total,
+            'running' => Container::where('status', 'running')->count(),
+            'stopped' => Container::whereIn('status', ['stopped', 'created'])->count(),
+            'error' => Container::whereIn('status', ['error', 'failed'])->count(),
+        ]);
     }
 
     public function users(Request $request)
@@ -237,7 +274,13 @@ class AdminController extends Controller
         }
 
         if ($level = $request->get('level')) {
-            $query->whereHas('level', fn($q) => $q->where('slug', $level));
+            if (is_numeric($level)) {
+                $query->where('level_id', (int)$level);
+            } else {
+                $query->whereHas('level', function ($q) use ($level) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower(str_replace('-', ' ', $level))]);
+                });
+            }
         }
 
         $users = $query->latest()->paginate(20);
@@ -559,6 +602,15 @@ class AdminController extends Controller
                 'light' => $this->formatLogo(Settings::get('branding.logo.light')),
                 'dark' => $this->formatLogo(Settings::get('branding.logo.dark')),
             ],
+            'solvera' => [
+                'enabled' => (bool) Settings::get('solvera.enabled', true),
+                'api_base' => Settings::get('solvera.api_base', 'https://api.solvera.ai'),
+                'model' => Settings::get('solvera.model', 'gtp-5'),
+                'temperature' => (float) Settings::get('solvera.temperature', 0.25),
+                'max_tokens' => (int) Settings::get('solvera.max_tokens', 800),
+                'persona' => Settings::get('solvera.persona', 'KnowHub hamjamiyati uchun yordamchi AI'),
+                'has_api_key' => (bool) Settings::get('solvera.api_key'),
+            ],
         ];
 
         return response()->json($settings);
@@ -579,6 +631,13 @@ class AdminController extends Controller
             'site_tagline' => 'sometimes|string|max:200',
             'seo_meta_description' => 'sometimes|string|max:160',
             'seo_meta_keywords' => 'sometimes|array',
+            'solvera_enabled' => 'sometimes|boolean',
+            'solvera_api_base' => 'sometimes|url',
+            'solvera_model' => 'sometimes|string|max:120',
+            'solvera_temperature' => 'sometimes|numeric|min:0|max:1',
+            'solvera_max_tokens' => 'sometimes|integer|min:16|max:32768',
+            'solvera_persona' => 'sometimes|string|max:4000',
+            'solvera_api_key' => 'sometimes|string|max:500',
         ]);
 
         $cacheKeys = [
@@ -590,6 +649,7 @@ class AdminController extends Controller
             'ai_suggestions_enabled',
             'email_notifications_enabled',
             'auto_moderation_enabled',
+            'solvera_enabled',
         ];
 
         foreach (array_intersect_key($data, array_flip($cacheKeys)) as $key => $value) {
@@ -618,6 +678,34 @@ class AdminController extends Controller
 
         if (array_key_exists('seo_meta_keywords', $data)) {
             Settings::set('seo.meta_keywords', array_values($data['seo_meta_keywords']), 'json');
+        }
+
+        if (array_key_exists('solvera_api_base', $data)) {
+            Settings::set('solvera.api_base', rtrim($data['solvera_api_base'], '/'));
+        }
+
+        if (array_key_exists('solvera_enabled', $data)) {
+            Settings::set('solvera.enabled', (bool) $data['solvera_enabled']);
+        }
+
+        if (array_key_exists('solvera_model', $data)) {
+            Settings::set('solvera.model', $data['solvera_model']);
+        }
+
+        if (array_key_exists('solvera_temperature', $data)) {
+            Settings::set('solvera.temperature', (float) $data['solvera_temperature']);
+        }
+
+        if (array_key_exists('solvera_max_tokens', $data)) {
+            Settings::set('solvera.max_tokens', (int) $data['solvera_max_tokens']);
+        }
+
+        if (array_key_exists('solvera_persona', $data)) {
+            Settings::set('solvera.persona', $data['solvera_persona']);
+        }
+
+        if (array_key_exists('solvera_api_key', $data)) {
+            Settings::set('solvera.api_key', $data['solvera_api_key']);
         }
 
         Log::info('System settings updated', [
@@ -792,6 +880,33 @@ class AdminController extends Controller
         return $this->formatBytes(memory_get_usage(true));
     }
 
+    private function getMemoryStats(): array
+    {
+        $total = 0;
+        $available = 0;
+
+        if (is_readable('/proc/meminfo')) {
+            $meminfo = file('/proc/meminfo');
+            foreach ($meminfo as $line) {
+                if (str_starts_with($line, 'MemTotal:')) {
+                    $total = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+
+                if (str_starts_with($line, 'MemAvailable:')) {
+                    $available = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+            }
+        }
+
+        $totalMb = (int) round($total / 1024);
+        $usedMb = $total > 0 ? (int) round(($total - $available) / 1024) : 0;
+
+        return [
+            'total' => max($totalMb, 0),
+            'used' => max($usedMb, 0),
+        ];
+    }
+
     private function getDiskUsage(): string
     {
         try {
@@ -808,6 +923,38 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return 'N/A';
         }
+    }
+
+    private function getDiskStats(): array
+    {
+        $total = disk_total_space('/') ?: 0;
+        $free = disk_free_space('/') ?: 0;
+
+        $totalMb = (int) round($total / 1024 / 1024);
+        $usedMb = $total > 0 ? (int) round(($total - $free) / 1024 / 1024) : 0;
+
+        return [
+            'total' => max($totalMb, 0),
+            'used' => max($usedMb, 0),
+        ];
+    }
+
+    private function getCpuUsagePercentage(): float
+    {
+        $load = sys_getloadavg();
+        $cores = 1;
+
+        if (function_exists('shell_exec')) {
+            $coreCount = (int) shell_exec('nproc 2>/dev/null');
+            if ($coreCount > 0) {
+                $cores = $coreCount;
+            }
+        }
+
+        $oneMinuteLoad = $load[0] ?? 0;
+        $percentage = ($oneMinuteLoad / max(1, $cores)) * 100;
+
+        return round(min($percentage, 100), 1);
     }
 
     private function formatBytes($bytes, $precision = 2): string

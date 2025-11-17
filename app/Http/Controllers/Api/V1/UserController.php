@@ -7,6 +7,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -24,7 +25,13 @@ class UserController extends Controller
         }
 
         if ($level = $request->get('level')) {
-            $query->whereHas('level', fn($q) => $q->where('slug', $level));
+            if (is_numeric($level)) {
+                $query->where('level_id', (int)$level);
+            } else {
+                $query->whereHas('level', function ($q) use ($level) {
+                    $q->whereRaw('LOWER(name) = ?', [Str::of($level)->replace('-', ' ')->lower()]);
+                });
+            }
         }
 
         switch ($request->get('sort', 'xp')) {

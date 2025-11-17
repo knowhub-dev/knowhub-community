@@ -17,6 +17,7 @@ import TableCell from '@tiptap/extension-table-cell';
 import Mention from '@tiptap/extension-mention';
 import AiSuggestionsPanel from '@/components/AiSuggestionsPanel';
 import { AiProgressUpdate, AiSuggestion, AiSuggestionStatus, createAiSuggestionStream } from '@/lib/services/ai-suggestions';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Category {
   id: number;
@@ -52,7 +53,7 @@ async function getTags() {
 
 export default function CreatePostPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -362,6 +363,14 @@ export default function CreatePostPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
