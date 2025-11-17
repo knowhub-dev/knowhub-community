@@ -1,12 +1,20 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ArrowLeft, Save, Eye, X } from 'lucide-react';
+import { ArrowLeft, Save, Eye, X, Code2, Bold, Italic, Heading2, List, ListOrdered, Image as ImageIcon, Table as TableIcon, AtSign, Undo2, Redo2, Type } from 'lucide-react';
 import Link from 'next/link';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
+import Mention from '@tiptap/extension-mention';
 
 interface Category {
   id: number;
@@ -49,11 +57,9 @@ export default function CreatePostPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [editorLoaded, setEditorLoaded] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const editorRef = useRef<any>(null);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -70,138 +76,181 @@ export default function CreatePostPage() {
   const categories = categoriesData?.data || [];
   const tags = tagsData?.data || [];
 
-  // TinyMCE ni CDN orqali yuklash
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+      }).extend({
+        addKeyboardShortcuts() {
+          return {
+            'Mod-b': () => this.editor.commands.toggleBold(),
+            'Mod-i': () => this.editor.commands.toggleItalic(),
+            'Shift-Tab': () => this.editor.commands.liftListItem('listItem'),
+          };
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'Postni shu yerga yozing...',
+      }),
+      Image.configure({ inline: false }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-indigo-600 font-semibold',
+        },
+        suggestion: {
+          items: ({ query }) => {
+            const mentions = ['@developer', '@designer', '@community'];
+            if (!query) return mentions;
+            return mentions.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
+          },
+          render: () => ({
+            onStart() {},
+            onUpdate() {},
+            onKeyDown() {
+              return false;
+            },
+            onExit() {},
+          }),
+        },
+      }),
+    ],
+    content,
+    autofocus: true,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+  });
+
   useEffect(() => {
-    if (typeof window !== 'undefined' && !editorLoaded) {
-      loadTinyMCE();
-    }
-
     return () => {
-      if (editorRef.current) {
-        try {
-          editorRef.current.destroy();
-        } catch (e) {
-          console.log('Editor destroy error:', e);
-        }
-        editorRef.current = null;
-      }
+      editor?.destroy();
     };
-  }, [editorLoaded]);
-
-  const loadTinyMCE = () => {
-    // Avval TinyMCE borligini tekshiramiz
-    if ((window as any).tinymce) {
-      setEditorLoaded(true);
-      initTinyMCE();
-      return;
-    }
-
-    // TinyMCE CDN scriptini yuklash
-    const script = document.createElement('script');
-    script.src = `https://cdn.tiny.cloud/1/${process.env.NEXT_PUBLIC_TINYMCE_API_KEY}/tinymce/6/tinymce.min.js`;
-    script.referrerPolicy = 'origin';
-    script.async = true;
-    
-    script.onload = () => {
-      console.log('TinyMCE loaded successfully');
-      setEditorLoaded(true);
-      setTimeout(() => initTinyMCE(), 100); // Kichik kechikish bilan ishga tushiramiz
-    };
-    
-    script.onerror = () => {
-      console.error('TinyMCE CDN yuklashda xatolik yuz berdi');
-      // Fallback: alternative CDN
-      const fallbackScript = document.createElement('script');
-      fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js';
-      fallbackScript.onload = () => {
-        console.log('TinyMCE loaded from fallback CDN');
-        setEditorLoaded(true);
-        setTimeout(() => initTinyMCE(), 100);
-      };
-      fallbackScript.onerror = () => {
-        console.error('TinyMCE fallback CDN ham yuklanmadi');
-        setEditorLoaded(true); // Xatolik holatida ham loaded deb belgilaymiz
-      };
-      document.head.appendChild(fallbackScript);
-    };
-    
-    document.head.appendChild(script);
-  };
-
-  const initTinyMCE = () => {
-    if (typeof window === 'undefined' || !(window as any).tinymce) {
-      console.log('TinyMCE not available yet');
-      return;
-    }
-
-    const tinymce = (window as any).tinymce;
-    
-    try {
-      // Agar editor allaqachon mavjud bo'lsa, uni o'chirib tashlaymiz
-      if (editorRef.current) {
-        try {
-          editorRef.current.destroy();
-        } catch (e) {
-          console.log('Editor destroy error:', e);
-        }
-        editorRef.current = null;
-      }
-
-      // Eski editorlarni tozalash
-      tinymce.remove('#content-editor');
-
-      // TinyMCE CSS ni qo'shish
-      if (!document.querySelector('link[href*="tinymce/skins/ui/oxide/skin.min.css"]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = `https://cdn.tiny.cloud/1/${process.env.NEXT_PUBLIC_TINYMCE_API_KEY}/tinymce/6/skins/ui/oxide/skin.min.css`;
-        document.head.appendChild(link);
-      }
-
-      tinymce.init({
-        selector: '#content-editor',
-        height: 500,
-        menubar: true,
-        plugins: [
-          'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-          'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-          'insertdatetime', 'media', 'table', 'help', 'wordcount', 'codesample'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-          'bold italic forecolor | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist outdent indent | ' +
-          'removeformat | codesample | help',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px }',
-        setup: (editor: any) => {
-          editorRef.current = editor;
-          editor.on('init', () => {
-            console.log('TinyMCE editor initialized');
-            // Agar oldindan content bo'lsa, uni editorga qo'yamiz
-            if (content) {
-              editor.setContent(content);
-            }
-          });
-          editor.on('change', () => {
-            setContent(editor.getContent());
-          });
-        }
-      });
-    } catch (error) {
-      console.error('TinyMCE initialization error:', error);
-    }
-  };
+  }, [editor]);
 
   const handleTagToggle = (tagName: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tagName) 
+    setSelectedTags(prev =>
+      prev.includes(tagName)
         ? prev.filter(tag => tag !== tagName)
         : [...prev, tagName]
     );
   };
 
+  const handleInsertImage = () => {
+    if (!editor) return;
+    const src = imagePreview || window.prompt('Rasm URL manzilini kiriting');
+    if (src) {
+      editor.chain().focus().setImage({ src }).run();
+    }
+  };
+
+  const toolbarGroups = useMemo(() => {
+    if (!editor) return [];
+
+    const actions = [
+      [
+        {
+          label: 'Sarlavha',
+          icon: <Heading2 className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+          isActive: editor.isActive('heading', { level: 2 }),
+          shortcut: 'Mod+Alt+2',
+        },
+        {
+          label: 'Paragraf',
+          icon: <Type className="w-4 h-4" />,
+          command: () => editor.chain().focus().setParagraph().run(),
+          isActive: editor.isActive('paragraph'),
+        },
+      ],
+      [
+        {
+          label: 'Qalin',
+          icon: <Bold className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleBold().run(),
+          isActive: editor.isActive('bold'),
+          shortcut: 'Mod+B',
+        },
+        {
+          label: 'Kursiv',
+          icon: <Italic className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleItalic().run(),
+          isActive: editor.isActive('italic'),
+          shortcut: 'Mod+I',
+        },
+      ],
+      [
+        {
+          label: 'Kod bloki',
+          icon: <Code2 className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleCodeBlock().run(),
+          isActive: editor.isActive('codeBlock'),
+        },
+      ],
+      [
+        {
+          label: 'Ro\'yxat',
+          icon: <List className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleBulletList().run(),
+          isActive: editor.isActive('bulletList'),
+        },
+        {
+          label: 'Raqamli ro\'yxat',
+          icon: <ListOrdered className="w-4 h-4" />,
+          command: () => editor.chain().focus().toggleOrderedList().run(),
+          isActive: editor.isActive('orderedList'),
+        },
+        {
+          label: 'Shift+Tab',
+          icon: <Undo2 className="w-4 h-4" />,
+          command: () => editor.chain().focus().liftListItem('listItem').run(),
+          shortcut: 'Shift+Tab',
+        },
+      ],
+      [
+        {
+          label: 'Jadval',
+          icon: <TableIcon className="w-4 h-4" />,
+          command: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+          isActive: editor.isActive('table'),
+        },
+        {
+          label: 'Rasm',
+          icon: <ImageIcon className="w-4 h-4" />,
+          command: handleInsertImage,
+        },
+        {
+          label: 'Mention',
+          icon: <AtSign className="w-4 h-4" />,
+          command: () => editor.chain().focus().insertContent([
+            { type: 'mention', attrs: { id: 'user', label: '@user' } },
+            { type: 'text', text: ' ' },
+          ]).run(),
+        },
+      ],
+      [
+        {
+          label: 'Ortga',
+          icon: <Undo2 className="w-4 h-4" />,
+          command: () => editor.chain().focus().undo().run(),
+        },
+        {
+          label: 'Qayta',
+          icon: <Redo2 className="w-4 h-4" />,
+          command: () => editor.chain().focus().redo().run(),
+        },
+      ],
+    ];
+
+    return actions;
+  }, [editor, imagePreview]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim() || !content.trim() || !selectedCategory) {
       alert('Iltimos, barcha majburiy maydonlarni to\'ldiring');
       return;
@@ -218,7 +267,7 @@ export default function CreatePostPage() {
       };
 
       const res = await api.post('/posts', postData);
-      
+
       if (res.data.success) {
         router.push(`/posts/${res.data.data.slug}`);
       } else {
@@ -446,7 +495,7 @@ export default function CreatePostPage() {
                     </label>
                   </div>
                 )}
-                
+
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
@@ -463,7 +512,7 @@ export default function CreatePostPage() {
               <label htmlFor="content-editor" className="block text-sm font-medium text-gray-700 mb-2">
                 Post kontenti *
               </label>
-              {!editorLoaded ? (
+              {!editor ? (
                 <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
                   <div className="text-center">
                     <div className="animate-spin w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -471,42 +520,34 @@ export default function CreatePostPage() {
                   </div>
                 </div>
               ) : (
-                <textarea
-                  id="content-editor"
-                  defaultValue={content}
-                  placeholder="Postni shu yerga yozing..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  required
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {toolbarGroups.map((group, groupIndex) => (
+                      <div key={`group-${groupIndex}`} className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                        {group.map((action) => (
+                          <button
+                            key={action.label}
+                            type="button"
+                            onClick={action.command}
+                            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-sm border border-transparent hover:bg-white hover:border-gray-200 ${
+                              action.isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'text-gray-700'
+                            }`}
+                            title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
+                          >
+                            {action.icon}
+                            <span>{action.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border border-gray-300 rounded-lg min-h-[384px]">
+                    <EditorContent id="content-editor" editor={editor} className="prose max-w-none p-4 focus:outline-none" />
+                  </div>
+                </div>
               )}
               <div className="mt-3 text-sm text-gray-500">
-                <p><strong>TinyMCE WYSIWYG Editor</strong> - Matnni formatlash uchun qurollar panelidan foydalaning:</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    <strong>Qalin</strong>
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    <em>Kursiv</em>
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Sarlavhalar
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Ro'yxatlar
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Linklar
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Rasmlar
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Kod
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                    Jadvallar
-                  </span>
-                </div>
+                <p><strong>TipTap WYSIWYG Editor</strong> - toolbar orqali heading, matn uslublari, kod bloklari, ro'yxatlar, jadval va mention qo'shish mumkin. Qisqa tugmalar: <code>Mod+B</code>, <code>Mod+I</code>, <code>Shift+Tab</code>.</p>
               </div>
             </div>
 
