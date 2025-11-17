@@ -14,6 +14,7 @@ use App\Models\Notification;
 use App\Models\Vote;
 use App\Models\Follow;
 use App\Models\Bookmark;
+use App\Models\Container;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -42,7 +43,7 @@ class AdminController extends Controller
     public function dashboard()
     {
         $cacheKey = 'admin:dashboard:stats';
-        
+
         $stats = Cache::remember($cacheKey, 300, function () {
             return [
                 'users' => [
@@ -51,6 +52,7 @@ class AdminController extends Controller
                     'active_today' => User::whereDate('updated_at', today())->count(),
                     'new_this_week' => User::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
+                    'active' => User::where('updated_at', '>=', now()->subDays(7))->count(),
                     'banned' => User::where('is_banned', true)->count(),
                     'admins' => User::where('is_admin', true)->count(),
                     'online_now' => User::where('updated_at', '>=', now()->subMinutes(5))->count(),
@@ -83,6 +85,8 @@ class AdminController extends Controller
                     'this_week' => Comment::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'this_month' => Comment::whereMonth('created_at', now()->month)->count(),
                     'high_score' => Comment::where('score', '>', 5)->count(),
+                    'pending' => 0,
+                    'pending_moderation' => 0,
                     'avg_score' => round(Comment::avg('score'), 2),
                     'top_commenters' => User::withCount('comments')
                         ->orderByDesc('comments_count')
@@ -170,6 +174,11 @@ class AdminController extends Controller
                         ->limit(5)
                         ->get(['id', 'title', 'slug', 'bookmarks_count']),
                 ],
+                'reports' => [
+                    'total' => 0,
+                    'pending' => 0,
+                    'resolved' => 0,
+                ],
                 'system' => [
                     'php_version' => PHP_VERSION,
                     'laravel_version' => app()->version(),
@@ -198,6 +207,34 @@ class AdminController extends Controller
         });
 
         return response()->json($stats);
+    }
+
+    public function systemResources()
+    {
+        $memory = $this->getMemoryStats();
+        $disk = $this->getDiskStats();
+
+        return response()->json([
+            'cpu_usage' => $this->getCpuUsagePercentage(),
+            'memory_total' => $memory['total'],
+            'memory_used' => $memory['used'],
+            'disk_total' => $disk['total'],
+            'disk_used' => $disk['used'],
+            'container_count' => Container::count(),
+            'active_users' => User::where('updated_at', '>=', now()->subMinutes(5))->count(),
+        ]);
+    }
+
+    public function containerStats()
+    {
+        $total = Container::count();
+
+        return response()->json([
+            'total' => $total,
+            'running' => Container::where('status', 'running')->count(),
+            'stopped' => Container::whereIn('status', ['stopped', 'created'])->count(),
+            'error' => Container::whereIn('status', ['error', 'failed'])->count(),
+        ]);
     }
 
     public function users(Request $request)
@@ -237,7 +274,13 @@ class AdminController extends Controller
         }
 
         if ($level = $request->get('level')) {
-            $query->whereHas('level', fn($q) => $q->where('slug', $level));
+            if (is_numeric($level)) {
+                $query->where('level_id', (int)$level);
+            } else {
+                $query->whereHas('level', function ($q) use ($level) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower(str_replace('-', ' ', $level))]);
+                });
+            }
         }
 
         $users = $query->latest()->paginate(20);
@@ -792,6 +835,33 @@ class AdminController extends Controller
         return $this->formatBytes(memory_get_usage(true));
     }
 
+    private function getMemoryStats(): array
+    {
+        $total = 0;
+        $available = 0;
+
+        if (is_readable('/proc/meminfo')) {
+            $meminfo = file('/proc/meminfo');
+            foreach ($meminfo as $line) {
+                if (str_starts_with($line, 'MemTotal:')) {
+                    $total = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+
+                if (str_starts_with($line, 'MemAvailable:')) {
+                    $available = (int) filter_var($line, FILTER_SANITIZE_NUMBER_INT);
+                }
+            }
+        }
+
+        $totalMb = (int) round($total / 1024);
+        $usedMb = $total > 0 ? (int) round(($total - $available) / 1024) : 0;
+
+        return [
+            'total' => max($totalMb, 0),
+            'used' => max($usedMb, 0),
+        ];
+    }
+
     private function getDiskUsage(): string
     {
         try {
@@ -808,6 +878,38 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return 'N/A';
         }
+    }
+
+    private function getDiskStats(): array
+    {
+        $total = disk_total_space('/') ?: 0;
+        $free = disk_free_space('/') ?: 0;
+
+        $totalMb = (int) round($total / 1024 / 1024);
+        $usedMb = $total > 0 ? (int) round(($total - $free) / 1024 / 1024) : 0;
+
+        return [
+            'total' => max($totalMb, 0),
+            'used' => max($usedMb, 0),
+        ];
+    }
+
+    private function getCpuUsagePercentage(): float
+    {
+        $load = sys_getloadavg();
+        $cores = 1;
+
+        if (function_exists('shell_exec')) {
+            $coreCount = (int) shell_exec('nproc 2>/dev/null');
+            if ($coreCount > 0) {
+                $cores = $coreCount;
+            }
+        }
+
+        $oneMinuteLoad = $load[0] ?? 0;
+        $percentage = ($oneMinuteLoad / max(1, $cores)) * 100;
+
+        return round(min($percentage, 100), 1);
     }
 
     private function formatBytes($bytes, $precision = 2): string

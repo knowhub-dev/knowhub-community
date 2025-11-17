@@ -181,6 +181,21 @@ async function deleteLogo(type: 'light' | 'dark') {
   return res.data;
 }
 
+async function clearPlatformCache() {
+  const res = await api.post('/admin/cache/clear');
+  return res.data;
+}
+
+async function optimizePlatform() {
+  const res = await api.post('/admin/system/optimize');
+  return res.data;
+}
+
+async function backupDatabaseNow() {
+  const res = await api.post('/admin/database/backup');
+  return res.data;
+}
+
 async function updateUserStatus({
   userId,
   data,
@@ -221,6 +236,8 @@ export default function AdminPage() {
   const [aiSuggestionsEnabled, setAiSuggestionsEnabled] = useState(true);
   const [maxPostsPerDay, setMaxPostsPerDay] = useState(10);
   const [maxCommentsPerDay, setMaxCommentsPerDay] = useState(50);
+  const [toolMessage, setToolMessage] = useState<string | null>(null);
+  const [toolError, setToolError] = useState<string | null>(null);
 
   const loadStats = useCallback(async () => {
     if (!isAdmin) return;
@@ -320,6 +337,42 @@ export default function AdminPage() {
     },
     onError: (error: unknown) => {
       alert(`Logo o'chirishda xatolik: ${getErrorMessage(error, "Noma'lum xatolik")}`);
+    },
+  });
+
+  const cacheClearMutation = useMutation({
+    mutationFn: clearPlatformCache,
+    onSuccess: (data) => {
+      setToolMessage(data?.message ?? 'Cache muvaffaqiyatli tozalandi');
+      setToolError(null);
+    },
+    onError: (error: unknown) => {
+      setToolError(getErrorMessage(error, 'Cache tozalashda xatolik')); 
+      setToolMessage(null);
+    },
+  });
+
+  const optimizeMutation = useMutation({
+    mutationFn: optimizePlatform,
+    onSuccess: (data) => {
+      setToolMessage(data?.message ?? 'Optimallashtirish yakunlandi');
+      setToolError(null);
+    },
+    onError: (error: unknown) => {
+      setToolError(getErrorMessage(error, 'Optimallashtirishda xatolik'));
+      setToolMessage(null);
+    },
+  });
+
+  const backupMutation = useMutation({
+    mutationFn: backupDatabaseNow,
+    onSuccess: (data) => {
+      setToolMessage(data?.message ?? 'Zaxira nusxa yaratildi');
+      setToolError(null);
+    },
+    onError: (error: unknown) => {
+      setToolError(getErrorMessage(error, 'Zaxira nusxa olishda xatolik'));
+      setToolMessage(null);
     },
   });
 
@@ -678,6 +731,42 @@ export default function AdminPage() {
             <MetricLine label="O`rtacha javob vaqti" value={stats.performance?.avg_response_time ?? '—'} trend={`${stats.performance?.cache_hit_rate ?? '—'} cache hit`} />
             <MetricLine label="Sekin so'rovlar" value={formatNumber(stats.performance?.slow_queries)} trend="Optimallashtirish rejasini ko'rib chiqing" />
             <MetricLine label="Kod bajarish o'rtacha" value={stats.code_runs?.avg_runtime ?? '—'} trend={`${formatNumber(stats.code_runs?.successful)} muvaffaqiyatli`} />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">Tezkor tizim vositalari</h3>
+              <p className="text-sm text-muted-foreground">Cache, optimizatsiya va zaxira nusxasini bir bosishda ishga tushiring.</p>
+            </div>
+            {(toolMessage || toolError) && (
+              <p className={`text-sm ${toolError ? 'text-red-600' : 'text-green-600'}`}>
+                {toolError ?? toolMessage}
+              </p>
+            )}
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <button
+              onClick={() => cacheClearMutation.mutate()}
+              disabled={cacheClearMutation.isPending}
+              className="rounded-xl border border-border bg-muted px-4 py-3 text-sm font-medium text-[hsl(var(--foreground))] transition hover:border-[hsl(var(--primary))] disabled:opacity-60"
+            >
+              {cacheClearMutation.isPending ? 'Cache tozalanmoqda...' : 'Cache-ni tozalash'}
+            </button>
+            <button
+              onClick={() => optimizeMutation.mutate()}
+              disabled={optimizeMutation.isPending}
+              className="rounded-xl border border-border bg-muted px-4 py-3 text-sm font-medium text-[hsl(var(--foreground))] transition hover:border-[hsl(var(--primary))] disabled:opacity-60"
+            >
+              {optimizeMutation.isPending ? 'Optimallashtirilmoqda...' : 'Optimallashtirish'}
+            </button>
+            <button
+              onClick={() => backupMutation.mutate()}
+              disabled={backupMutation.isPending}
+              className="rounded-xl border border-border bg-muted px-4 py-3 text-sm font-medium text-[hsl(var(--foreground))] transition hover:border-[hsl(var(--primary))] disabled:opacity-60"
+            >
+              {backupMutation.isPending ? 'Zaxira olinmoqda...' : 'Zaxira nusxa'}
+            </button>
           </div>
         </div>
       </div>
