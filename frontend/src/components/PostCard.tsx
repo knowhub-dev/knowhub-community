@@ -62,13 +62,13 @@ type EnrichedPost = Post & {
 };
 
 const baseCardStyles =
-  'group relative overflow-hidden rounded-lg border border-border/60 bg-surface/60 shadow-subtle backdrop-blur-md transition-all duration-200';
+  'group relative overflow-hidden rounded-lg border border-border/70 bg-surface/90 shadow-subtle backdrop-blur-md transition-all duration-200';
 
 const variantStyles: Record<Exclude<PostCardVariant, 'skeleton'>, string> = {
   standard: 'p-6 hover:-translate-y-0.5 hover:shadow-neon',
   compact: 'p-4 hover:-translate-y-0.5 hover:shadow-neon',
   highlighted:
-    'p-6 border-primary/70 bg-surface/70 ring-1 ring-inset ring-primary/30 hover:-translate-y-1 hover:shadow-neon',
+    'p-6 border-primary/70 bg-surface/95 ring-1 ring-inset ring-primary/35 hover:-translate-y-1 hover:shadow-neon',
 };
 
 function SkeletonCard({ className }: { className?: string }) {
@@ -76,7 +76,7 @@ function SkeletonCard({ className }: { className?: string }) {
     <article
       className={cn(
         baseCardStyles,
-        'p-6 animate-pulse border-border/40 bg-surface/50',
+        'p-6 animate-pulse border-border/50 bg-surface/70',
         className,
       )}
     >

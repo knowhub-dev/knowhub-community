@@ -8,12 +8,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        solid: "bg-surface/60 text-foreground shadow-subtle backdrop-blur-sm",
+        solid: "bg-surface/85 text-foreground border border-border/70 shadow-subtle backdrop-blur-sm",
         outline:
           "bg-transparent text-foreground shadow-none backdrop-blur-sm hover:shadow-subtle",
         neon:
           "isolate bg-transparent text-white shadow-[0_0_28px_rgba(164,85,247,0.45)] before:absolute before:inset-0 before:-z-10 before:rounded-[var(--radius-md)] before:bg-gradient-to-r before:from-accent-purple/80 before:to-accent-pink/80 before:opacity-90 before:blur-[1px] before:transition-opacity before:duration-200 before:content-[''] after:absolute after:inset-[1px] after:-z-20 after:rounded-[calc(var(--radius-md)-2px)] after:bg-surface/70 after:backdrop-blur-md after:content-[''] hover:before:opacity-100",
-        icon: "bg-surface/40 text-foreground shadow-subtle backdrop-blur-sm",
+        icon: "bg-surface/70 text-foreground shadow-subtle backdrop-blur-sm",
         achievement:
           "bg-gradient-to-r from-amber-400/85 via-amber-300/80 to-yellow-400/80 text-slate-900 shadow-[0_0_32px_rgba(251,191,36,0.45)]",
       },

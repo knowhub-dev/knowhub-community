@@ -112,11 +112,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     }
 
     const baseClasses = cn(
-      "w-full appearance-none rounded-md border bg-surface/60",
+      "w-full appearance-none rounded-md border bg-surface/85",
       "backdrop-blur-sm transition-colors duration-200 shadow-subtle",
       "placeholder:text-muted-foreground text-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
-      "hover:bg-surface/80",
+      "hover:bg-surface/95",
       "disabled:cursor-not-allowed disabled:opacity-60",
       "resize-none",
       statusStyles[status],
