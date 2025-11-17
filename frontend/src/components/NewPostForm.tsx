@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { api } from '@/lib/api';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -51,6 +53,7 @@ export default function NewPostForm() {
     },
     onSuccess: (data) => {
       router.push(`/posts/${data.slug}`);
+      router.refresh();
     }
   });
 
