@@ -55,8 +55,9 @@ async function getPost(slug: string): Promise<Post> {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getPost(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
   const snippet = post.content_markdown
     ? post.content_markdown.replace(/[#*_`>\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)
     : undefined;
@@ -72,8 +73,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // ✅ Page component
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const post = await getPost(slug);
   const snippet = post.content_markdown
     ? post.content_markdown.replace(/[#*_`>\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)

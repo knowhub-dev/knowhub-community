@@ -48,8 +48,9 @@ export async function generateStaticParams(): Promise<Params[]> {
 }
 
 // ✅ Har bir user sahifasi
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const res = await fetch(`${API_URL}/users/${params.username}`, {
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { username } = await params;
+  const res = await fetch(`${API_URL}/users/${username}`, {
     cache: 'no-store',
   });
 
@@ -72,8 +73,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   });
 }
 
-export default async function ProfilePage({ params }: { params: Params }) {
-  const res = await fetch(`${API_URL}/users/${params.username}`, {
+export default async function ProfilePage({ params }: { params: Promise<Params> }) {
+  const { username } = await params;
+  const res = await fetch(`${API_URL}/users/${username}`, {
     cache: "no-store",
   });
 
@@ -82,7 +84,7 @@ export default async function ProfilePage({ params }: { params: Params }) {
   }
 
   if (!res.ok) {
-    throw new Error("Userni olishda xato");
+    notFound();
   }
 
   const user: User = await res.json();
