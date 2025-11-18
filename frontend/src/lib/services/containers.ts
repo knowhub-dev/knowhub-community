@@ -1,10 +1,20 @@
 import { api } from '../api';
-import { Container, CreateContainerDto, ContainerStats, ContainerOptions } from '@/types/container';
+import { Container, CreateContainerDto, ContainerStats, ContainerOptions, ContainerLogResponse } from '@/types/container';
 
-const BASE_URL = '/api/v1/admin/containers';
+const BASE_URL = '/api/v1/containers';
 
 export const getContainerStats = async (id: number): Promise<ContainerStats> => {
     const response = await api.get(`${BASE_URL}/${id}/stats`);
+    return response.data;
+};
+
+export const getContainerLogs = async (id: number): Promise<ContainerLogResponse> => {
+    const response = await api.get(`${BASE_URL}/${id}/logs`);
+    return response.data;
+};
+
+export const updateContainerEnv = async (params: { id: number; env_vars: Record<string, string> }): Promise<Container> => {
+    const response = await api.put(`${BASE_URL}/${params.id}/env`, params);
     return response.data;
 };
 
@@ -60,5 +70,15 @@ export const containerService = {
     async getContainerStats(id: number): Promise<ContainerStats> {
         const response = await api.get(`${BASE_URL}/${id}/stats`);
         return response.data;
-    }
+    },
+
+    async getContainerLogs(id: number): Promise<ContainerLogResponse> {
+        const response = await api.get(`${BASE_URL}/${id}/logs`);
+        return response.data;
+    },
+
+    async updateContainerEnv(id: number, envVars: Record<string, string>): Promise<Container> {
+        const response = await api.put(`${BASE_URL}/${id}/env`, { env_vars: envVars });
+        return response.data;
+    },
 };

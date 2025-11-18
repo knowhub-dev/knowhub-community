@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Middleware\CacheMiddleware;
+use App\Http\Controllers\Api\ContainerController;
 
 Route::prefix('v1')->group(function () {
 
@@ -73,6 +74,20 @@ Route::prefix('v1')->group(function () {
 
     // Authenticated Routes
     Route::middleware(['auth:sanctum', RateLimitMiddleware::class . ':api,100'])->group(function () {
+
+        // Container management
+        Route::prefix('containers')->group(function () {
+            Route::get('/', [ContainerController::class, 'index']);
+            Route::post('/', [ContainerController::class, 'store']);
+            Route::get('/options', [ContainerController::class, 'options']);
+            Route::get('/{container}', [ContainerController::class, 'show']);
+            Route::post('/{container}/start', [ContainerController::class, 'start']);
+            Route::post('/{container}/stop', [ContainerController::class, 'stop']);
+            Route::delete('/{container}', [ContainerController::class, 'destroy']);
+            Route::get('/{container}/stats', [ContainerController::class, 'stats']);
+            Route::get('/{container}/logs', [ContainerController::class, 'logs']);
+            Route::put('/{container}/env', [ContainerController::class, 'updateEnv']);
+        });
 
         // Profile
         Route::get('/profile/me', [ProfileController::class, 'me']);
@@ -175,6 +190,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/containers/{container}/stop', [ContainerController::class, 'stop']);
             Route::delete('/containers/{container}', [ContainerController::class, 'destroy']);
             Route::get('/containers/{container}/stats', [ContainerController::class, 'stats']);
+            Route::get('/containers/{container}/logs', [ContainerController::class, 'logs']);
+            Route::put('/containers/{container}/env', [ContainerController::class, 'updateEnv']);
         });
 
         // Wiki PR-like
