@@ -56,7 +56,8 @@ return [
     ],
 
     'piston' => [
-        'base_url' => env('PISTON_BASE_URL'),
+        // Default piston endpoint provides a reasonable fallback when env is missing
+        'base_url' => env('PISTON_BASE_URL', 'https://emkc.org/api/v2/piston'),
         'timeout_ms' => env('PISTON_DEFAULT_TIMEOUT_MS', 6000),
     ],
 
