@@ -731,7 +731,7 @@ export default function HomePage() {
             </div>
             <h2 className="text-2xl font-semibold text-[hsl(var(--foreground))] sm:text-3xl">Postlarni SolVera bilan jilolang</h2>
             <p className="text-sm text-muted-foreground">
-              KnowHub jamoasining gtp-5 asosidagi modeli yozganlaringizni silliqlaydi, CTAlarni boyitadi va kod sharhlarini tezkor taklif qiladi.
+              KnowHub jamoasining AI modeli yozganlaringizni silliqlaydi, CTAlarni boyitadi va kod sharhlarini tezkor taklif qiladi.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[var(--radius-md)] border border-border/80 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))] p-4 text-sm shadow-sm">
