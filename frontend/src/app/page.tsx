@@ -902,7 +902,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-6 py-12 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
               <div className="space-y-6 rounded-[28px] border border-border/60 bg-[hsl(var(--card))]/90 p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
-                <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))] px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_rgba(14,116,144,0.18)]">
                   Xush kelibsiz, {auth.user?.name ?? auth.user?.username ?? "a'zo"}
                 </div>
                 <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
@@ -993,8 +993,8 @@ export default function HomePage() {
                 </div>
                 <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">Joriy faollik</p>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface))] px-3 py-1 text-xs font-semibold text-[hsl(var(--secondary))]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[hsl(var(--foreground))]">Joriy faollik</p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/60 bg-[hsl(var(--primary))]/18 px-3 py-1 text-xs font-semibold text-[hsl(var(--primary))] shadow-sm">
                       <Sparkles className="h-4 w-4" />
                       Live
                     </div>
@@ -1214,13 +1214,13 @@ export default function HomePage() {
               KnowHub jamoasining gtp-5 asosidagi modeli yozganlaringizni silliqlaydi, CTAlarni boyitadi va kod sharhlarini tezkor taklif qiladi.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4 text-sm">
+              <div className="rounded-2xl border border-border/80 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))] p-4 text-sm shadow-sm">
                 <p className="font-semibold text-[hsl(var(--foreground))]">Yozish va qayta yozish</p>
-                <p className="text-xs text-muted-foreground">Sarlavha, muammo bayoni va changelogni SolVera bilan tayyorlang.</p>
+                <p className="text-xs text-[hsl(var(--foreground))]/80">Sarlavha, muammo bayoni va changelogni SolVera bilan tayyorlang.</p>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4 text-sm">
+              <div className="rounded-2xl border border-border/80 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))] p-4 text-sm shadow-sm">
                 <p className="font-semibold text-[hsl(var(--foreground))]">Kod uchun chaqmoq sharhlar</p>
-                <p className="text-xs text-muted-foreground">Snippetlaringizni tushuntirish yoki refaktor g'oyalarini olish.</p>
+                <p className="text-xs text-[hsl(var(--foreground))]/80">Snippetlaringizni tushuntirish yoki refaktor g'oyalarini olish.</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
