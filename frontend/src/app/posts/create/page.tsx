@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
@@ -71,6 +72,11 @@ export default function CreatePostPage() {
   const [aiError, setAiError] = useState<string | undefined>();
   const [aiReplayKey, setAiReplayKey] = useState(0);
   const streamCleanupRef = useRef<() => void>();
+
+  const sanitizedPreview = useMemo(
+    () => DOMPurify.sanitize(content.replace(/\n/g, '<br>')),
+    [content],
+  );
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -446,7 +452,7 @@ export default function CreatePostPage() {
                 </p>
                 <div className="mt-6 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
                   {content ? (
-                    <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizedPreview }} />
                   ) : (
                     <p className="text-muted-foreground">Post kontenti bu yerda ko'rsatiladi...</p>
                   )}
