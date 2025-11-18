@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import Mention from '@tiptap/extension-mention';
 import AiSuggestionsPanel from '@/components/AiSuggestionsPanel';
+import { Button } from '@/components/ui/button';
 import { AiProgressUpdate, AiSuggestion, AiSuggestionStatus, createAiSuggestionStream } from '@/lib/services/ai-suggestions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -70,6 +72,11 @@ export default function CreatePostPage() {
   const [aiError, setAiError] = useState<string | undefined>();
   const [aiReplayKey, setAiReplayKey] = useState(0);
   const streamCleanupRef = useRef<() => void>();
+
+  const sanitizedPreview = useMemo(
+    () => DOMPurify.sanitize(content.replace(/\n/g, '<br>')),
+    [content],
+  );
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -366,7 +373,7 @@ export default function CreatePostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
         <LoadingSpinner />
       </div>
     );
@@ -374,87 +381,102 @@ export default function CreatePostPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Kirish talab qilinadi</h1>
-          <p className="text-gray-600 mb-6">Post yaratish uchun tizimga kiring</p>
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Kirish
-          </Link>
+      <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+        <div className="max-w-md space-y-4 rounded-2xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))] p-8 text-center shadow-2xl">
+          <div className="text-5xl">🔒</div>
+          <h1 className="text-2xl font-semibold text-[hsl(var(--foreground))]">Kirish talab qilinadi</h1>
+          <p className="text-sm text-[hsl(var(--foreground))]/80">Post yaratish uchun tizimga kiring</p>
+          <Button asChild className="w-full justify-center text-base font-semibold">
+            <Link href="/auth/login">Kirish</Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/posts"
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Ortga
+    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      <div className="border-b border-border/50 bg-gradient-to-r from-[hsl(var(--surface))] to-[hsl(var(--card))]/80">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Button asChild variant="ghost" className="gap-2 rounded-full border border-border/60 bg-[hsl(var(--card))]/80 px-4 shadow-sm">
+              <Link href="/posts">
+                <ArrowLeft className="h-4 w-4" /> Ortga
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Yangi Post Yaratish</h1>
+            </Button>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">SolVera yordamida</p>
+              <h1 className="text-3xl font-semibold leading-tight text-[hsl(var(--foreground))]">Yangi Post Yaratish</h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {showPreview ? 'Tahrirlash' : 'Ko\'rish'}
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex items-center px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                    Saqlanmoqda...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Nashr qilish
-                  </>
-                )}
-              </button>
-            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full border-border/70 bg-[hsl(var(--card))] px-4"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              <Eye className="h-4 w-4" />
+              {showPreview ? 'Tahrirlash' : "Ko'rish"}
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 rounded-full px-5">
+              {isSubmitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[hsl(var(--primary-foreground))] border-t-transparent" />
+                  Saqlanmoqda...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Nashr qilish
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-10">
         {showPreview ? (
-          /* Preview Mode */
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{title || 'Post sarlavhasi'}</h1>
-            <div className="prose prose-lg max-w-none">
-              {content ? (
-                <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
-              ) : (
-                <p className="text-gray-500">Post kontenti bu yerda ko'rsatiladi...</p>
-              )}
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Post ko'rinishi</h2>
+                <Link href="/posts/create" className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
+                  Asosiy rejaga qaytish
+                </Link>
+              </div>
+              <div className="prose max-w-none text-[hsl(var(--foreground))]">
+                <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">{title || 'Post sarlavhasi'}</h1>
+                <p className="text-sm text-muted-foreground">
+                  Kategoriya: {selectedCategory || 'Tanlanmagan'} | Teglar: {selectedTags.length ? selectedTags.join(', ') : 'Teglar tanlanmagan'}
+                </p>
+                <div className="mt-6 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
+                  {content ? (
+                    <div dangerouslySetInnerHTML={{ __html: sanitizedPreview }} />
+                  ) : (
+                    <p className="text-muted-foreground">Post kontenti bu yerda ko'rsatiladi...</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <AiSuggestionsPanel
+                suggestions={aiSuggestions}
+                status={aiStatus}
+                progress={aiProgress}
+                transport={aiTransport}
+                onTransportChange={setAiTransport}
+                onApply={handleApplySuggestion}
+                onRetry={handleRetryStream}
+                errorMessage={aiError}
+              />
             </div>
           </div>
         ) : (
-          /* Edit Mode */
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <label htmlFor="title" className="mb-2 block text-sm font-medium">
                 Post sarlavhasi *
               </label>
               <input
@@ -463,21 +485,21 @@ export default function CreatePostPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Muhokama uchun sarlavha..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full rounded-xl border border-border/60 bg-[hsl(var(--surface))] px-4 py-3 text-sm text-[hsl(var(--foreground))] outline-none transition focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
                 required
               />
             </div>
 
             {/* Category */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <label htmlFor="category" className="mb-2 block text-sm font-medium">
                 Kategoriya *
               </label>
               <select
                 id="category"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full rounded-xl border border-border/60 bg-[hsl(var(--surface))] px-4 py-3 text-sm text-[hsl(var(--foreground))] outline-none transition focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/30"
                 required
               >
                 <option value="">Kategoriyani tanlang</option>
@@ -490,21 +512,21 @@ export default function CreatePostPage() {
             </div>
 
             {/* Tags */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <label className="mb-2 block text-sm font-medium">
                 Teglar
               </label>
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="mb-3 flex flex-wrap gap-2">
                 {selectedTags.map((tagName) => (
                   <span
                     key={tagName}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800"
+                    className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/15 px-3 py-1 text-sm font-medium text-[hsl(var(--primary))]"
                   >
                     {tagName}
                     <button
                       type="button"
                       onClick={() => handleTagToggle(tagName)}
-                      className="ml-2 text-indigo-600 hover:text-indigo-800"
+                      className="text-[hsl(var(--primary))] transition hover:opacity-70"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -517,10 +539,10 @@ export default function CreatePostPage() {
                     key={tag.id}
                     type="button"
                     onClick={() => handleTagToggle(tag.name)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                    className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
                       selectedTags.includes(tag.name)
-                        ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
-                        : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                        ? 'border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]'
+                        : 'border-border/60 bg-[hsl(var(--surface))] text-muted-foreground hover:border-border hover:text-[hsl(var(--foreground))]'
                     }`}
                   >
                     {tag.name}
@@ -530,8 +552,8 @@ export default function CreatePostPage() {
             </div>
 
             {/* Image Upload */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <label className="mb-2 block text-sm font-medium">
                 Post rasmi (ixtiyoriy)
               </label>
               <div className="space-y-4">
@@ -540,7 +562,7 @@ export default function CreatePostPage() {
                     <img
                       src={imagePreview}
                       alt="Post rasmi preview"
-                      className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-200"
+                      className="h-48 w-full max-w-md rounded-2xl border border-border/70 object-cover"
                     />
                     <button
                       type="button"
@@ -548,13 +570,13 @@ export default function CreatePostPage() {
                         setSelectedImage(null);
                         setImagePreview('');
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      className="absolute right-2 top-2 rounded-full bg-[hsl(var(--destructive))] p-1 text-[hsl(var(--destructive-foreground))] shadow transition hover:brightness-110"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <div className="rounded-2xl border-2 border-dashed border-border/70 p-6 text-center transition hover:border-[hsl(var(--primary))]/60">
                     <input
                       type="file"
                       id="image-upload"
@@ -572,25 +594,22 @@ export default function CreatePostPage() {
                       }}
                       className="hidden"
                     />
-                    <label
-                      htmlFor="image-upload"
-                      className="cursor-pointer"
-                    >
-                      <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--surface))] text-muted-foreground">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">Rasm yuklash uchun bosing</p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF (max 5MB)</p>
+                      <p className="mb-1 text-sm font-medium text-[hsl(var(--foreground))]">Rasm yuklash uchun bosing</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG, GIF (max 5MB)</p>
                     </label>
                   </div>
                 )}
 
                 {uploadProgress > 0 && uploadProgress < 100 && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="h-2 w-full rounded-full bg-muted">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="h-2 rounded-full bg-[hsl(var(--primary))] transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -599,31 +618,33 @@ export default function CreatePostPage() {
             </div>
 
             {/* Content Editor */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <label htmlFor="content-editor" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
+              <label htmlFor="content-editor" className="mb-2 block text-sm font-medium">
                 Post kontenti *
               </label>
               <div className="grid gap-4 lg:grid-cols-4">
                 <div className="lg:col-span-3">
                   {!editor ? (
-                    <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                    <div className="flex h-96 w-full items-center justify-center rounded-2xl border border-border/60 bg-[hsl(var(--surface))]">
                       <div className="text-center">
-                        <div className="animate-spin w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                        <p className="text-gray-600">Editor yuklanmoqda...</p>
+                        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent"></div>
+                        <p className="text-muted-foreground">Editor yuklanmoqda...</p>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <div className="flex flex-wrap gap-2">
                         {toolbarGroups.map((group, groupIndex) => (
-                          <div key={`group-${groupIndex}`} className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                          <div key={`group-${groupIndex}`} className="flex items-center space-x-2 rounded-xl border border-border/60 bg-[hsl(var(--surface))] px-2 py-1 shadow-sm">
                             {group.map((action) => (
                               <button
                                 key={action.label}
                                 type="button"
                                 onClick={action.command}
-                                className={`flex items-center space-x-1 px-2 py-1 rounded-md text-sm border border-transparent hover:bg-white hover:border-gray-200 ${
-                                  action.isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'text-gray-700'
+                                className={`flex items-center space-x-1 rounded-lg border px-2 py-1 text-sm transition ${
+                                  action.isActive
+                                    ? 'border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]'
+                                    : 'border-transparent text-[hsl(var(--foreground))] hover:border-border/60 hover:bg-[hsl(var(--muted))]/60'
                                 }`}
                                 title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
                               >
@@ -634,12 +655,12 @@ export default function CreatePostPage() {
                           </div>
                         ))}
                       </div>
-                      <div className="border border-gray-300 rounded-lg min-h-[384px]">
-                        <EditorContent id="content-editor" editor={editor} className="prose max-w-none p-4 focus:outline-none" />
+                      <div className="min-h-[384px] rounded-2xl border border-border/60 bg-[hsl(var(--surface))]">
+                        <EditorContent id="content-editor" editor={editor} className="prose prose-neutral max-w-none p-4 focus:outline-none dark:prose-invert" />
                       </div>
                     </div>
                   )}
-                  <div className="mt-3 text-sm text-gray-500">
+                  <div className="mt-3 text-sm text-muted-foreground">
                     <p><strong>TipTap WYSIWYG Editor</strong> - toolbar orqali heading, matn uslublari, kod bloklari, ro'yxatlar, jadval va mention qo'shish mumkin. Qisqa tugmalar: <code>Mod+B</code>, <code>Mod+I</code>, <code>Shift+Tab</code>.</p>
                   </div>
                 </div>
@@ -659,30 +680,23 @@ export default function CreatePostPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4">
-              <Link
-                href="/posts"
-                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Bekor qilish
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
+            <div className="flex justify-end gap-3">
+              <Button asChild variant="outline" className="gap-2 rounded-full border-border/70 bg-[hsl(var(--card))] px-6">
+                <Link href="/posts">Bekor qilish</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="gap-2 rounded-full px-6">
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[hsl(var(--primary-foreground))] border-t-transparent" />
                     Saqlanmoqda...
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="h-4 w-4" />
                     Nashr qilish
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </form>
         )}
