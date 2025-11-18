@@ -376,10 +376,10 @@ export default function CreatePostPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-        <div className="max-w-md space-y-4 rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-8 text-center shadow-xl">
+        <div className="max-w-md space-y-4 rounded-2xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))] p-8 text-center shadow-2xl">
           <div className="text-5xl">🔒</div>
-          <h1 className="text-2xl font-semibold">Kirish talab qilinadi</h1>
-          <p className="text-sm text-muted-foreground">Post yaratish uchun tizimga kiring</p>
+          <h1 className="text-2xl font-semibold text-[hsl(var(--foreground))]">Kirish talab qilinadi</h1>
+          <p className="text-sm text-[hsl(var(--foreground))]/80">Post yaratish uchun tizimga kiring</p>
           <Button asChild className="w-full justify-center text-base font-semibold">
             <Link href="/auth/login">Kirish</Link>
           </Button>
@@ -390,17 +390,17 @@ export default function CreatePostPage() {
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <div className="border-b border-border/60 bg-[hsl(var(--surface))]">
+      <div className="border-b border-border/50 bg-gradient-to-r from-[hsl(var(--surface))] to-[hsl(var(--card))]/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" className="gap-2 rounded-full border border-border/60 bg-[hsl(var(--card))] px-4">
+            <Button asChild variant="ghost" className="gap-2 rounded-full border border-border/60 bg-[hsl(var(--card))]/80 px-4 shadow-sm">
               <Link href="/posts">
                 <ArrowLeft className="h-4 w-4" /> Ortga
               </Link>
             </Button>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">SolVera yordamida</p>
-              <h1 className="text-3xl font-semibold leading-tight">Yangi Post Yaratish</h1>
+              <h1 className="text-3xl font-semibold leading-tight text-[hsl(var(--foreground))]">Yangi Post Yaratish</h1>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -432,7 +432,7 @@ export default function CreatePostPage() {
       <div className="mx-auto max-w-6xl px-6 py-10">
         {showPreview ? (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Post ko'rinishi</h2>
                 <Link href="/posts/create" className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
@@ -453,7 +453,7 @@ export default function CreatePostPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <AiSuggestionsPanel
                 suggestions={aiSuggestions}
                 status={aiStatus}
@@ -469,7 +469,7 @@ export default function CreatePostPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <label htmlFor="title" className="mb-2 block text-sm font-medium">
                 Post sarlavhasi *
               </label>
@@ -485,7 +485,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Category */}
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <label htmlFor="category" className="mb-2 block text-sm font-medium">
                 Kategoriya *
               </label>
@@ -506,7 +506,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Tags */}
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <label className="mb-2 block text-sm font-medium">
                 Teglar
               </label>
@@ -546,7 +546,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Image Upload */}
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <label className="mb-2 block text-sm font-medium">
                 Post rasmi (ixtiyoriy)
               </label>
@@ -612,7 +612,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Content Editor */}
-            <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))] p-6 shadow-lg">
+            <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-[hsl(var(--surface))] to-[hsl(var(--card))]/90 p-6 shadow-lg">
               <label htmlFor="content-editor" className="mb-2 block text-sm font-medium">
                 Post kontenti *
               </label>
