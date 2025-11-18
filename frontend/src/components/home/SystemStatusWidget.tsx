@@ -41,7 +41,7 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
   const badge = statusCopy[aggregateStatus];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-[hsl(var(--surface))] p-6 text-sm shadow-sm">
+    <div className="flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-border bg-[hsl(var(--surface))] p-6 text-sm shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Tizim holati</p>
@@ -54,7 +54,7 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
           Ko'rish <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
-      <div className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+      <div className="mt-5 flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
         <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}>
           {badge.icon}
           {badge.label}
@@ -64,11 +64,11 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
       <div className="mt-6 space-y-3">
         {(services.length ? services.slice(0, 3) : new Array(3).fill(null)).map((service, index) => {
           if (!service) {
-            return <div key={`skeleton-${index}`} className="h-14 animate-pulse rounded-2xl bg-[hsl(var(--card))]/70" />;
+            return <div key={`skeleton-${index}`} className="h-14 animate-pulse rounded-[var(--radius-md)] bg-[hsl(var(--card))]/70" />;
           }
           const copy = statusCopy[service.status];
           return (
-            <div key={service.name} className="flex items-center justify-between rounded-2xl border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
+            <div key={service.name} className="flex items-center justify-between rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/90 px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[hsl(var(--foreground))]">{service.name}</p>
                 <p className="text-xs text-muted-foreground">{service.description}</p>
@@ -82,15 +82,15 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
         })}
       </div>
       <div className="mt-6 grid gap-3 text-center text-xs sm:grid-cols-3">
-        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+        <div className="rounded-[var(--radius-md)] border border-border/80 bg-[hsl(var(--card))]/90 p-4">
           <p className="text-muted-foreground">Faol a'zolar</p>
           <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.active_users)}</p>
         </div>
-        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+        <div className="rounded-[var(--radius-md)] border border-border/80 bg-[hsl(var(--card))]/90 p-4">
           <p className="text-muted-foreground">Navbat</p>
           <p className="mt-2 text-2xl font-semibold text-[hsl(var(--foreground))]">{formatNumber(metrics.queue_backlog)}</p>
         </div>
-        <div className="rounded-2xl border border-border/80 bg-[hsl(var(--card))]/90 p-4">
+        <div className="rounded-[var(--radius-md)] border border-border/80 bg-[hsl(var(--card))]/90 p-4">
           <p className="text-muted-foreground">Uptime</p>
           <p className="mt-2 text-xl font-semibold text-[hsl(var(--foreground))]">{formatDuration(metrics.uptime_seconds)}</p>
         </div>

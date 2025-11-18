@@ -77,7 +77,7 @@ export function CodeRunnerCard(_: CodeRunnerCardProps) {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border/40 bg-[hsl(var(--card))]/70 shadow-xl backdrop-blur">
+    <div className="flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-border/40 bg-[hsl(var(--card))]/70 shadow-xl backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--primary))]">
           <Code2 className="h-4 w-4" />
@@ -87,7 +87,7 @@ export function CodeRunnerCard(_: CodeRunnerCardProps) {
           <select
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
-            className="rounded-lg border border-border/60 bg-transparent px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground focus:border-[hsl(var(--primary))] focus:outline-none"
+            className="rounded-[var(--radius-md)] border border-border/60 bg-transparent px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground focus:border-[hsl(var(--primary))] focus:outline-none"
           >
             {LANGUAGES.map((item) => (
               <option key={item.value} value={item.value}>
@@ -98,7 +98,7 @@ export function CodeRunnerCard(_: CodeRunnerCardProps) {
           <button
             onClick={handleRun}
             disabled={running}
-            className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-1.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+            className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[hsl(var(--primary))] px-4 py-1.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >
             <Play className={`h-4 w-4 ${running ? "animate-pulse" : ""}`} />
             {running ? "Bajarilmoqda" : "Run"}
@@ -111,16 +111,16 @@ export function CodeRunnerCard(_: CodeRunnerCardProps) {
         spellCheck={false}
         className="min-h-[180px] flex-1 resize-none border-t border-border/40 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--surface))] to-[hsl(var(--background))] px-4 py-3 text-sm text-[hsl(var(--foreground))] focus:outline-none"
       />
-      <div className="border-t border-border/40 bg-[hsl(var(--card))]/80 px-4 py-3 text-sm text-muted-foreground">
-        {result ? (
-          <div className="space-y-2">
-            {result.message && <p className="text-[hsl(var(--accent-pink))]">{result.message}</p>}
-            {result.stdout && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--secondary))]">{result.stdout}</pre>
-            )}
-            {result.stderr && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-[hsl(var(--background))] p-3 text-xs text-[hsl(var(--destructive))]">{result.stderr}</pre>
-            )}
+        <div className="border-t border-border/40 bg-[#060b18]/90 px-4 py-3 text-sm font-mono text-[13px] text-[hsl(var(--secondary-foreground))]">
+          {result ? (
+            <div className="space-y-2">
+              {result.message && <p className="text-[hsl(var(--accent-pink))]">{result.message}</p>}
+              {result.stdout && (
+                <pre className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-emerald-500/25 bg-[#0b162b]/95 p-3 text-xs text-emerald-100 shadow-[0_15px_45px_rgba(6,17,38,0.45)]">{result.stdout}</pre>
+              )}
+              {result.stderr && (
+                <pre className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[hsl(var(--destructive))]/30 bg-[#1a0b12]/90 p-3 text-xs text-[hsl(var(--destructive))] shadow-[0_15px_45px_rgba(38,9,16,0.45)]">{result.stderr}</pre>
+              )}
             {result.status && !result.message && (
               <p className="text-xs uppercase tracking-[0.3em] text-[hsl(var(--primary))]">Holat: {result.status}</p>
             )}

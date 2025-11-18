@@ -68,7 +68,7 @@ export function ActivityFeed({ feed, variant = "full", limit }: ActivityFeedProp
     return (
       <div className="mt-4 space-y-3">
         {items.map((event) => (
-          <div key={`${event.type}-${event.id}`} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-[hsl(var(--surface))] p-4">
+          <div key={`${event.type}-${event.id}`} className="flex items-start gap-3 rounded-[var(--radius-md)] border border-border/60 bg-[hsl(var(--surface))] p-4">
             <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/10 p-2">{activityIcon(event.type)}</div>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -100,7 +100,7 @@ export function ActivityFeed({ feed, variant = "full", limit }: ActivityFeedProp
         {items.map((event) => (
           <div
             key={`${event.type}-${event.id}`}
-            className="flex items-start gap-3 rounded-2xl border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--primary))]/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
+            className="flex items-start gap-3 rounded-[var(--radius-md)] border border-border/80 bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--primary))]/60 hover:shadow-lg dark:border-border/70 dark:bg-[hsl(var(--card))]/70"
           >
             <div className="mt-1 rounded-full bg-[hsl(var(--foreground))]/80 p-2 dark:bg-[hsl(var(--foreground))]/30">{activityIcon(event.type)}</div>
             <div className="space-y-1 text-sm">
