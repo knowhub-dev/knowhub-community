@@ -27,6 +27,10 @@ export interface ContainerStats {
     created_at: string;
 }
 
+export interface ContainerLogResponse {
+    lines: string[];
+}
+
 export interface CreateContainerDto {
     name: string;
     subdomain?: string;

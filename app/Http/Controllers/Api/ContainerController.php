@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -13,12 +15,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Support\Settings;
-use Throwable;
 use RuntimeException;
+use Throwable;
 
 class ContainerController extends Controller
 {
-    private $containerService;
+    private ContainerService $containerService;
 
     public function __construct(ContainerService $containerService)
     {
@@ -225,11 +227,84 @@ class ContainerController extends Controller
         $this->authorize('view', $container);
 
         $stats = $this->containerService->getStats($container);
+
         if ($stats) {
             return response()->json($stats);
         }
 
-        return response()->json(['message' => 'Failed to get container stats'], 500);
+        $latest = $container->stats()->latest()->first();
+
+        if ($latest) {
+            return response()->json($latest);
+        }
+
+        return response()->json([
+            'cpu_usage' => 0.0,
+            'memory_usage' => 0.0,
+            'disk_usage' => 0.0,
+            'network_rx' => 0,
+            'network_tx' => 0,
+            'container_id' => $container->id,
+        ]);
+    }
+
+    /**
+     * Get container logs.
+     */
+    public function logs(Container $container)
+    {
+        $this->authorize('view', $container);
+
+        $logs = $this->containerService->getLogs($container, 100);
+
+        return response()->json([
+            'lines' => $logs,
+        ]);
+    }
+
+    /**
+     * Update environment variables securely.
+     */
+    public function updateEnv(Container $container, Request $request)
+    {
+        $this->authorize('update', $container);
+
+        $maxEnvVars = (int) config('containers.max_env_vars', 0);
+        $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
+        $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
+
+        $validator = Validator::make($request->all(), [
+            'env_vars' => ['required', 'array', 'max:' . $maxEnvVars],
+            'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
+        ]);
+
+        $validator->after(function ($validator) use ($request, $keyPattern) {
+            $envVars = $request->input('env_vars');
+            foreach ($envVars as $key => $value) {
+                $normalizedKey = strtoupper(trim((string) $key));
+                $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
+
+                if (!preg_match($keyPattern, $normalizedKey ?? '')) {
+                    $validator->errors()->add('env_vars.' . $key, 'Invalid environment variable key.');
+                }
+
+                if (!is_null($value) && !is_scalar($value)) {
+                    $validator->errors()->add('env_vars.' . $key, 'Environment values must be simple strings or numbers.');
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $normalizedEnv = $this->normalizeEnvVars($request->input('env_vars', []));
+
+        if (!$this->containerService->updateEnv($container, $normalizedEnv)) {
+            return response()->json(['message' => 'Failed to update environment variables'], 500);
+        }
+
+        return response()->json($container->fresh());
     }
 
     public function options(Request $request)

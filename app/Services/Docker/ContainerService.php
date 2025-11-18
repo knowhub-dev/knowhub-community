@@ -5,6 +5,7 @@ namespace App\Services\Docker;
 use App\Models\Container;
 use App\Models\ContainerStats;
 use Exception;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
@@ -148,6 +149,62 @@ class ContainerService
                 'container_id' => $container->id,
             ]);
             return null;
+        }
+    }
+
+    public function getLogs(Container $container, int $limit = 100): array
+    {
+        try {
+            $response = $this->client->get(
+                "/containers/{$container->container_id}/logs",
+                [
+                    'query' => [
+                        'stdout' => 1,
+                        'stderr' => 1,
+                        'tail' => $limit,
+                    ],
+                ],
+            );
+
+            $rawLogs = (string) $response->getBody();
+            $lines = array_filter(explode("\n", $rawLogs));
+
+            return array_slice($lines, -$limit);
+        } catch (RequestException $e) {
+            Log::warning('Failed to fetch container logs', [
+                'container_id' => $container->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    public function updateEnv(Container $container, array $envVars): bool
+    {
+        try {
+            $container->env_vars = $envVars;
+            $container->save();
+
+            if ($container->container_id) {
+                $this->client->post(
+                    "/containers/{$container->container_id}/update",
+                    [
+                        'json' => [
+                            'Env' => $this->formatEnvVars($envVars),
+                        ],
+                    ],
+                );
+            }
+
+            return true;
+        } catch (Exception|GuzzleException $e) {
+            Log::error('Failed to update container environment variables', [
+                'container_id' => $container->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         }
     }
 
