@@ -1,49 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 // file: app/Http/Controllers/Api/V1/PostController.php
 namespace App\Http\Controllers\Api\V1;
 
+use App\Filters\PostFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
 use App\Http\Resources\PostResource;
+use App\Jobs\GeneratePostAiDraft;
+use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Tag;
-use App\Models\Category;
-use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use App\Jobs\GeneratePostAiDraft;
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
-    public function index(Request $req)
+    public function index(Request $request, PostFilter $filter)
     {
-        $cacheKey = 'posts:' . md5(serialize($req->all()) . ($req->user()?->id ?? 'guest'));
-        
-        return Cache::remember($cacheKey, 300, function () use ($req) {
-            $q = Post::query()->with(['user.level','tags','category'])
-                ->where('status','published')
-                ->when($req->get('tag'), fn($qq,$tag)=>$qq->whereHas('tags', fn($t)=>$t->where('slug',$tag)))
-                ->when($req->get('category'), fn($qq,$cat)=>$qq->whereHas('category', fn($c)=>$c->where('slug',$cat)))
-                ->when($req->get('user'), fn($qq,$username)=>$qq->whereHas('user', fn($u)=>$u->where('username',$username)))
-                ->when($req->get('search'), function($qq, $search) {
-                    $qq->where(function($q) use ($search) {
-                        $q->where('title', 'LIKE', "%{$search}%")
-                          ->orWhere('content_markdown', 'LIKE', "%{$search}%")
-                          ->orWhereHas('tags', fn($t) => $t->where('name', 'LIKE', "%{$search}%"));
-                    });
-                })
-                ->when($req->get('sort') === 'latest', fn($qq) => $qq->orderByDesc('created_at'))
-                ->when($req->get('sort') === 'trending', fn($qq) => $qq->orderByDesc('score')->orderByDesc('created_at'))
-                ->when($req->get('sort') === 'popular', fn($qq) => $qq->orderByDesc('answers_count')->orderByDesc('score'))
-                ->when($req->get('sort') === 'unanswered', fn($qq) => $qq->where('answers_count', 0)->orderByDesc('created_at'))
-                ->when(!$req->get('sort'), fn($qq) => $qq->orderByDesc('score')->orderByDesc('id'));
+        $validated = $filter->validate($request);
+        $perPage = (int) ($validated['per_page'] ?? 20);
 
-            $perPage = min((int)$req->get('per_page', 20), 50);
-            return PostResource::collection($q->paginate($perPage));
-        });
+        $query = $filter->apply(
+            Post::query()->with(['user.level', 'tags', 'category']),
+            $validated
+        );
+
+        $cacheKey = $filter->cacheKey($validated, $request->user()?->id);
+
+        if ($cacheKey !== null) {
+            return Cache::tags(['posts'])->remember($cacheKey, 300, static fn () =>
+                PostResource::collection($query->paginate($perPage))
+            );
+        }
+
+        return PostResource::collection($query->paginate($perPage));
     }
 
     public function show(string $slug)
@@ -209,7 +204,7 @@ class PostController extends Controller
         return response()->json(['ok'=>true]);
     }
 
-    private function clearPostCaches($slug = null)
+    private function clearPostCaches(?string $slug = null): void
     {
         // Clear general post caches
         Cache::tags(['posts'])->flush();

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { buildMetadata, buildCanonicalUrl } from '@/lib/seo';
 import { SolveraChatCard } from '@/components/SolveraChatCard';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // API URL-ni o'z muhitiga qarab almashtir
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -21,73 +24,77 @@ interface User {
   xp: number;
 }
 
-// ✅ Static params (barcha userlarni build paytida olish)
-export async function generateStaticParams(): Promise<Params[]> {
-  try {
-    const res = await fetch(`${API_URL}/users`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      throw new Error("Foydalanuvchilarni olishda xato");
-    }
-
-    const payload = await res.json();
-    // API might return `{ data: [...] }` or `[...]` depending on backend
-    const users: User[] = Array.isArray(payload?.data)
-      ? payload.data
-      : Array.isArray(payload)
-      ? payload
-      : [];
-
-    return users.map((user) => ({ username: user.username }));
-  } catch (error) {
-    console.error("generateStaticParams xato:", error);
-    return [];
-  }
-}
-
 // ✅ Har bir user sahifasi
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
-  const res = await fetch(`${API_URL}/users/${username}`, {
-    cache: 'no-store',
-  });
+  try {
+    const res = await fetch(`${API_URL}/users/${username}`, {
+      cache: 'no-store',
+    });
 
-  if (res.status === 404) {
-    notFound();
+    if (res.status === 404) {
+      notFound();
+    }
+
+    if (!res.ok) {
+      return buildMetadata({ title: 'Profil topilmadi', description: 'Profil mavjud emas.' });
+    }
+
+    const user: User = await res.json();
+    const description = user.bio || `${user.name} — KnowHub hamjamiyatining a'zosi.`;
+
+    return buildMetadata({
+      title: user.name,
+      description,
+      url: `/profile/${user.username}`,
+      keywords: [user.username, user.name, 'KnowHub foydalanuvchi'],
+    });
+  } catch (error) {
+    console.error('Metadata olishda xato:', error);
+    return buildMetadata({ title: username, description: 'Profilni ko‘rsatib bo‘lmadi.' });
   }
-
-  if (!res.ok) {
-    return buildMetadata({ title: 'Profil topilmadi', description: 'Profil mavjud emas.' });
-  }
-
-  const user: User = await res.json();
-  const description = user.bio || `${user.name} — KnowHub hamjamiyatining a'zosi.`;
-
-  return buildMetadata({
-    title: user.name,
-    description,
-    url: `/profile/${user.username}`,
-    keywords: [user.username, user.name, 'KnowHub foydalanuvchi'],
-  });
 }
 
 export default async function ProfilePage({ params }: { params: Promise<Params> }) {
   const { username } = await params;
-  const res = await fetch(`${API_URL}/users/${username}`, {
-    cache: "no-store",
-  });
+  let user: User | null = null;
+  let errorMessage: string | null = null;
 
-  if (res.status === 404) {
-    notFound();
+  try {
+    const res = await fetch(`${API_URL}/users/${username}`, {
+      cache: "no-store",
+    });
+
+    if (res.status === 404) {
+      notFound();
+    }
+
+    if (!res.ok) {
+      errorMessage = "Profilni yuklab bo'lmadi. Birozdan so'ng urinib ko'ring.";
+    } else {
+      user = await res.json();
+    }
+  } catch (error) {
+    console.error('Profilni olishda xato:', error);
+    errorMessage = "Profilni yuklashda xizmat bilan bog'lanib bo'lmadi.";
   }
 
-  if (!res.ok) {
-    notFound();
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-[hsl(var(--foreground))]">{username} profili vaqtincha mavjud emas</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {errorMessage ?? "Noma'lum xatolik yuz berdi. Keyinroq qayta urinib ko'ring."}
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] hover:brightness-110"
+        >
+          Bosh sahifaga qaytish
+        </Link>
+      </div>
+    );
   }
-
-  const user: User = await res.json();
 
   const profileJsonLd = {
     '@context': 'https://schema.org',
