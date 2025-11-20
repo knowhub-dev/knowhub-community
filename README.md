@@ -6,63 +6,282 @@
 [![Issues](https://img.shields.io/github/issues/knowhub-dev/knowhub-community.svg)]()
 [![Stars](https://img.shields.io/github/stars/knowhub-dev/knowhub-community.svg?style=social)]()
 
-KnowHub Community is an open-source hub that brings developers together through articles, discussions, live code examples, and collaborative knowledge sharing. Our goal is to make learning, mentoring, and building side-by-side simple and enjoyable.
+**KnowHub Community** — o‘zbek dasturchilari va texnologiya ixlosmandlari uchun yaratilgan **next-gen ochiq manba platformasi**.  
+Platforma maqolalar, savol-javoblar, Wiki, kod ijrosi, gamifikatsiya va real vaqt funksiyalari orqali bilim almashishni qulay qiladi.
 
-## 🎯 Quick Links
-- 🚀 **Installation:** See [QUICK_START.md](QUICK_START.md) for local setup and container usage.
-- 🗺️ **Future Plans:** Explore the roadmap in [docs/ROADMAP.md](docs/ROADMAP.md).
+🎯 **Maqsad:** O‘zbekistondagi eng katta texnologik hamjamiyatni yaratish.
 
-## 🖼️ Visual Showcase
-- **Dashboard Screenshot:** _Add your latest UI capture here._
-- **Code Runner Demo GIF:** _Showcase the Piston-powered interactive code execution._
+---
 
-## 🛡️ Tech Stack Badges
-![Laravel](https://img.shields.io/badge/Laravel-11-ff2d20?logo=laravel&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ed?logo=docker&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-cache-dc382d?logo=redis&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-data-4169e1?logo=postgresql&logoColor=white)
+# 🚀 Nega KnowHub Community?
 
-## 🏗️ Architecture Overview
-- **Backend (Laravel API):** Provides RESTful endpoints, authentication, notifications, and queue-backed workloads.
-  Connects to Redis for caching and PostgreSQL/MySQL for persistence.
-- **Frontend (Next.js):** Consumes the Laravel API, renders dashboards and content feeds, and delivers real-time UX.
-  Listens for WebSocket events and API calls to keep pages in sync.
-- **Microservices (Piston):** Runs untrusted code snippets in isolated sandboxes.
-  Laravel orchestrates requests to Piston while the frontend displays live results to users.
+- 🇺🇿 **Mahalliy auditoriya uchun**, o‘zbekcha interfeys va texno-ekotizim.  
+- 🧠 **O‘qish + Tajriba + Hamjamiyat** — UX tajriba o‘rganish uchun ideal.  
+- ⚔️ **Gamifikatsiya** — XP, badge’lar, level up, leaderboard.  
+- 🚀 **Kuchli arxitektura** — Laravel 11, Next.js 14, Redis, Docker.  
+- 🤝 **To‘liq ochiq manba** — jamoa asosidagi rivojlanish.
 
-## ✨ Core Capabilities
-- Articles, posts, comments, tags, and community wiki pages.
-- OAuth and email authentication with role-based controls.
-- Interactive code runner backed by Piston microservices.
-- Notifications, trends, leaderboards, bookmarks, and gamification.
-- Analytics-ready dashboards for users and admins.
+---
 
-## 🚀 Getting Started (Summary)
-- Backend: Laravel 11 (PHP 8.2+), Redis, and PostgreSQL/MySQL.
-- Frontend: Next.js 14 with TypeScript, Tailwind CSS, and React Query.
-- DevOps: Docker, Docker Compose, Nginx, and Supervisor for production hardening.
+# 🖼️ Vizual Ko‘rinish
 
-For step-by-step commands, environment setup, and deployment guidance, follow [QUICK_START.md](QUICK_START.md).
+> `docs/screenshots/` katalogi yaratilib to‘ldiriladi.
 
-## 🔑 Environment Reference
-| Variable | Scope | Purpose |
-| --- | --- | --- |
-| `PISTON_HOST` | Backend `.env` | URL of the Piston service used for sandboxed code execution (e.g., `http://piston:2000`). |
-| `OPENAI_API_KEY` | Backend `.env` | API key for OpenAI-powered recommendations and AI features. Leave unset to disable AI integrations. |
+- Dashboard (Glass UI)  
+- Leaderboard (XP + badge)  
+- Post Editor (TipTap/Slate)  
+- Wiki Preview  
+- Piston Code Runner (GIF)  
 
-## 🐳 Docker Notes
-- **Development:** `docker-compose up -d` spins up app, database, Redis, and Piston services. Run `docker-compose exec app php artisan migrate --seed` after the first boot.
-- **Production:** Use `deploy.sh` for automated SSL, build, migrations, and Nginx configuration. Adjust environment variables before running.
+---
 
-## 🛠️ Troubleshooting
-- **Containers keep restarting:** Check misconfigured environment variables (`APP_KEY`, database credentials, `PISTON_HOST`). Run `docker-compose logs -f app` for details.
-- **Database connection failures:** Ensure the database service is healthy (`docker-compose ps`) and host/port match your `.env`. Re-run migrations after fixing credentials.
-- **Slow or failing `npm install` inside containers:** Increase memory limits or run the command on the host and mount `node_modules` if permitted.
-- **Port conflicts (80/443/3000/8000):** Stop any services occupying those ports before starting Docker, or override published ports in `docker-compose.yml`.
+# 🏛️ Arxitektura
 
-## 🤝 Contributing
-We welcome issues, discussions, and pull requests. Please open an issue to propose significant changes and follow conventional commit messages for clarity.
+```
+┌──────────────────────────────────────────────┐
+│                Next.js Frontend              │
+│ React, Tailwind, TS, React Query             │
+└──────────────────────────────────────────────┘
+                  ▲               │
+                  │ API           ▼
+┌──────────────────────────────────────────────┐
+│               Laravel Backend                │
+│ Auth, Posts, Wiki, Notifications, Gamify     │
+│ Trends, Queues, Analytics                    │
+└──────────────────────────────────────────────┘
+                  ▲               │
+                  │ Sandbox       ▼
+┌──────────────────────────────────────────────┐
+│        Piston Code Execution Engine          │
+│ Izolyatsiya qilingan kod ijro muhiti         │
+└──────────────────────────────────────────────┘
+```
 
-## 📜 License
-Released under the MIT License. See [LICENSE](LICENSE) for details.
+- **Nginx** — reverse proxy  
+- **Redis** — cache + queue  
+- **PostgreSQL/MySQL** — data storage  
+- **Supervisor/Horizon** — background jobs  
+- **Docker Compose** — local & production environment  
+
+---
+
+# 🧩 Mini-Serverlar (KnowHub Mini Services / Microservices)
+
+KnowHub ekotizimi bo‘ylab **kichik mustaqil xizmatlar** mavjud bo‘lib, ular platformani katta monolitga aylantirmasdan funksiyalarni boshqaradi.
+
+### 🔹 1. Piston Service (Code Runner)
+
+- Backend → Piston orqali kodni sandbox’da bajartiradi  
+- 30+ dasturlash tilini qo‘llab-quvvatlaydi  
+- Docker konteynerlarda izolyatsiya
+
+### 🔹 2. Image Optimization Service (Mini CDN) *(rejalashtirilgan)*
+
+- Post rasmlarini optimallashtirish  
+- WebP generatsiya  
+- Thumb caching
+
+### 🔹 3. AI Recommendation Engine
+
+- Foydalanuvchi faoliyati asosida kontent tavsiya qilish  
+- OpenAI API / lokal inferens server integratsiyasi
+
+### 🔹 4. Notification Microservice
+
+- Real-time xabarnomalar  
+- Queue orqali ishlov berish  
+- Email + WebPush qo‘llab-quvvatlash
+
+### 🔹 5. Trend Engine
+
+- Postlar, taglar va mualliflar uchun trend hisoblash  
+- Cached scoring algoritmlar
+
+Bu mini serverlar platformaning tez ishlashini, kengayuvchanligini va mustahkamligini ta’minlaydi.
+
+---
+
+# ✨ Asosiy Funksiyalar
+
+### 📝 Kontent
+
+- Postlar  
+- Maqolalar  
+- Fikrlar  
+- Taglar  
+- Wiki bo‘lim  
+
+### ⚔️ Gamifikatsiya
+
+- XP  
+- Badge’lar  
+- Darajalar (Levels)  
+- Leaderboard  
+
+### 🧠 AI Integratsiyasi
+
+- Maqola yozishda yordam  
+- Tavsiyalar  
+- Kod sharhlash  
+
+### 🧪 Kod Ijrosi (Piston)
+
+- Real vaqt  
+- 30+ til  
+- Maxsus konteynerlar
+
+### 🛡️ Admin Panel
+
+- Moderatsiya  
+- Analitika  
+- Banner boshqaruvi  
+- Post tasdiqlash  
+
+---
+
+# 🛠 Tez Boshlash
+
+## 1️⃣ Reponi klon qiling
+
+```bash
+git clone https://github.com/knowhub-dev/knowhub-community.git
+cd knowhub-community
+```
+
+---
+
+# 🔧 Backend (Laravel)
+
+```bash
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
+```
+
+Migratsiya:
+
+```bash
+php artisan migrate --seed
+```
+
+Server:
+
+```bash
+php artisan serve
+```
+
+---
+
+# 💻 Frontend (Next.js 14)
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+---
+
+# 🐳 Docker Orqali Ishga Tushirish
+
+### Development:
+
+```bash
+docker-compose up -d
+docker-compose exec app php artisan migrate --seed
+```
+
+### Production:
+
+- `deploy.sh` skripti  
+- SSL (Let’s Encrypt)  
+- Nginx avtomatik konfiguratsiya  
+- Build + migrate  
+
+---
+
+# 🔑 Muhit O‘zgaruvchilari (ENV)
+
+| O‘zgaruvchi | Qayerda | Maqsad |
+|-------------|---------|--------|
+| APP_URL | Backend | API bazaviy URL |
+| FRONTEND_URL | Front/Back | CORS |
+| DB_HOST, DB_PASSWORD | Backend | Ma’lumotlar bazasi |
+| REDIS_HOST | Backend | Cache/Queue |
+| QUEUE_CONNECTION | Backend | Horizon/Supervisor |
+| PISTON_HOST | Backend | Sandbox |
+| OPENAI_API_KEY | Backend | AI funksiyalar |
+
+---
+
+# 🛠 Muammolar va Yechimlar
+
+### ❌ DB ishlamayapti
+
+```bash
+docker-compose ps
+docker-compose logs db
+```
+
+### ❌ Port band
+
+```bash
+sudo lsof -i:3000
+```
+
+### ❌ Container restart bo‘layapti
+
+- `.env` ni tekshiring  
+- `APP_KEY`  
+- DB credential  
+
+---
+
+# 🤝 Hissa Qo‘shish (Contributing)
+
+Biz barcha PR va takliflarni mamnuniyat bilan qabul qilamiz.
+
+### Branch strategiyasi:
+
+- `main` — produktion  
+- `develop` — asosiy rivojlanish  
+- `feature/*` — yangi modullar  
+
+### Commit format:
+
+- `feat: ...`  
+- `fix: ...`  
+- `docs: ...`  
+- `refactor: ...`  
+
+### PR jarayoni:
+
+1. Issue ochish  
+2. Muhokama  
+3. PR  
+4. Review → merge  
+
+---
+
+# 🛡 Xavfsizlik
+
+Xavfsizlik kamchiligini topsangiz:
+
+📧 **security@knowhub.uz**
+
+Public issue ochmang.
+
+---
+
+# 📜 Litsenziya
+
+Ushbu loyiha **MIT License** asosida tarqatiladi.
+
+---
+
+# ❤️ Hamjamiyat
+
+**Built with ❤️ for the tech community**  
+https://knowhub.uz
