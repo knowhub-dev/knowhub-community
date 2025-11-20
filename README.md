@@ -23,17 +23,6 @@ Platforma maqolalar, savol-javoblar, Wiki, kod ijrosi, gamifikatsiya va real vaq
 
 ---
 
-# 🖼️ Vizual Ko‘rinish
-
-> `docs/screenshots/` katalogi yaratilib to‘ldiriladi.
-
-- Dashboard (Glass UI)  
-- Leaderboard (XP + badge)  
-- Post Editor (TipTap/Slate)  
-- Wiki Preview  
-- Piston Code Runner (GIF)  
-
----
 
 # 🏛️ Arxitektura
 
