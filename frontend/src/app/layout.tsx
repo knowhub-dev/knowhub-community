@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,6 +29,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased transition-colors">
@@ -48,6 +51,7 @@ export default function RootLayout({
         <Script id="knowhub-organization" type="application/ld+json">
           {JSON.stringify(organizationJsonLd)}
         </Script>
+        {measurementId ? <GoogleAnalytics gaId={measurementId} /> : null}
       </body>
     </html>
   );

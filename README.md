@@ -93,6 +93,8 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
 echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000" >> .env.local
 echo "NEXT_PUBLIC_SITE_NAME=KnowHub Community" >> .env.local
 echo "NEXT_PUBLIC_SITE_DESCRIPTION=O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati." >> .env.local
+# Google Analytics 4 (ixtiyoriy)
+echo "NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX" >> .env.local
 
 npm run dev # UI http://localhost:3000 da ishlaydi
 ```
@@ -183,8 +185,14 @@ NEXT_PUBLIC_API_URL=https://api.knowhub.uz/api/v1
 NEXT_PUBLIC_SITE_URL=https://knowhub.uz
 NEXT_PUBLIC_SITE_NAME="KnowHub Community"
 NEXT_PUBLIC_SITE_DESCRIPTION="O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati."
-NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your_ga_id
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
+
+### Google Analytics 4 integratsiyasi
+
+- GA4 ni yoqish uchun `.env.local` faylida `NEXT_PUBLIC_GA_MEASUREMENT_ID` ni to'ldiring (masalan, `G-XXXXXXXXXX`).
+- Frontend `src/app/layout.tsx` faylida rasmiy `<GoogleAnalytics>` komponentini yuklaydi va faqat measurement ID mavjud bo'lsa ishlaydi.
+- Maxsus voqealar yuborish uchun `src/lib/analytics.ts` dagi `sendGAEvent(eventName, params)` helperidan foydalanishingiz mumkin (masalan, `sendGAEvent("Post Created", { source: "dashboard" })`).
 
 ### Branding va SEO boshqaruvi
 
