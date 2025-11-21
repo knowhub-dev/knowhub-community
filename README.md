@@ -1,93 +1,74 @@
 # 🌐 KnowHub Community
+
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
 [![Contributors](https://img.shields.io/github/contributors/knowhub-dev/knowhub-community.svg)]()
 [![Issues](https://img.shields.io/github/issues/knowhub-dev/knowhub-community.svg)]()
 [![Stars](https://img.shields.io/github/stars/knowhub-dev/knowhub-community.svg?style=social)]()
 
-KnowHub Community — bu O'zbekiston va butun dunyo bo'ylab dasturchilar hamjamiyatini birlashtiruvchi ochiq platforma.  
-🎯 Maqsadimiz — bilim almashish, hamkorlikda loyihalar yaratish va yangi texnologiyalarni o'zlashtirishni osonlashtirish.
+**KnowHub Community** — o‘zbek dasturchilari va texnologiya ixlosmandlari uchun yaratilgan **next-gen ochiq manba platformasi**.  
+Platforma maqolalar, savol-javoblar, Wiki, kod ijrosi, gamifikatsiya va real vaqt funksiyalari orqali bilim almashishni qulay qiladi.
+
+🎯 **Maqsad:** O‘zbekistondagi eng katta texnologik hamjamiyatni yaratish.
 
 ---
 
-## ✨ Asosiy imkoniyatlar
-📢 Postlar va maqolalar — Jamiyat a'zolari tomonidan yozilgan, trendga chiqqan yoki yangi maqolalar.  
-💬 Izohlar va muhokamalar — Har bir post ostida fikr almashish.  
-🏷 Teglar va toifalar — Kontentni mavzular bo'yicha tartiblash.  
-📚 Wiki — Hamkorlikda tahrirlanadigan bilim bazasi.  
-🧑‍💻 Kod ishga tushirish (Code Runner) — Kod namunalari ustida interaktiv ishlash.  
-🔐 OAuth va Email autentifikatsiya — Google, GitHub yoki email orqali kirish.  
-🎯 Trend algoritmlari — Eng ko'p ovoz to'plagan va eng faol postlar ro'yxati.
-👥 Foydalanuvchilar tizimi — Profil, kuzatish, reyting jadvali.
-📊 Dashboard va analitika — Shaxsiy statistika va jamiyat ko'rsatkichlari.
-🔔 Real-time bildirishnomalar — Yangi kommentlar, ovozlar va kuzatuvchilar haqida xabarlar.
-⭐ Saqlangan postlar — Kerakli postlarni bookmark qilish imkoniyati.
-🏆 Gamifikatsiya — XP, darajalar, badglar va yutuqlar tizimi.
+# 🚀 Nega KnowHub Community?
+
+- 🇺🇿 **Mahalliy auditoriya uchun**, o‘zbekcha interfeys va texno-ekotizim.  
+- 🧠 **O‘qish + Tajriba + Hamjamiyat** — UX tajriba o‘rganish uchun ideal.  
+- ⚔️ **Gamifikatsiya** — XP, badge’lar, level up, leaderboard.  
+- 🚀 **Kuchli arxitektura** — Laravel 11, Next.js 14, Redis, Docker.  
+- 🤝 **To‘liq ochiq manba** — jamoa asosidagi rivojlanish.
 
 ---
 
-## 🛠 Texnologiyalar
 
-### Backend:
-- ⚡ Laravel 12 (PHP 8+)  
-- 🔑 Laravel Sanctum (API autentifikatsiya)  
-- 🗄️ MySQL / PostgreSQL  
-- 🌐 RESTful API arxitekturasi
-- 📦 Redis (kesh va sessiyalar)
-- 🔄 Queue system (background jobs)
-- 🤖 OpenAI integration (AI tavsiyalar)
+# 🏛️ Arxitektura
 
-### Frontend:
-- ⚛️ Next.js 14 (App Router)  
-- 📘 TypeScript  
-- 🎨 Tailwind CSS  
-- 🔌 Axios (API chaqiriqlari uchun)
-- 🔄 React Query (server state management)
-- 🎯 Zustand (client state management)
-- 📊 Chart.js (grafik va diagrammalar)
-
-### DevOps:
-- 🐳 Docker va Docker Compose
-- 🌐 Nginx (reverse proxy va load balancer)
-- 🔒 SSL/TLS encryption
-- 📈 Supervisor (process management)
-- 🚀 Production-ready deployment
-
----
-
-## 🚀 O'rnatish
-
-### Talablar
-- PHP 8.2+  
-- Composer  
-- Node.js 18+  
-- MySQL yoki PostgreSQL
-- Redis
-- Git
-- Docker va Docker Compose (production uchun)
-
-### O'rnatish bosqichlari
-
-#### 1. Loyihani klonlash
-```bash
-git clone https://github.com/knowhub-dev/knowhub-community.git
-cd knowhub-community
+```
+┌──────────────────────────────────────────────┐
+│                Next.js Frontend              │
+│ React, Tailwind, TS, React Query             │
+└──────────────────────────────────────────────┘
+                  ▲               │
+                  │ API           ▼
+┌──────────────────────────────────────────────┐
+│               Laravel Backend                │
+│ Auth, Posts, Wiki, Notifications, Gamify     │
+│ Trends, Queues, Analytics                    │
+└──────────────────────────────────────────────┘
+                  ▲               │
+                  │ Sandbox       ▼
+┌──────────────────────────────────────────────┐
+│        Piston Code Execution Engine          │
+│ Izolyatsiya qilingan kod ijro muhiti         │
+└──────────────────────────────────────────────┘
 ```
 
-#### 2. Backend (Laravel API)ni ishga tushirish
-```bash
-cp .env.example .env
-composer install
-php artisan key:generate
-php artisan migrate --seed
-php artisan storage:link
-php artisan serve # API http://localhost:8000 da ishlaydi
-```
+- **Nginx** — reverse proxy  
+- **Redis** — cache + queue  
+- **PostgreSQL/MySQL** — data storage  
+- **Supervisor/Horizon** — background jobs  
+- **Docker Compose** — local & production environment  
 
-#### 3. Frontend (Next.js UI)ni ishga tushirish
-```bash
-cd frontend
-npm install
+---
+
+# 🧩 Mini-Serverlar (KnowHub Mini Services / Microservices)
+
+KnowHub ekotizimi bo‘ylab **kichik mustaqil xizmatlar** mavjud bo‘lib, ular platformani katta monolitga aylantirmasdan funksiyalarni boshqaradi.
+
+### 🔹 1. Piston Service (Code Runner)
+
+- Backend → Piston orqali kodni sandbox’da bajartiradi  
+- 30+ dasturlash tilini qo‘llab-quvvatlaydi  
+- Docker konteynerlarda izolyatsiya
+
+### 🔹 2. Image Optimization Service (Mini CDN) *(rejalashtirilgan)*
+
+- Post rasmlarini optimallashtirish  
+- WebP generatsiya  
+- Thumb caching
 
 echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
 echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000" >> .env.local
@@ -96,88 +77,48 @@ echo "NEXT_PUBLIC_SITE_DESCRIPTION=O'zbekiston va dunyo bo'ylab dasturchilar ham
 # Google Analytics 4 (ixtiyoriy)
 echo "NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX" >> .env.local
 
-npm run dev # UI http://localhost:3000 da ishlaydi
-```
+- Foydalanuvchi faoliyati asosida kontent tavsiya qilish  
+- OpenAI API / lokal inferens server integratsiyasi
 
-#### 4. Qo'shimcha servislar (ixtiyoriy)
-```bash
-# Queue worker (background jobs uchun)
-php artisan queue:work
+### 🔹 4. Notification Microservice
 
-# Schedulerni lokalda ishga tushirish
-php artisan schedule:work
-```
+- Real-time xabarnomalar  
+- Queue orqali ishlov berish  
+- Email + WebPush qo‘llab-quvvatlash
 
----
+### 🔹 5. Trend Engine
 
-## 🐳 Docker bilan ishga tushirish
+- Postlar, taglar va mualliflar uchun trend hisoblash  
+- Cached scoring algoritmlar
 
-### Development
-```bash
-# Barcha servislarni ishga tushirish
-docker-compose up -d
-
-# Database migratsiya
-docker-compose exec app php artisan migrate --seed
-
-# Loglarni ko'rish
-docker-compose logs -f
-```
-
-### Production deployment
-```bash
-# Deploy script ishga tushirish
-chmod +x deploy.sh
-./deploy.sh
-```
-
-Deploy script quyidagilarni avtomatik bajaradi:
-- SSL sertifikatlar yaratish
-- Docker containers build qilish
-- Database migratsiya va seed
-- Nginx konfiguratsiya
-- Production optimizatsiya
+Bu mini serverlar platformaning tez ishlashini, kengayuvchanligini va mustahkamligini ta’minlaydi.
 
 ---
 
-## 🔧 Konfiguratsiya
+# ✨ Asosiy Funksiyalar
 
-### Environment Variables
+### 📝 Kontent
 
-#### Backend (.env)
-```env
-# Application
-APP_NAME="KnowHub Community"
-APP_ENV=production
-APP_URL=https://knowhub.uz
-FRONTEND_URL=https://app.knowhub.uz
+- Postlar  
+- Maqolalar  
+- Fikrlar  
+- Taglar  
+- Wiki bo‘lim  
 
-# Database
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_DATABASE=knowhub_community
-DB_USERNAME=root
-DB_PASSWORD=your_password
+### ⚔️ Gamifikatsiya
 
-# Redis
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
+- XP  
+- Badge’lar  
+- Darajalar (Levels)  
+- Leaderboard  
 
-# OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
+### 🧠 AI Integratsiyasi
 
-# AI
-OPENAI_API_KEY=your_openai_api_key
+- Maqola yozishda yordam  
+- Tavsiyalar  
+- Kod sharhlash  
 
-# Email
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_USERNAME=your_email
-MAIL_PASSWORD=your_password
-```
+### 🧪 Kod Ijrosi (Piston)
 
 #### Frontend (.env.local)
 ```env
@@ -196,163 +137,147 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 ### Branding va SEO boshqaruvi
 
-- Admin paneldagi **Settings** tab'i orqali sayt nomi, tagline, meta description/keywords va light/dark logolarni boshqarish mumkin.
-- Logolar `storage/app/public/branding` papkasida saqlanadi. Frontend bilan integratsiya uchun `php artisan storage:link` buyrug'ini ishga tushiring.
-- `NEXT_PUBLIC_SITE_*` o'zgaruvchilari default qiymat sifatida ishlatiladi; admin panel orqali yangilangan ma'lumotlar avtomatik tarzda API orqali UI ga yetkaziladi.
+## 1️⃣ Reponi klon qiling
 
----
-
-## 📚 API Documentation
-
-### Authentication
 ```bash
-# Email bilan ro'yxatdan o'tish
-POST /api/v1/auth/email/register
-{
-  "name": "John Doe",
-  "username": "johndoe",
-  "email": "john@example.com",
-  "password": "password"
-}
-
-# Kirish
-POST /api/v1/auth/email/login
-{
-  "email": "john@example.com",
-  "password": "password"
-}
-
-# OAuth
-GET /api/v1/auth/google/redirect
-GET /api/v1/auth/github/redirect
-```
-
-### Posts
-```bash
-# Postlar ro'yxati
-GET /api/v1/posts?sort=trending&tag=laravel&category=programming
-
-# Post yaratish
-POST /api/v1/posts
-{
-  "title": "Laravel Tips",
-  "content_markdown": "# Laravel Tips\n\nSome useful tips...",
-  "category_id": 1,
-  "tags": ["Laravel", "PHP"]
-}
-
-# Post ko'rish
-GET /api/v1/posts/{slug}
-
-# Tegishli postlar
-GET /api/v1/posts/{slug}/related
-```
-
-### Users
-```bash
-# Foydalanuvchilar ro'yxati
-GET /api/v1/users?sort=xp&search=john
-
-# Profil ko'rish
-GET /api/v1/users/{username}
-
-# Reyting jadvali
-GET /api/v1/users/leaderboard?period=month&type=posts
-
-# Statistika
-GET /api/v1/users/{username}/stats
-```
-
-### Dashboard
-```bash
-# Umumiy statistika
-GET /api/v1/dashboard/stats
-
-# Shaxsiy faoliyat
-GET /api/v1/dashboard/activity
-
-# Trend kontent
-GET /api/v1/dashboard/trending
-
-# Analitika
-GET /api/v1/dashboard/analytics?period=30
+git clone https://github.com/knowhub-dev/knowhub-community.git
+cd knowhub-community
 ```
 
 ---
 
-## 🚀 Production Deployment
+# 🔧 Backend (Laravel)
 
-### Server talablari
-- Ubuntu 20.04+ yoki CentOS 8+
-- 2+ CPU cores
-- 4GB+ RAM
-- 50GB+ disk space
-- Docker va Docker Compose
-
-### SSL sertifikat
 ```bash
-# Let's Encrypt bilan
-sudo apt install certbot
-sudo certbot certonly --standalone -d knowhub.uz -d api.knowhub.uz
-
-# Sertifikatlarni Docker volume ga ko'chirish
-sudo cp /etc/letsencrypt/live/knowhub.uz/fullchain.pem ssl/cert.pem
-sudo cp /etc/letsencrypt/live/knowhub.uz/privkey.pem ssl/key.pem
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
 ```
 
-### Monitoring
+Migratsiya:
+
 ```bash
-# Container statusini tekshirish
+php artisan migrate --seed
+```
+
+Server:
+
+```bash
+php artisan serve
+```
+
+---
+
+# 💻 Frontend (Next.js 14)
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+---
+
+# 🐳 Docker Orqali Ishga Tushirish
+
+### Development:
+
+```bash
+docker-compose up -d
+docker-compose exec app php artisan migrate --seed
+```
+
+### Production:
+
+- `deploy.sh` skripti  
+- SSL (Let’s Encrypt)  
+- Nginx avtomatik konfiguratsiya  
+- Build + migrate  
+
+---
+
+# 🔑 Muhit O‘zgaruvchilari (ENV)
+
+| O‘zgaruvchi | Qayerda | Maqsad |
+|-------------|---------|--------|
+| APP_URL | Backend | API bazaviy URL |
+| FRONTEND_URL | Front/Back | CORS |
+| DB_HOST, DB_PASSWORD | Backend | Ma’lumotlar bazasi |
+| REDIS_HOST | Backend | Cache/Queue |
+| QUEUE_CONNECTION | Backend | Horizon/Supervisor |
+| PISTON_HOST | Backend | Sandbox |
+| OPENAI_API_KEY | Backend | AI funksiyalar |
+
+---
+
+# 🛠 Muammolar va Yechimlar
+
+### ❌ DB ishlamayapti
+
+```bash
 docker-compose ps
-
-# Loglarni ko'rish
-docker-compose logs -f app
-docker-compose logs -f frontend
-docker-compose logs -f nginx
-
-# Resource usage
-docker stats
+docker-compose logs db
 ```
 
-### Backup
+### ❌ Port band
+
 ```bash
-# Database backup
-docker-compose exec db mysqldump -u root -p knowhub_community > backup.sql
-
-# Files backup
-tar -czf storage_backup.tar.gz storage/
+sudo lsof -i:3000
 ```
 
----
+### ❌ Container restart bo‘layapti
 
-## 🤝 Hissa qo'shish
-
-1. Fork qiling
-2. Feature branch yarating (`git checkout -b feature/amazing-feature`)
-3. Commit qiling (`git commit -m 'Add amazing feature'`)
-4. Push qiling (`git push origin feature/amazing-feature`)
-5. Pull Request oching
+- `.env` ni tekshiring  
+- `APP_KEY`  
+- DB credential  
 
 ---
 
-## 📄 Litsenziya
+# 🤝 Hissa Qo‘shish (Contributing)
 
-Bu loyiha MIT litsenziyasi ostida tarqatiladi. Batafsil ma'lumot uchun [LICENSE](LICENSE) faylini ko'ring.
+Biz barcha PR va takliflarni mamnuniyat bilan qabul qilamiz.
+
+### Branch strategiyasi:
+
+- `main` — produktion  
+- `develop` — asosiy rivojlanish  
+- `feature/*` — yangi modullar  
+
+### Commit format:
+
+- `feat: ...`  
+- `fix: ...`  
+- `docs: ...`  
+- `refactor: ...`  
+
+### PR jarayoni:
+
+1. Issue ochish  
+2. Muhokama  
+3. PR  
+4. Review → merge  
 
 ---
 
-## 📞 Aloqa
+# 🛡 Xavfsizlik
 
-- 🌐 Website: [knowhub.uz](https://knowhub.uz)
-- 📧 Email: info@knowhub.uz
-- 💬 Telegram: [@knowhub_community](https://t.me/knowhub_community)
-- 🐙 GitHub: [knowhub-dev](https://github.com/knowhub-dev)
+Xavfsizlik kamchiligini topsangiz:
+
+📧 **security@knowhub.uz**
+
+Public issue ochmang.
 
 ---
 
-## 🙏 Minnatdorchilik
+# 📜 Litsenziya
 
-- Laravel jamoasiga
-- Next.js jamoasiga  
-- Barcha open source contributorlariga
-- O'zbek dasturchilar hamjamiyatiga
+Ushbu loyiha **MIT License** asosida tarqatiladi.
+
+---
+
+# ❤️ Hamjamiyat
+
+**Built with ❤️ for the tech community**  
+https://knowhub.uz
