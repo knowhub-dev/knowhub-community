@@ -70,10 +70,7 @@ KnowHub ekotizimi bo‘ylab **kichik mustaqil xizmatlar** mavjud bo‘lib, ular 
 - WebP generatsiya  
 - Thumb caching
 
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
-echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000" >> .env.local
-echo "NEXT_PUBLIC_SITE_NAME=KnowHub Community" >> .env.local
-echo "NEXT_PUBLIC_SITE_DESCRIPTION=O'zbekiston va dunyo bo'ylab dasturchilar hamjamiyati." >> .env.local
+
 # Google Analytics 4 (ixtiyoriy)
 echo "NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX" >> .env.local
 
