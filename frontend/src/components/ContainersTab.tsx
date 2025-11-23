@@ -21,7 +21,7 @@ import { Label } from './ui/label';
 const DEFAULT_CONTAINER: CreateContainerDto = {
   name: '',
   subdomain: '',
-  image: '',
+  type: 'node',
   cpu_limit: 1,
   memory_limit: 512,
   disk_limit: 1024,
@@ -43,7 +43,7 @@ export default function ContainersTab() {
     queryFn: containerService.getContainers,
   });
 
-  const allowedImages = options?.allowed_images ?? [];
+  const templates = options?.templates ?? [];
   const domainSuffix = options?.domain_suffix ?? null;
   const reservedSubdomains = options?.reserved_subdomains ?? [];
   const subdomainMin = options?.subdomain_min_length ?? 3;
@@ -51,26 +51,26 @@ export default function ContainersTab() {
   const remainingSlots = options?.remaining_slots ?? null;
   const isCreateDisabled =
     !options ||
-    !allowedImages.length ||
+    !templates.length ||
     !options.can_create ||
     (remainingSlots !== null && remainingSlots <= 0);
 
   useEffect(() => {
-    if (!allowedImages.length) {
+    if (!templates.length) {
       return;
     }
 
     setFormData((prev) => {
-      if (allowedImages.includes(prev.image)) {
+      if (templates.some((template) => template.type === prev.type)) {
         return prev;
       }
 
       return {
         ...prev,
-        image: allowedImages[0],
+        type: templates[0].type,
       };
     });
-  }, [allowedImages]);
+  }, [templates]);
 
   // Create container
   const createMutation = useMutation({
@@ -80,7 +80,7 @@ export default function ContainersTab() {
       setIsDialogOpen(false);
       setFormData({
         ...DEFAULT_CONTAINER,
-        image: allowedImages[0] ?? '',
+        type: templates[0]?.type ?? 'node',
       });
     },
   });
@@ -190,19 +190,17 @@ export default function ContainersTab() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="image">Image</Label>
+                <Label htmlFor="template">Template</Label>
                 <select
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
+                  id="template"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   required
                 >
-                  {allowedImages.map((image) => (
-                    <option key={image} value={image}>
-                      {image}
+                  {templates.map((template) => (
+                    <option key={template.type} value={template.type}>
+                      {template.type.toUpperCase()} — {template.image}
                     </option>
                   ))}
                 </select>
@@ -275,7 +273,9 @@ export default function ContainersTab() {
         <div className="rounded-md border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
           <p className="font-medium">Security constraints</p>
           <ul className="list-disc pl-5 mt-2 space-y-1">
-            <li>Allowed images: {allowedImages.join(', ') || '—'}</li>
+            <li>
+              Templates: {templates.map((template) => `${template.type} (${template.image})`).join(', ') || '—'}
+            </li>
             <li>
               Containers remaining:{' '}
               {remainingSlots === null ? 'Unlimited' : remainingSlots} /

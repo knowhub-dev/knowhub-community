@@ -29,7 +29,8 @@ export default function MiniServicesPage() {
     queryFn: containerService.getContainers,
   });
 
-  const allowedImages = options?.allowed_images ?? [];
+  const templates = options?.templates ?? [];
+  const defaultTemplate = templates[0]?.type ?? 'node';
   const miniSettings = options?.mini_services;
   const minXpRequired = miniSettings?.min_xp_required ?? options?.min_xp_required ?? 0;
   const maxPerUser = miniSettings?.max_per_user ?? options?.max_containers_per_user ?? null;
@@ -40,7 +41,7 @@ export default function MiniServicesPage() {
   const [formData, setFormData] = useState<CreateContainerDto>({
     name: '',
     subdomain: '',
-    image: allowedImages[0] ?? '',
+    type: defaultTemplate,
     cpu_limit: 1,
     memory_limit: 512,
     disk_limit: 2048,
@@ -48,10 +49,10 @@ export default function MiniServicesPage() {
   const [envRows, setEnvRows] = useState<EnvRow[]>(defaultEnvRows);
 
   useEffect(() => {
-    if (allowedImages.length) {
-      setFormData((prev) => ({ ...prev, image: prev.image || allowedImages[0] }));
+    if (templates.length) {
+      setFormData((prev) => ({ ...prev, type: prev.type || templates[0]?.type }));
     }
-  }, [allowedImages]);
+  }, [templates]);
 
   const xpGateMessage = useMemo(() => {
     if (!user) return 'Mini serverlarni ishga tushirish uchun avvalo tizimga kiring.';
@@ -181,15 +182,19 @@ export default function MiniServicesPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium">
-                  Runtime image
+                  Runtime template
                   <select
-                    value={formData.image}
-                    onChange={(event) => setFormData({ ...formData, image: event.target.value })}
+                    value={formData.type}
+                    onChange={(event) => setFormData({ ...formData, type: event.target.value })}
                     className="mt-2 w-full rounded-xl border border-border bg-transparent px-3 py-2 text-sm focus:border-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))/20]"
                   >
-                    {allowedImages.map((image) => (
-                      <option key={image} value={image} className="bg-[hsl(var(--card))] text-[hsl(var(--foreground))]">
-                        {image}
+                    {templates.map((template) => (
+                      <option
+                        key={template.type}
+                        value={template.type}
+                        className="bg-[hsl(var(--card))] text-[hsl(var(--foreground))]"
+                      >
+                        {template.type.toUpperCase()} — {template.image}
                       </option>
                     ))}
                   </select>

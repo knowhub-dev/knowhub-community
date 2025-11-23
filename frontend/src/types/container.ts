@@ -2,8 +2,10 @@ export interface Container {
     id: number;
     user_id: number;
     container_id: string | null;
+    uuid?: string;
     name: string;
     subdomain?: string | null;
+    type?: 'node' | 'python' | 'html' | 'php' | string;
     image: string;
     status: 'created' | 'running' | 'stopped' | 'failed';
     cpu_limit: number;
@@ -34,11 +36,16 @@ export interface ContainerLogResponse {
 export interface CreateContainerDto {
     name: string;
     subdomain?: string;
-    image: string;
+    type: string;
     cpu_limit: number;
     memory_limit: number;
     disk_limit: number;
     env_vars?: Record<string, string>;
+}
+
+export interface ContainerTemplate {
+    type: string;
+    image: string;
 }
 
 export interface ContainerOptions {
@@ -54,6 +61,7 @@ export interface ContainerOptions {
     reserved_subdomains?: string[];
     subdomain_min_length?: number;
     subdomain_max_length?: number;
+    templates?: ContainerTemplate[];
     mini_services?: {
         enabled: boolean;
         min_xp_required: number;

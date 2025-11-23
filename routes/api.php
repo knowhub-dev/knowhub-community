@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\{
 };
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
+use App\Http\Controllers\Api\V1\ContainerFileController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Middleware\CacheMiddleware;
 use App\Http\Controllers\Api\ContainerController;
@@ -87,6 +88,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/{container}/stats', [ContainerController::class, 'stats']);
             Route::get('/{container}/logs', [ContainerController::class, 'logs']);
             Route::put('/{container}/env', [ContainerController::class, 'updateEnv']);
+            Route::get('/{container}/files', [ContainerFileController::class, 'index']);
+            Route::get('/{container}/files/show', [ContainerFileController::class, 'show']);
+            Route::post('/{container}/files', [ContainerFileController::class, 'store']);
+            Route::put('/{container}/files', [ContainerFileController::class, 'update']);
         });
 
         // Profile
