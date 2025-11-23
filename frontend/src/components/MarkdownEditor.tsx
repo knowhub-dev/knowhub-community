@@ -11,16 +11,19 @@ const MDEditor = dynamic(
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
+  preview?: 'live' | 'edit' | 'preview';
 }
 
-export default function MarkdownEditor({ value, onChange }: MarkdownEditorProps) {
+export default function MarkdownEditor({ value, onChange, preview = 'live' }: MarkdownEditorProps) {
   return (
     <div className="w-full">
       <MDEditor
         value={value}
         onChange={(val) => onChange(val || '')}
-        preview="live"
-        height={400}
+        preview={preview}
+        height={420}
+        className="creator-editor"
+        data-color-mode="dark"
       />
     </div>
   );
