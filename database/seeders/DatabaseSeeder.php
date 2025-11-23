@@ -11,6 +11,7 @@ use App\Models\Level;
 use App\Models\User;     // <-- Yangi
 use App\Models\Post;     // <-- Yangi
 use App\Models\Comment;  // <-- Yangi
+use App\Models\Badge;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,7 +25,9 @@ class DatabaseSeeder extends Seeder
         Category::truncate();
         Tag::truncate();
         Level::truncate();
+        Badge::truncate();
         DB::table('post_tag')->truncate(); // oraliq jadval
+        DB::table('user_badges')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // 1. Kategoriyalar (sizning kodingiz)
@@ -46,6 +49,9 @@ class DatabaseSeeder extends Seeder
             ['name'=>'Mentor','min_xp'=>2500,'icon'=>'shield'],
         ];
         foreach ($levels as $lv) { Level::firstOrCreate(['name'=>$lv['name']], $lv); }
+
+        // 3.1. Badge'larni seeding qilamiz
+        $this->call(BadgeSeeder::class);
         
         // 4. ADMINNI YARATAMIZ
         // Default credentialar: admin@knowhub.uz / admin123

@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ContainerService
@@ -253,6 +254,9 @@ class ContainerService
             'SecurityOpt' => [],
         ];
 
+        $workspacePath = $this->ensureWorkspace($container);
+        $hostConfig['Binds'] = [sprintf('%s:/app', $workspacePath)];
+
         if (!empty($security['no_new_privileges'])) {
             $hostConfig['SecurityOpt'][] = 'no-new-privileges:true';
         }
@@ -325,5 +329,18 @@ class ContainerService
         }
 
         return $total / (1024 * 1024);
+    }
+
+    private function ensureWorkspace(Container $container): string
+    {
+        if (!$container->uuid) {
+            $container->uuid = (string) Str::uuid();
+            $container->save();
+        }
+
+        $relativePath = sprintf('containers/%s', $container->uuid);
+        Storage::disk('local')->makeDirectory($relativePath);
+
+        return storage_path(sprintf('app/%s', $relativePath));
     }
 }

@@ -9,8 +9,10 @@ class Container extends Model
     protected $fillable = [
         'user_id',
         'container_id',
+        'uuid',
         'name',
         'subdomain',
+        'type',
         'image',
         'status',
         'cpu_limit',

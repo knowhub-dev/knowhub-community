@@ -1,10 +1,18 @@
 <?php
 
 return [
+    'templates' => [
+        'node' => 'node:18-alpine',
+        'python' => 'python:3.12-alpine',
+        'html' => 'nginx:alpine',
+        'php' => 'php:8.2-apache',
+    ],
+
     'allowed_images' => [
-        'ghcr.io/knowhub/base-runtime:latest',
-        'ghcr.io/knowhub/node-runner:18',
-        'ghcr.io/knowhub/python-runner:3.12',
+        'node:18-alpine',
+        'python:3.12-alpine',
+        'nginx:alpine',
+        'php:8.2-apache',
     ],
 
     'min_xp_required' => env('CONTAINER_MIN_XP', 500),

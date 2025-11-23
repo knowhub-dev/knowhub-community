@@ -4,6 +4,7 @@ import Script from 'next/script';
 import Link from "next/link";
 import { buildMetadata, buildCanonicalUrl } from '@/lib/seo';
 import { SolveraChatCard } from '@/components/SolveraChatCard';
+import { BadgeCard } from '@/components/gamification/BadgeCard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,6 +23,14 @@ interface User {
   bio?: string;
   avatar_url?: string;
   xp: number;
+  badges?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+    icon_key?: string;
+    level?: string;
+    awarded_at?: string;
+  }>;
 }
 
 // ✅ Har bir user sahifasi
@@ -154,6 +163,24 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           title="SolVera bilan tezkor yordam"
           subtitle="Bio yoki postlaringizni shu yerning o'zida takomillashtiring"
         />
+      </div>
+
+      <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">Trophy Case</h2>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Badges</p>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">Hamjamiyatdagi yutuqlaringiz shu yerda jamlangan.</p>
+
+        {user.badges?.length ? (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {user.badges.map((badge) => (
+              <BadgeCard key={badge.id} badge={badge} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-6 text-sm font-medium text-muted-foreground">Hozircha hech qanday badge yo'q — faol bo'lib, yutuqlarni oching!</p>
+        )}
       </div>
 
       <Script id={`profile-jsonld-${user.id}`} type="application/ld+json">

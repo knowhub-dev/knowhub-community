@@ -59,7 +59,7 @@ class ContainerController extends Controller
             }
         }
 
-        $allowedImages = config('containers.allowed_images', []);
+        $templateImages = config('containers.templates', []);
         $maxEnvVars = (int) config('containers.max_env_vars', 0);
         $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
         $reservedSubdomains = config('containers.reserved_subdomains', []);
@@ -82,14 +82,14 @@ class ContainerController extends Controller
                 Rule::notIn($reservedSubdomains),
                 Rule::unique('containers', 'subdomain'),
             ]),
-            'image' => ['required', 'string', Rule::in($allowedImages)],
+            'type' => ['required', 'string', Rule::in(array_keys($templateImages))],
             'cpu_limit' => ['required', 'integer', 'min:1', 'max:4'],
             'memory_limit' => ['required', 'integer', 'min:128', 'max:2048'],
             'disk_limit' => ['required', 'integer', 'min:1024', 'max:10240'],
             'env_vars' => ['nullable', 'array', 'max:' . $maxEnvVars],
             'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
         ], [
-            'image.in' => 'The selected container image is not permitted.',
+            'type.in' => 'The selected container template is not permitted.',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -131,10 +131,12 @@ class ContainerController extends Controller
         $validated = $validator->validated();
 
         $payload = collect($validated)
-            ->only(['name', 'subdomain', 'image', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
+            ->only(['name', 'subdomain', 'type', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
             ->toArray();
 
         $payload['env_vars'] = $this->normalizeEnvVars($request->input('env_vars', []));
+        $payload['uuid'] = (string) Str::uuid();
+        $payload['image'] = $this->resolveTemplateImage($payload['type']);
 
         if (!empty($payload['subdomain'])) {
             $payload['subdomain'] = $this->sanitizeSubdomain($payload['subdomain']);
@@ -311,7 +313,8 @@ class ContainerController extends Controller
     {
         $user = $request->user();
 
-        $allowedImages = config('containers.allowed_images', []);
+        $templates = config('containers.templates', []);
+        $allowedImages = array_values($templates ?: config('containers.allowed_images', []));
         $maxContainers = (int) Settings::get('mini_services.max_per_user', config('containers.max_containers_per_user', PHP_INT_MAX));
         $currentCount = $user->containers()->count();
         $isAdmin = (bool) $user->is_admin;
@@ -333,6 +336,12 @@ class ContainerController extends Controller
             'reserved_subdomains' => $reservedSubdomains,
             'subdomain_min_length' => (int) config('containers.subdomain_min_length', 3),
             'subdomain_max_length' => (int) config('containers.subdomain_max_length', 30),
+            'templates' => collect($templates)->map(function ($image, $type) {
+                return [
+                    'type' => $type,
+                    'image' => $image,
+                ];
+            })->values()->all(),
             'mini_services' => [
                 'enabled' => (bool) Settings::get('mini_services.enabled', true),
                 'min_xp_required' => $minXpRequired,
@@ -341,6 +350,17 @@ class ContainerController extends Controller
                 'mysql_instances_per_user' => $mysqlInstances,
             ],
         ]);
+    }
+
+    private function resolveTemplateImage(string $type): string
+    {
+        $templates = config('containers.templates', []);
+
+        if (!array_key_exists($type, $templates)) {
+            throw new RuntimeException('Unsupported container template.');
+        }
+
+        return (string) $templates[$type];
     }
 
     private function normalizeEnvVars($envVars): array
