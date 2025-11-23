@@ -123,3 +123,34 @@
     color: hsl(var(--foreground));
   }
 }
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-sky-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_8px_30px_rgba(99,102,241,0.25)];
+  }
+
+  .focus-glow {
+    @apply ring-2 ring-offset-2 ring-offset-[hsl(var(--background))] ring-[hsl(var(--primary))]/60 shadow-[0_0_0_6px_rgba(79,70,229,0.25)];
+  }
+
+  .creator-editor .w-md-editor {
+    background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.06), transparent 35%),
+      radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.05), transparent 35%),
+      #0f172a;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 15px 60px -35px rgba(94, 92, 255, 0.5);
+    color: #e2e8f0;
+  }
+
+  .creator-editor .w-md-editor-toolbar,
+  .creator-editor .w-md-editor-preview,
+  .creator-editor .w-md-editor-input,
+  .creator-editor .w-md-editor-text-input {
+    background: transparent;
+    color: #e2e8f0;
+  }
+
+  .creator-editor .w-md-editor-toolbar {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
