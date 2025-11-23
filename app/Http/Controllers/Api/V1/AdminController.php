@@ -283,9 +283,31 @@ class AdminController extends Controller
             }
         }
 
-        $users = $query->latest()->paginate(20);
-        
+        $users = $query
+            ->select(['id', 'name', 'username', 'email', 'xp', 'is_admin', 'is_banned', 'created_at'])
+            ->latest()
+            ->paginate(20);
+
         return response()->json($users);
+    }
+
+    public function banUser($userId)
+    {
+        $user = User::findOrFail($userId);
+
+        $user->is_banned = !$user->is_banned;
+        $user->save();
+
+        Log::info('User ban state toggled', [
+            'admin_id' => auth()->id(),
+            'target_user_id' => $userId,
+            'is_banned' => $user->is_banned,
+        ]);
+
+        return response()->json([
+            'message' => $user->is_banned ? 'Foydalanuvchi bloklandi' : "Foydalanuvchi blokdan chiqarildi",
+            'user' => $user,
+        ]);
     }
 
     public function posts(Request $request)
@@ -565,6 +587,26 @@ class AdminController extends Controller
         $post->delete();
 
         return response()->json(['message' => 'Post o\'chirildi']);
+    }
+
+    public function approvePost($postId)
+    {
+        $post = Post::findOrFail($postId);
+
+        $post->status = 'published';
+        $post->published_at = $post->published_at ?? now();
+        $post->save();
+
+        Log::info('Post approved by admin', [
+            'admin_id' => auth()->id(),
+            'post_id' => $postId,
+            'post_title' => $post->title,
+        ]);
+
+        return response()->json([
+            'message' => 'Post tasdiqlandi va nashr etildi',
+            'post' => $post,
+        ]);
     }
 
     public function deleteComment($commentId)
