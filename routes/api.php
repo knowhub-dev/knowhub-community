@@ -157,7 +157,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/activity', [AdminController::class, 'activity']);
             Route::get('/analytics', [AdminController::class, 'analytics']);
             Route::put('/users/{userId}/status', [AdminController::class, 'updateUserStatus']);
+            Route::post('/users/{userId}/ban', [AdminController::class, 'banUser']);
             Route::delete('/posts/{postId}', [AdminController::class, 'deletePost']);
+            Route::post('/posts/{postId}/approve', [AdminController::class, 'approvePost']);
             Route::delete('/comments/{commentId}', [AdminController::class, 'deleteComment']);
             Route::get('/settings', [AdminController::class, 'systemSettings']);
             Route::put('/settings', [AdminController::class, 'updateSystemSettings']);
