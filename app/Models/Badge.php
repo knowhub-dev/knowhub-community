@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Badge extends Model
 {
-    protected $fillable = ['name','slug','icon','description','xp_reward'];
+    protected $fillable = ['name','slug','icon','icon_key','level','description','xp_reward'];
 }
 
 

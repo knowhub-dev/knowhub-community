@@ -67,6 +67,17 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')
+            ->withPivot('awarded_at');
+    }
+
+    public function xpTransactions(): HasMany
+    {
+        return $this->hasMany(XpTransaction::class);
+    }
+
     // =======================================================
     // XATONI TUZATADIGAN JOY (Sening Migratsiyang Asosida)
     // =======================================================

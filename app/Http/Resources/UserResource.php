@@ -24,7 +24,11 @@ class UserResource extends JsonResource
                 return $this->badges->map(fn($badge) => [
                     'id' => $badge->id,
                     'name' => $badge->name,
+                    'slug' => $badge->slug,
+                    'description' => $badge->description,
                     'icon' => $badge->icon,
+                    'icon_key' => $badge->icon_key,
+                    'level' => $badge->level,
                     'awarded_at' => $badge->pivot->awarded_at
                 ]);
             }),
