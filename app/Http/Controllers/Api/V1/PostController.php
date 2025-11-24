@@ -25,10 +25,15 @@ class PostController extends Controller
         $validated = $filter->validate($request);
         $perPage = (int) ($validated['per_page'] ?? 20);
 
-        $query = $filter->apply(
-            Post::query()->with(['user.level', 'tags', 'category']),
-            $validated
-        );
+        $query = Post::query()
+            ->with([
+                'author:id,name,username,avatar_url,level_id',
+                'author.level:id,name,min_xp,icon',
+                'tags:id,name,slug',
+                'category:id,name,slug',
+            ])
+            ->withCount(['comments', 'votes'])
+            ->filter($filter, $validated);
 
         $cacheKey = $filter->cacheKey($validated, $request->user()?->id);
 
@@ -46,7 +51,12 @@ class PostController extends Controller
         $cacheKey = 'post:' . $slug;
         
         $post = Cache::remember($cacheKey, 600, function () use ($slug) {
-            return Post::with(['user.level','tags','category'])->where('slug',$slug)->firstOrFail();
+            return Post::with([
+                'author:id,name,username,avatar_url,level_id',
+                'author.level:id,name,min_xp,icon',
+                'tags:id,name,slug',
+                'category:id,name,slug',
+            ])->withCount(['comments', 'votes'])->where('slug', $slug)->firstOrFail();
         });
         
         return new PostResource($post);
@@ -61,7 +71,13 @@ class PostController extends Controller
         $relatedPosts = Cache::remember($cacheKey, 1800, function () use ($post) {
             $tagIds = $post->tags->pluck('id');
             
-            return Post::with(['user.level', 'tags', 'category'])
+            return Post::with([
+                'author:id,name,username,avatar_url,level_id',
+                'author.level:id,name,min_xp,icon',
+                'tags:id,name,slug',
+                'category:id,name,slug',
+            ])
+                ->withCount(['comments', 'votes'])
                 ->where('status', 'published')
                 ->where('id', '!=', $post->id)
                 ->where(function ($q) use ($post, $tagIds) {
@@ -87,7 +103,13 @@ class PostController extends Controller
         $cacheKey = 'posts:trending:weekly';
         
         $trendingPosts = Cache::remember($cacheKey, 600, function () {
-            return Post::with(['user.level', 'tags', 'category'])
+            return Post::with([
+                'author:id,name,username,avatar_url,level_id',
+                'author.level:id,name,min_xp,icon',
+                'tags:id,name,slug',
+                'category:id,name,slug',
+            ])
+                ->withCount(['comments', 'votes'])
                 ->where('status', 'published')
                 ->where('created_at', '>=', now()->subDays(7))
                 ->orderByDesc('score')
@@ -104,7 +126,13 @@ class PostController extends Controller
         $cacheKey = 'posts:featured';
         
         $featuredPosts = Cache::remember($cacheKey, 3600, function () {
-            return Post::with(['user.level', 'tags', 'category'])
+            return Post::with([
+                'author:id,name,username,avatar_url,level_id',
+                'author.level:id,name,min_xp,icon',
+                'tags:id,name,slug',
+                'category:id,name,slug',
+            ])
+                ->withCount(['comments', 'votes'])
                 ->where('status', 'published')
                 ->where('score', '>=', 10)
                 ->where('answers_count', '>=', 3)
