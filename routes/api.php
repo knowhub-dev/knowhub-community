@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\{
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController, LevelController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController
+    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController,
+    PaymentCallbackController
 };
+use App\Http\Controllers\Api\V1\Admin\PaymentSettingsController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Controllers\Api\V1\ContainerFileController;
@@ -39,6 +41,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/status/summary', [SystemStatusController::class, 'summary']);
     Route::post('/ai/solvera/chat', [SolveraController::class, 'chat'])
         ->middleware(RateLimitMiddleware::class . ':ai,20');
+
+    // Payment callbacks (public endpoints consumed by providers)
+    Route::post('/payment/payme/callback', [PaymentCallbackController::class, 'payme'])
+        ->name('payments.payme.callback');
+    Route::post('/payment/click/callback', [PaymentCallbackController::class, 'click'])
+        ->name('payments.click.callback');
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -171,6 +179,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('/comments/{commentId}', [AdminController::class, 'deleteComment']);
             Route::get('/settings', [AdminController::class, 'systemSettings']);
             Route::put('/settings', [AdminController::class, 'updateSystemSettings']);
+            Route::put('/payment/settings', [PaymentSettingsController::class, 'update']);
+            Route::get('/payment/callbacks', [PaymentSettingsController::class, 'getCallbacks']);
             Route::post('/cache/clear', [AdminController::class, 'clearCache']);
             Route::post('/system/optimize', [AdminController::class, 'optimizeSystem']);
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);
