@@ -28,7 +28,6 @@ class StoreContainerRequest extends FormRequest
         $templateImages = config('containers.templates', []);
         $maxEnvVars = (int) config('containers.max_env_vars', 0);
         $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
-        $reservedSubdomains = config('containers.reserved_subdomains', []);
         $minSubdomainLength = (int) config('containers.subdomain_min_length', 3);
         $maxSubdomainLength = (int) config('containers.subdomain_max_length', 30);
 
@@ -40,7 +39,7 @@ class StoreContainerRequest extends FormRequest
                 'min:' . $minSubdomainLength,
                 'max:' . $maxSubdomainLength,
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                new ReservedSubdomain($reservedSubdomains),
+                new ReservedSubdomain(),
                 Rule::unique('containers', 'subdomain'),
             ]),
             'type' => ['required', 'string', Rule::in(array_keys($templateImages))],

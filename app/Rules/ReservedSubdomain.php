@@ -7,21 +7,21 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class ReservedSubdomain implements ValidationRule
 {
-    private array $reserved = [
-        'admin', 'api', 'www', 'mail', 'support', 'billing', 'status', 'dashboard',
+    /**
+     * @var array<string>
+     */
+    private array $blacklist = [
+        'admin', 'api', 'auth', 'login', 'signup', 'oauth', 'backend', 'panel', 'root', 'system', 'internal', 'config',
+        'www', 'app', 'beta', 'dev', 'test', 'staging', 'demo', 'static', 'cdn', 'assets',
+        'mail', 'smtp', 'ftp', 'sftp', 'ssh', 'vpn',
+        'support', 'help', 'docs', 'blog', 'status', 'news', 'community', 'space', 'cloud',
+        'api-v1', 'api-v2', 'samdevx',
     ];
-
-    public function __construct(private ?array $additional = null)
-    {
-        if ($additional) {
-            $this->reserved = array_values(array_unique(array_merge($this->reserved, $additional)));
-        }
-    }
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (in_array(strtolower((string) $value), $this->reserved, true)) {
-            $fail('The :attribute is reserved and cannot be used.');
+        if (in_array(strtolower((string) $value), $this->blacklist, true)) {
+            $fail('Bu nom tizim tomonidan band qilingan.');
         }
     }
 }

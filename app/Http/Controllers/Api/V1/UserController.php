@@ -7,6 +7,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -137,6 +138,27 @@ class UserController extends Controller
         });
 
         return response()->json($stats);
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $validated = $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+        $oldAvatar = $user->avatar_url;
+
+        if ($oldAvatar) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
+
+        $path = $validated['avatar']->store('avatars', 'public');
+
+        $user->avatar_url = $path;
+        $user->save();
+
+        return new UserResource($user->fresh(['level', 'badges']));
     }
 
     private function getMonthlyStats(User $user)

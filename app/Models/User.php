@@ -132,4 +132,9 @@ class User extends Authenticatable
     {
         return $this->containers()->where('is_featured', true);
     }
+
+    public function isAdmin(): bool
+    {
+        return (bool) ($this->is_admin ?? false);
+    }
 }
