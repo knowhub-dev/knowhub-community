@@ -1,39 +1,43 @@
 import type { Metadata } from 'next';
 import { notFound } from "next/navigation";
 import Script from 'next/script';
-import Link from "next/link";
-import { buildMetadata, buildCanonicalUrl } from '@/lib/seo';
+
+import { GamificationStats } from '@/components/profile/GamificationStats';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import { SolveraChatCard } from '@/components/SolveraChatCard';
-import { BadgeCard } from '@/components/gamification/BadgeCard';
+import { buildCanonicalUrl, buildMetadata } from '@/lib/seo';
+import type { Post, User as BaseUser } from '@/types';
+import type { Container } from '@/types/container';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// API URL-ni o'z muhitiga qarab almashtir
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 interface Params {
   username: string;
 }
 
-interface User {
+interface Badge {
   id: number;
   name: string;
-  username: string;
-  bio?: string;
-  avatar_url?: string;
-  xp: number;
-  badges?: Array<{
-    id: number;
-    name: string;
-    description?: string;
-    icon_key?: string;
-    level?: string;
-    awarded_at?: string;
-  }>;
+  description?: string;
+  icon_key?: string;
+  level?: string;
+  awarded_at?: string;
 }
 
-// ✅ Har bir user sahifasi
+interface UserProfile extends BaseUser {
+  posts?: Post[];
+  containers?: Container[];
+  badges?: Badge[];
+  socials?: { github?: string | null; linkedin?: string | null; website?: string | null };
+  tech_stack?: string[];
+  level?: (BaseUser['level'] & { max_xp?: number | null; current?: number | null }) | null;
+  is_current_user?: boolean;
+}
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
   try {
@@ -49,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       return buildMetadata({ title: 'Profil topilmadi', description: 'Profil mavjud emas.' });
     }
 
-    const user: User = await res.json();
+    const user: UserProfile = await res.json();
     const description = user.bio || `${user.name} — KnowHub hamjamiyatining a'zosi.`;
 
     return buildMetadata({
@@ -66,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
 export default async function ProfilePage({ params }: { params: Promise<Params> }) {
   const { username } = await params;
-  let user: User | null = null;
+  let user: UserProfile | null = null;
   let errorMessage: string | null = null;
 
   try {
@@ -95,15 +99,23 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         <p className="mt-3 text-sm text-muted-foreground">
           {errorMessage ?? "Noma'lum xatolik yuz berdi. Keyinroq qayta urinib ko'ring."}
         </p>
-        <Link
+        <a
           href="/"
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] hover:brightness-110"
         >
           Bosh sahifaga qaytish
-        </Link>
+        </a>
       </div>
     );
   }
+
+  const xpTarget = Math.max(
+    user.level?.max_xp ?? (user.level?.min_xp ?? 0) + 5000,
+    user.xp,
+  );
+  const xpProgress = xpTarget > 0 ? Math.min(100, (user.xp / xpTarget) * 100) : 0;
+  const levelLabel = user.level?.name ?? `Level ${user.level?.id ?? 1}`;
+  const isCurrentUser = Boolean(user.is_current_user);
 
   const profileJsonLd = {
     '@context': 'https://schema.org',
@@ -114,73 +126,47 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 space-y-6">
-      <div className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <img
-              src={
-                user.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
-              }
-              alt={user.name}
-              className="h-20 w-20 rounded-full border border-border object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">{user.name}</h1>
-              <p className="text-sm text-muted-foreground">@{user.username}</p>
-              {user.bio && <p className="mt-2 text-sm text-[hsl(var(--foreground))]">{user.bio}</p>}
-              <p className="mt-2 text-sm font-semibold text-[hsl(var(--primary))]">{user.xp} XP</p>
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
+      <ProfileHeader
+        user={user}
+        xpTarget={xpTarget}
+        xpProgress={xpProgress}
+        isCurrentUser={isCurrentUser}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[1.45fr,0.85fr]">
+        <div className="space-y-4">
+          <ProfileTabs
+            posts={user.posts}
+            containers={user.containers}
+            bio={user.bio}
+            socials={user.socials}
+            techStack={user.tech_stack}
+            username={user.username}
+          />
+
+          <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/70 p-6 shadow-subtle backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Copilot</p>
+                <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">SolVera bilan tezkor yordam</h3>
+                <p className="text-sm text-muted-foreground">Bio yoki postlaringizni shu yerning o'zida takomillashtiring.</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/80 to-[hsl(var(--accent-purple))]/80 text-white shadow-neon">
+                <span className="text-lg font-bold">AI</span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <SolveraChatCard
+                context={{ surface: 'profile', username: user.username }}
+                title="Yordam so'rang"
+                subtitle="Bio va postlaringizni SolVera tavsiyalari bilan jilolang"
+              />
             </div>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-[hsl(var(--surface))] px-4 py-3 text-sm text-[hsl(var(--foreground))]">
-            <p className="font-semibold">SolVera yordamida profilni boyiting</p>
-            <p className="text-xs text-muted-foreground">Bio va postlaringizni SolVera (gtp-5) tavsiyalari bilan jilolang.</p>
-          </div>
         </div>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
-        <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">Hamjamiyatdagi ishtirok</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            SolVera beta foydalanuvchilarga post yozish, bio va izohlarni silliqlashda yordam beradi. Profilingizni boyitish va yangi postlar yaratishda uni ishga soling.
-          </p>
-          <ul className="mt-4 space-y-2 text-sm text-[hsl(var(--foreground))]">
-            <li>• Shaxsiy bio matnini qisqa va ta'sirchan qiling.</li>
-            <li>• Postlaringiz uchun sarlavha va changeloglarni tayyorlang.</li>
-            <li>• Kod sharhlari va savollarni aniqroq yozing.</li>
-          </ul>
-          <Link
-            href="/solvera"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] shadow-sm transition hover:brightness-110"
-          >
-            SolVera haqida batafsil
-          </Link>
-        </div>
-        <SolveraChatCard
-          context={{ surface: 'profile', username: user.username }}
-          title="SolVera bilan tezkor yordam"
-          subtitle="Bio yoki postlaringizni shu yerning o'zida takomillashtiring"
-        />
-      </div>
-
-      <div className="rounded-3xl border border-border bg-[hsl(var(--card))]/80 p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">Trophy Case</h2>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Badges</p>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">Hamjamiyatdagi yutuqlaringiz shu yerda jamlangan.</p>
-
-        {user.badges?.length ? (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {user.badges.map((badge) => (
-              <BadgeCard key={badge.id} badge={badge} />
-            ))}
-          </div>
-        ) : (
-          <p className="mt-6 text-sm font-medium text-muted-foreground">Hozircha hech qanday badge yo'q — faol bo'lib, yutuqlarni oching!</p>
-        )}
+        <GamificationStats xp={user.xp} xpTarget={xpTarget} levelLabel={levelLabel} badges={user.badges} />
       </div>
 
       <Script id={`profile-jsonld-${user.id}`} type="application/ld+json">
