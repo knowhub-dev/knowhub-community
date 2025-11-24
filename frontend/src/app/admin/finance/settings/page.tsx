@@ -167,15 +167,25 @@ function CallbackUrlDisplay({ label, url }: { label: string; url?: string }) {
 }
 
 export default function PaymentSettingsPage() {
-  const [settings, setSettings] = useState<PaymentSettingsResponse | null>(null);
+  const defaultSettings: PaymentSettingsResponse = {
+    payme: { enabled: false },
+    click: { enabled: false },
+    plans: { monthly_price: 0, yearly_price: 0 },
+  };
+
+  const [settings, setSettings] = useState<PaymentSettingsResponse>(defaultSettings);
   const [showSecret, setShowSecret] = useState<SecretVisibility>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get<PaymentSettingsResponse>('/admin/payment-settings');
-        setSettings(res.data);
+        const res = await api.get<{ payme: string; click: string }>('/admin/payment/callbacks');
+        setSettings(prev => ({
+          ...prev,
+          payme: { ...prev.payme, callback_url: res.data.payme },
+          click: { ...prev.click, callback_url: res.data.click },
+        }));
       } catch (error) {
         console.error(error);
         toast.error('Failed to load payment settings');
@@ -185,18 +195,24 @@ export default function PaymentSettingsPage() {
   }, []);
 
   const updateGateway = (provider: GatewayKey, field: keyof GatewayConfig, value: string | boolean) => {
-    setSettings(prev => (prev ? { ...prev, [provider]: { ...prev[provider], [field]: value } } : prev));
+    setSettings(prev => ({ ...prev, [provider]: { ...prev[provider], [field]: value } }));
   };
 
   const updatePlans = (field: keyof PricingConfig, value: number) => {
-    setSettings(prev => (prev ? { ...prev, plans: { ...prev.plans, [field]: value } } : prev));
+    setSettings(prev => ({ ...prev, plans: { ...prev.plans, [field]: value } }));
   };
 
   const handleSave = async () => {
-    if (!settings) return;
     setSaving(true);
     try {
-      await api.post('/admin/payment-settings', settings);
+      const payload: Record<string, string | undefined> = {
+        payme_merchant_id: settings.payme.merchant_id || undefined,
+        payme_key: settings.payme.secret_key || undefined,
+        click_service_id: settings.click.service_id || undefined,
+        click_secret_key: settings.click.secret_key || undefined,
+      };
+
+      await api.put('/admin/payment/settings', payload);
       toast.success('Payment settings saved');
     } catch (error) {
       console.error(error);
@@ -215,7 +231,7 @@ export default function PaymentSettingsPage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Payment Integrations</h1>
           <p className="text-slate-600 dark:text-slate-400">Configure Payme and Click gateways without redeploying.</p>
         </div>
-        <Button onClick={handleSave} disabled={saving || !settings} className="gap-2">
+        <Button onClick={handleSave} disabled={saving} className="gap-2">
           {saving ? <ShieldCheck className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save changes
         </Button>
       </div>
