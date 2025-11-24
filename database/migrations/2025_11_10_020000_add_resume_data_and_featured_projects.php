@@ -16,7 +16,7 @@ return new class extends Migration
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->jsonb('resume_data')->nullable()->after('resume');
+            $table->json('resume_data')->nullable()->after('resume');
         });
     }
 
