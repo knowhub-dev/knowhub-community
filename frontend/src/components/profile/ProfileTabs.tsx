@@ -28,10 +28,11 @@ const formatDate = (value: string) => {
 };
 
 function PostPreview({ post }: { post: Post }) {
+  const excerptSource = post.content_markdown ?? '';
   const excerpt = useMemo(() => {
-    const clean = post.content_markdown.replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim();
+    const clean = excerptSource.replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim();
     return clean.length > 140 ? `${clean.slice(0, 140)}…` : clean;
-  }, [post.content_markdown]);
+  }, [excerptSource]);
 
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-border/70 bg-[hsl(var(--card))]/80 p-4 shadow-subtle backdrop-blur transition hover:-translate-y-0.5 hover:shadow-neon">

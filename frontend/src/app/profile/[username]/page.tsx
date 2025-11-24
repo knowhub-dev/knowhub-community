@@ -86,6 +86,28 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
       errorMessage = "Profilni yuklab bo'lmadi. Birozdan so'ng urinib ko'ring.";
     } else {
       user = await res.json();
+
+      const [postsResponse, containersResponse] = await Promise.allSettled([
+        fetch(`${API_URL}/users/${username}/posts`, { cache: "no-store" }),
+        fetch(`${API_URL}/users/${username}/containers`, { cache: "no-store" }),
+      ]);
+
+      if (postsResponse.status === 'fulfilled' && postsResponse.value.ok) {
+        user.posts = await postsResponse.value.json();
+      }
+
+      if (containersResponse.status === 'fulfilled' && containersResponse.value.ok) {
+        user.containers = await containersResponse.value.json();
+      } else if (user.is_current_user) {
+        try {
+          const fallbackContainers = await fetch(`${API_URL}/containers`, { cache: 'no-store', credentials: 'include' });
+          if (fallbackContainers.ok) {
+            user.containers = await fallbackContainers.json();
+          }
+        } catch (fallbackError) {
+          console.error('Fallback container fetch failed:', fallbackError);
+        }
+      }
     }
   } catch (error) {
     console.error('Profilni olishda xato:', error);
