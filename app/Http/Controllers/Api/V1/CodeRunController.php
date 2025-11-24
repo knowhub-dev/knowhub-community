@@ -26,7 +26,7 @@ class CodeRunController extends Controller
             'post_id' => $postId,
             'comment_id' => $data['comment_id'] ?? null,
             'language' => $data['language'] === 'js' ? 'javascript' : $data['language'],
-            'source' => $data['source'],
+            'source' => $data['code'],
             'status' => 'running',
         ]);
 

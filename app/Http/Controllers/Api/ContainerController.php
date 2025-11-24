@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Services\Docker\ContainerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Support\Settings;
 use RuntimeException;
@@ -43,7 +42,7 @@ class ContainerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreContainerRequest $request)
     {
         $this->authorize('create', Container::class);
 
@@ -59,76 +58,7 @@ class ContainerController extends Controller
             }
         }
 
-        $templateImages = config('containers.templates', []);
-        $maxEnvVars = (int) config('containers.max_env_vars', 0);
-        $envValueMaxLength = (int) config('containers.env_value_max_length', 256);
-        $reservedSubdomains = config('containers.reserved_subdomains', []);
-        $minSubdomainLength = (int) config('containers.subdomain_min_length', 3);
-        $maxSubdomainLength = (int) config('containers.subdomain_max_length', 30);
-
-        $input = $request->all();
-        if (array_key_exists('subdomain', $input) && $input['subdomain'] !== null) {
-            $input['subdomain'] = $this->sanitizeSubdomain($input['subdomain']);
-        }
-
-        $validator = Validator::make($input, [
-            'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
-            'subdomain' => array_filter([
-                'nullable',
-                'string',
-                'min:' . $minSubdomainLength,
-                'max:' . $maxSubdomainLength,
-                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                Rule::notIn($reservedSubdomains),
-                Rule::unique('containers', 'subdomain'),
-            ]),
-            'type' => ['required', 'string', Rule::in(array_keys($templateImages))],
-            'cpu_limit' => ['required', 'integer', 'min:1', 'max:4'],
-            'memory_limit' => ['required', 'integer', 'min:128', 'max:2048'],
-            'disk_limit' => ['required', 'integer', 'min:1024', 'max:10240'],
-            'env_vars' => ['nullable', 'array', 'max:' . $maxEnvVars],
-            'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
-        ], [
-            'type.in' => 'The selected container template is not permitted.',
-        ]);
-
-        $validator->after(function ($validator) use ($request) {
-            $envVars = $request->input('env_vars');
-            if ($envVars === null) {
-                return;
-            }
-
-            if (!is_array($envVars)) {
-                $validator->errors()->add('env_vars', 'Environment variables must be an object of key/value pairs.');
-                return;
-            }
-
-            $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
-
-            foreach ($envVars as $key => $value) {
-                if (!is_string($key) || trim($key) === '') {
-                    $validator->errors()->add('env_vars', 'Environment variable keys must be non-empty strings.');
-                    continue;
-                }
-
-                $normalizedKey = strtoupper(trim((string) $key));
-                $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
-
-                if (!preg_match($keyPattern, $normalizedKey)) {
-                    $validator->errors()->add('env_vars.' . $key, 'Environment variable keys may only include uppercase letters, digits, and underscores.');
-                }
-
-                if (!is_null($value) && !is_scalar($value)) {
-                    $validator->errors()->add('env_vars.' . $key, 'Environment variable values must be simple strings or numbers.');
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $validated = $validator->validated();
+        $validated = $request->validated();
 
         $payload = collect($validated)
             ->only(['name', 'subdomain', 'type', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
