@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class Setting extends Model
 {
@@ -26,6 +28,7 @@ class Setting extends Model
                     'bool' => filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
                     'int' => $value !== null ? (int) $value : null,
                     'float' => $value !== null ? (float) $value : null,
+                    'encrypted' => $this->decryptValue($value),
                     default => $value,
                 };
             },
@@ -35,10 +38,24 @@ class Setting extends Model
                     'value' => match ($type) {
                         'json' => $value !== null ? json_encode($value) : null,
                         'bool' => $value ? '1' : '0',
+                        'encrypted' => $value !== null ? Crypt::encryptString($value) : null,
                         default => $value,
                     },
                 ];
             }
         );
+    }
+
+    private function decryptValue(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException) {
+            return null;
+        }
     }
 }

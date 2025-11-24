@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\{
     WikiArticleController, CodeRunController, ProfileController, SearchController,
     NotificationController, BookmarkController, FollowController, UserController, LevelController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
-    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController
+    ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController,
+    PaymentCallbackController
 };
+use App\Http\Controllers\Api\V1\Admin\PaymentSettingsController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Controllers\Api\V1\ContainerFileController;
@@ -39,6 +41,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/status/summary', [SystemStatusController::class, 'summary']);
     Route::post('/ai/solvera/chat', [SolveraController::class, 'chat'])
         ->middleware(RateLimitMiddleware::class . ':ai,20');
+
+    // Payment callbacks (public endpoints consumed by providers)
+    Route::post('/payment/payme/callback', [PaymentCallbackController::class, 'payme'])
+        ->name('payments.payme.callback');
+    Route::post('/payment/click/callback', [PaymentCallbackController::class, 'click'])
+        ->name('payments.click.callback');
 
     Route::middleware([CacheMiddleware::class . ':300'])->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
@@ -72,6 +80,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/users/{username}', [UserController::class, 'show']);
     Route::get('/users/{username}/stats', [UserController::class, 'stats']);
     Route::get('/users/{username}/posts', [UserController::class, 'posts']); // ✅ muhim
+    Route::get('/profile/{username}', [ProfileController::class, 'show']);
 
     // Authenticated Routes
     Route::middleware(['auth:sanctum', RateLimitMiddleware::class . ':api,100'])->group(function () {
@@ -84,6 +93,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{container}', [ContainerController::class, 'show']);
             Route::post('/{container}/start', [ContainerController::class, 'start']);
             Route::post('/{container}/stop', [ContainerController::class, 'stop']);
+            Route::post('/{container}/toggle-feature', [ProfileController::class, 'toggleProjectFeature']);
             Route::delete('/{container}', [ContainerController::class, 'destroy']);
             Route::get('/{container}/stats', [ContainerController::class, 'stats']);
             Route::get('/{container}/logs', [ContainerController::class, 'logs']);
@@ -97,6 +107,7 @@ Route::prefix('v1')->group(function () {
         // Profile
         Route::get('/profile/me', [ProfileController::class, 'me']);
         Route::put('/profile', [ProfileController::class, 'update']);
+        Route::put('/profile/resume', [ProfileController::class, 'updateResume']);
 
         // Posts CRUD
         Route::post('/posts', [PostController::class, 'store']);
@@ -168,6 +179,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('/comments/{commentId}', [AdminController::class, 'deleteComment']);
             Route::get('/settings', [AdminController::class, 'systemSettings']);
             Route::put('/settings', [AdminController::class, 'updateSystemSettings']);
+            Route::put('/payment/settings', [PaymentSettingsController::class, 'update']);
+            Route::get('/payment/callbacks', [PaymentSettingsController::class, 'getCallbacks']);
             Route::post('/cache/clear', [AdminController::class, 'clearCache']);
             Route::post('/system/optimize', [AdminController::class, 'optimizeSystem']);
             Route::post('/database/backup', [AdminController::class, 'backupDatabase']);

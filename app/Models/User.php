@@ -22,7 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'username', 'email', 'password', 'xp', 'level_id',
         'is_admin', 'is_banned', 'is_verified', 'verified_at', 'avatar_url', 'bio', 'website_url',
-        'github_url', 'linkedin_url', 'resume',
+        'github_url', 'linkedin_url', 'resume', 'resume_data',
         'provider', 'provider_id',
     ];
 
@@ -41,6 +41,7 @@ class User extends Authenticatable
         'is_banned' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'resume_data' => 'array',
     ];
 
     /**
@@ -120,5 +121,10 @@ class User extends Authenticatable
     public function containers(): HasMany
     {
         return $this->hasMany(Container::class);
+    }
+
+    public function featuredContainers(): HasMany
+    {
+        return $this->containers()->where('is_featured', true);
     }
 }
