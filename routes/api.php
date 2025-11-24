@@ -126,6 +126,7 @@ Route::prefix('v1')->group(function () {
 
         // Comments
         Route::post('/posts/{slug}/comments', [CommentController::class, 'store']);
+        Route::get('/posts/{slug}/comments', [CommentController::class, 'index']);
         Route::get('/comments/{id}', [CommentController::class, 'show']);
         Route::put('/comments/{id}', [CommentController::class, 'update']);
         Route::delete('/comments/{id}', [CommentController::class, 'destroy']);

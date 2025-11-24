@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\UserBadge;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -16,98 +19,74 @@ class ActivityFeedController extends Controller
         $limit = (int) $request->integer('limit', 20);
         $limit = max(5, min($limit, 50));
 
-        $posts = Post::query()
-            ->with(['user:id,name,username,avatar_url'])
-            ->where('status', 'published')
+        $activities = Activity::query()
+            ->with([
+                'user:id,name,username,avatar_url',
+                'subject' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        Post::class => ['user:id,name,username,avatar_url'],
+                        Comment::class => ['user:id,name,username,avatar_url', 'post:id,title,slug'],
+                        UserBadge::class => ['badge:id,name,slug,icon,xp_reward', 'user:id,name,username,avatar_url'],
+                    ]);
+                },
+            ])
             ->latest()
             ->limit($limit)
-            ->get(['id', 'user_id', 'title', 'slug', 'created_at'])
-            ->map(function (Post $post) {
-                return [
-                    'type' => 'post',
-                    'id' => $post->id,
-                    'created_at' => $post->created_at,
-                    'user' => $post->user ? [
-                        'id' => $post->user->id,
-                        'name' => $post->user->name,
-                        'username' => $post->user->username,
-                        'avatar_url' => $post->user->avatar_url,
-                    ] : null,
-                    'payload' => [
-                        'title' => $post->title,
-                        'slug' => $post->slug,
-                    ],
-                ];
-            });
+            ->get();
 
-        $comments = Comment::query()
-            ->with(['user:id,name,username,avatar_url', 'post:id,title,slug'])
-            ->latest()
-            ->limit($limit)
-            ->get(['id', 'user_id', 'post_id', 'content_markdown', 'created_at'])
-            ->map(function (Comment $comment) {
-                $excerpt = Str::of($comment->content_markdown ?? '')
-                    ->replaceMatches('/\s+/', ' ')
-                    ->stripTags()
-                    ->limit(140, '…')
-                    ->value();
+        $morphMap = array_flip(Relation::morphMap());
 
-                return [
-                    'type' => 'comment',
-                    'id' => $comment->id,
-                    'created_at' => $comment->created_at,
-                    'user' => $comment->user ? [
-                        'id' => $comment->user->id,
-                        'name' => $comment->user->name,
-                        'username' => $comment->user->username,
-                        'avatar_url' => $comment->user->avatar_url,
-                    ] : null,
-                    'payload' => [
-                        'excerpt' => $excerpt,
-                        'post' => $comment->post ? [
-                            'id' => $comment->post->id,
-                            'slug' => $comment->post->slug,
-                            'title' => $comment->post->title,
+        $events = $activities
+            ->map(function (Activity $activity) use ($morphMap) {
+                $subject = $activity->subject;
+                $type = $activity->subject_type
+                    ? ($morphMap[$activity->subject_type] ?? Str::kebab(class_basename((string) $activity->subject_type)))
+                    : 'activity';
+
+                $payload = null;
+                if ($subject instanceof Post) {
+                    $payload = [
+                        'title' => $subject->title,
+                        'slug' => $subject->slug,
+                    ];
+                } elseif ($subject instanceof Comment) {
+                    $payload = [
+                        'excerpt' => Str::of($subject->content_markdown ?? '')
+                            ->replaceMatches('/\s+/', ' ')
+                            ->stripTags()
+                            ->limit(140, '…')
+                            ->value(),
+                        'post' => $subject->post ? [
+                            'id' => $subject->post->id,
+                            'slug' => $subject->post->slug,
+                            'title' => $subject->post->title,
                         ] : null,
-                    ],
-                ];
-            });
+                    ];
+                } elseif ($subject instanceof UserBadge) {
+                    $payload = $subject->badge ? [
+                        'name' => $subject->badge->name,
+                        'slug' => $subject->badge->slug,
+                        'icon' => $subject->badge->icon,
+                        'xp_reward' => $subject->badge->xp_reward,
+                    ] : null;
+                }
 
-        $badges = UserBadge::query()
-            ->with(['user:id,name,username,avatar_url', 'badge:id,name,slug,icon,xp_reward'])
-            ->latest('awarded_at')
-            ->limit($limit)
-            ->get(['user_id', 'badge_id', 'awarded_at'])
-            ->map(function (UserBadge $userBadge) {
                 return [
-                    'type' => 'badge',
-                    'id' => sprintf('%d-%d', $userBadge->user_id, $userBadge->badge_id),
-                    'created_at' => $userBadge->awarded_at,
-                    'user' => $userBadge->user ? [
-                        'id' => $userBadge->user->id,
-                        'name' => $userBadge->user->name,
-                        'username' => $userBadge->user->username,
-                        'avatar_url' => $userBadge->user->avatar_url,
+                    'type' => $type,
+                    'id' => $activity->id,
+                    'created_at' => optional($activity->created_at)->toISOString(),
+                    'user' => $activity->user ? [
+                        'id' => $activity->user->id,
+                        'name' => $activity->user->name,
+                        'username' => $activity->user->username,
+                        'avatar_url' => $activity->user->avatar_url,
                     ] : null,
-                    'payload' => $userBadge->badge ? [
-                        'name' => $userBadge->badge->name,
-                        'slug' => $userBadge->badge->slug,
-                        'icon' => $userBadge->badge->icon,
-                        'xp_reward' => $userBadge->badge->xp_reward,
-                    ] : null,
+                    'payload' => $payload,
+                    'verb' => $activity->verb ?? 'created',
                 ];
-            });
-
-        $events = $posts
-            ->merge($comments)
-            ->merge($badges)
-            ->sortByDesc(fn (array $event) => $event['created_at'])
-            ->values()
-            ->take($limit)
-            ->map(function (array $event) {
-                $event['created_at'] = optional($event['created_at'])->toISOString();
-                return $event;
             })
+            ->take($limit)
+            ->values()
             ->all();
 
         return response()->json([

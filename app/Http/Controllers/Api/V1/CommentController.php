@@ -77,8 +77,33 @@ class CommentController extends Controller
             return $comment;
         });
 
-        $comment->load('user','children');
+        $comment->load([
+            'user:id,name,username,avatar_url,level',
+            'children.user:id,name,username,avatar_url,level',
+        ]);
         return new CommentResource($comment);
+    }
+
+    public function index(Request $request, string $slug)
+    {
+        $postId = Post::where('slug', $slug)->value('id');
+
+        if (!$postId) {
+            abort(404, 'Post not found');
+        }
+
+        $comments = Comment::query()
+            ->where('post_id', $postId)
+            ->whereNull('parent_id')
+            ->with([
+                'user:id,name,username,avatar_url,level',
+                'children.user:id,name,username,avatar_url,level',
+                'children.children.user:id,name,username,avatar_url,level',
+            ])
+            ->latest()
+            ->get();
+
+        return CommentResource::collection($comments);
     }
 
     public function destroy(Request $req, int $id)
@@ -103,18 +128,25 @@ class CommentController extends Controller
         $data = $req->validate([
             'content_markdown' => 'required|string'
         ]);
-        
+
         $comment->update($data);
-        $comment->load('user', 'children');
-        
+        $comment->load([
+            'user:id,name,username,avatar_url,level',
+            'children.user:id,name,username,avatar_url,level',
+        ]);
+
         return new CommentResource($comment);
     }
 
     public function show(int $id)
     {
-        $comment = Comment::with(['user.level', 'children.user', 'post'])
+        $comment = Comment::with([
+                'user:id,name,username,avatar_url,level',
+                'children.user:id,name,username,avatar_url,level',
+                'post',
+            ])
             ->findOrFail($id);
-            
+
         return new CommentResource($comment);
     }
 }

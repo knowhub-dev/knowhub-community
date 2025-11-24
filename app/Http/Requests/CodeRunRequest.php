@@ -11,8 +11,8 @@ class CodeRunRequest extends FormRequest
     public function authorize(): bool { return auth()->check(); }
     public function rules(): array {
         return [
-            'language' => ['required','in:javascript,python,php,js'],
-            'source' => ['required','string','max:20000'],
+            'language' => ['required','in:python,javascript,typescript,php,go,java,c++'],
+            'code' => ['required','string','max:10240'],
             'post_slug' => ['nullable','string'],
             'comment_id' => ['nullable','integer','exists:comments,id'],
         ];
