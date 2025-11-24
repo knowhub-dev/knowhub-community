@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import { notFound } from "next/navigation";
 import Script from 'next/script';
 
-import { GamificationStats } from '@/components/profile/GamificationStats';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
-import { ProfileTabs } from '@/components/profile/ProfileTabs';
+import { ProfileOverview } from '@/components/profile/ProfileOverview';
+import { ProfileAbout } from '@/components/profile/ProfileAbout';
+import { ProfilePosts } from '@/components/profile/ProfilePosts';
+import { ProfileProjects } from '@/components/profile/ProfileProjects';
 import { SolveraChatCard } from '@/components/SolveraChatCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { buildCanonicalUrl, buildMetadata } from '@/lib/seo';
 import type { Post, User as BaseUser } from '@/types';
 import type { Container } from '@/types/container';
@@ -134,39 +137,95 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         isCurrentUser={isCurrentUser}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.45fr,0.85fr]">
-        <div className="space-y-4">
-          <ProfileTabs
-            posts={user.posts}
-            containers={user.containers}
+      <Tabs
+        defaultValue="overview"
+        className="w-full space-y-6"
+      >
+        <TabsList className="flex flex-wrap gap-2 bg-muted/50 p-1 rounded-lg backdrop-blur-md">
+          <TabsTrigger
+            value="overview"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="projects"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+          >
+            Projects
+          </TabsTrigger>
+          <TabsTrigger
+            value="posts"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+          >
+            Posts & Wiki
+          </TabsTrigger>
+          <TabsTrigger
+            value="about"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+          >
+            About & Resume
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent
+          value="overview"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
+        >
+          <ProfileOverview
+            xp={user.xp}
+            xpTarget={xpTarget}
+            levelLabel={levelLabel}
+            badges={user.badges}
+            username={user.username}
+          />
+        </TabsContent>
+
+        <TabsContent
+          value="projects"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
+        >
+          <ProfileProjects containers={user.containers} />
+        </TabsContent>
+
+        <TabsContent
+          value="posts"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
+        >
+          <ProfilePosts posts={user.posts} username={user.username} />
+        </TabsContent>
+
+        <TabsContent
+          value="about"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
+        >
+          <ProfileAbout
             bio={user.bio}
             socials={user.socials}
             techStack={user.tech_stack}
             username={user.username}
           />
+        </TabsContent>
+      </Tabs>
 
-          <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/70 p-6 shadow-subtle backdrop-blur">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Copilot</p>
-                <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">SolVera bilan tezkor yordam</h3>
-                <p className="text-sm text-muted-foreground">Bio yoki postlaringizni shu yerning o'zida takomillashtiring.</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/80 to-[hsl(var(--accent-purple))]/80 text-white shadow-neon">
-                <span className="text-lg font-bold">AI</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <SolveraChatCard
-                context={{ surface: 'profile', username: user.username }}
-                title="Yordam so'rang"
-                subtitle="Bio va postlaringizni SolVera tavsiyalari bilan jilolang"
-              />
-            </div>
+      <div className="rounded-3xl border border-border/70 bg-[hsl(var(--card))]/70 p-6 shadow-subtle backdrop-blur">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Copilot</p>
+            <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">SolVera bilan tezkor yordam</h3>
+            <p className="text-sm text-muted-foreground">Bio yoki postlaringizni shu yerning o'zida takomillashtiring.</p>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/80 to-[hsl(var(--accent-purple))]/80 text-white shadow-neon">
+            <span className="text-lg font-bold">AI</span>
           </div>
         </div>
-
-        <GamificationStats xp={user.xp} xpTarget={xpTarget} levelLabel={levelLabel} badges={user.badges} />
+        <div className="mt-4">
+          <SolveraChatCard
+            context={{ surface: 'profile', username: user.username }}
+            title="Yordam so'rang"
+            subtitle="Bio va postlaringizni SolVera tavsiyalari bilan jilolang"
+          />
+        </div>
       </div>
 
       <Script id={`profile-jsonld-${user.id}`} type="application/ld+json">
