@@ -1,9 +1,12 @@
 <?php
-// file: app/Services/CodeRun/PistonCodeRunner.php
 namespace App\Services\CodeRun;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Log;
 
 class PistonCodeRunner implements CodeRunner
 {
@@ -13,12 +16,15 @@ class PistonCodeRunner implements CodeRunner
     {
         $lang = match ($language) {
             'javascript' => 'js',
+            'typescript' => 'ts',
             'python' => 'py',
             'php' => 'php',
+            'c++' => 'cpp',
             default => $language
         };
 
-        $client = new Client(['base_uri'=>$this->baseUrl, 'timeout'=>$this->timeoutMs/1000]);
+        $runTimeout = min($this->timeoutMs, 3000);
+        $client = new Client(['base_uri' => $this->baseUrl, 'timeout' => $this->timeoutMs / 1000]);
 
         $payload = [
             'language' => $lang,
@@ -26,11 +32,29 @@ class PistonCodeRunner implements CodeRunner
             'files' => [['content' => $source]],
             'stdin' => '',
             'args' => [],
-            'compile_timeout' => $this->timeoutMs,
-            'run_timeout' => $this->timeoutMs,
+            'compile_timeout' => $runTimeout,
+            'run_timeout' => $runTimeout,
         ];
 
-        $resp = $client->post('/execute', ['json'=>$payload]);
+        try {
+            $resp = $client->post('/execute', ['json' => $payload]);
+        } catch (ConnectException $exception) {
+            Log::warning('Piston connection failed', ['error' => $exception->getMessage()]);
+            throw new HttpResponseException(
+                response()->json(['message' => 'Code execution service unavailable. Please try again later.'], 503)
+            );
+        } catch (RequestException $exception) {
+            Log::error('Piston request failed', ['error' => $exception->getMessage()]);
+            throw new HttpResponseException(
+                response()->json(['message' => 'Code execution request could not be completed.'], 503)
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Piston execution error', ['error' => $exception->getMessage()]);
+            throw new HttpResponseException(
+                response()->json(['message' => 'Unexpected error while running code.'], 503)
+            );
+        }
+
         $data = json_decode((string)$resp->getBody(), true);
 
         $stdout = Arr::get($data, 'run.stdout', '');

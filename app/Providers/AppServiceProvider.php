@@ -3,6 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Comment;
+use App\Models\Container;
+use App\Models\Post;
+use App\Models\User;
+use App\Models\UserBadge;
 use App\Services\AI\AiAssistant;
 use App\Services\AI\OpenAiAssistant;
 use App\Services\CodeRun\CodeRunner;
@@ -37,7 +43,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Model relationships and observers can be registered here
+        Relation::morphMap([
+            'post' => Post::class,
+            'comment' => Comment::class,
+            'badge' => UserBadge::class,
+            'user' => User::class,
+            'container' => Container::class,
+        ]);
     }
 }
 

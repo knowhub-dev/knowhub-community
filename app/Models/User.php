@@ -20,10 +20,15 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'username', 'email', 'password', 'xp', 'level_id',
-        'is_admin', 'is_banned', 'is_verified', 'verified_at', 'avatar_url', 'bio', 'website_url',
-        'github_url', 'linkedin_url', 'resume', 'resume_data',
-        'provider', 'provider_id',
+        'name',
+        'username',
+        'email',
+        'password',
+        'avatar_url',
+        'bio',
+        'website_url',
+        'github_url',
+        'linkedin_url',
     ];
 
     /**
@@ -126,5 +131,10 @@ class User extends Authenticatable
     public function featuredContainers(): HasMany
     {
         return $this->containers()->where('is_featured', true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) ($this->is_admin ?? false);
     }
 }

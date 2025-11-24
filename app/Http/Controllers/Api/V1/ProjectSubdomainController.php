@@ -4,12 +4,25 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Container;
+use App\Rules\ReservedSubdomain;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProjectSubdomainController extends Controller
 {
     public function serve(Request $request, string $subdomain, ?string $path = null)
     {
+        $validator = Validator::make(['subdomain' => $subdomain], [
+            'subdomain' => ['required', 'string', new ReservedSubdomain()],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Subdomain is reserved and cannot be served.',
+                'subdomain' => $subdomain,
+            ], 403);
+        }
+
         $container = Container::query()
             ->whereNotNull('subdomain')
             ->where('subdomain', $subdomain)

@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,5 +32,33 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->shouldReturnJson(
+            fn ($request, Throwable $e) => $request->is('api/*')
+        );
+
+        $exceptions->render(function (Throwable $e, $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            $status = 500;
+            $errors = [];
+
+            if ($e instanceof ValidationException) {
+                $status = $e->status;
+                $errors = $e->errors();
+                $message = $e->getMessage();
+            } elseif ($e instanceof HttpExceptionInterface) {
+                $status = $e->getStatusCode();
+                $message = $e->getMessage() ?: Response::$statusTexts[$status] ?? 'Error';
+            } else {
+                $message = Response::$statusTexts[$status] ?? 'Server Error';
+            }
+
+            return response()->json([
+                'message' => $message,
+                'errors' => $errors,
+                'status' => $status,
+            ], $status);
+        });
     })->create();

@@ -2,6 +2,8 @@
 // file: app/Models/Post.php
 namespace App\Models;
 
+use App\Filters\PostFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory; // <-- QO'SHILDI
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,6 +39,11 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     /**
      * Postning kategoriyasi
      */
@@ -64,5 +71,10 @@ class Post extends Model
     public function collaborationSessions(): HasMany
     {
         return $this->hasMany(CollaborationSession::class);
+    }
+
+    public function scopeFilter(Builder $query, PostFilter $filter, array $filters): Builder
+    {
+        return $filter->apply($query, $filters);
     }
 }
