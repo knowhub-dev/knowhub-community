@@ -19,7 +19,8 @@ class Container extends Model
         'memory_limit',
         'disk_limit',
         'port',
-        'env_vars'
+        'env_vars',
+        'is_featured',
     ];
 
     protected $casts = [
@@ -27,7 +28,8 @@ class Container extends Model
         'cpu_limit' => 'integer',
         'memory_limit' => 'integer',
         'disk_limit' => 'integer',
-        'port' => 'integer'
+        'port' => 'integer',
+        'is_featured' => 'boolean',
     ];
 
     public function user()

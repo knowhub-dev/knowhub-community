@@ -5,14 +5,26 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 // Faylning yuqorisiga UserResource'ni chaqirib olamiz
-use App\Http\Resources\UserResource; 
+use App\Http\Resources\UserResource;
+use App\Models\Container;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
-    public function me(Request $req) 
-    { 
+    public function show(string $username)
+    {
+        $user = User::where('username', $username)
+            ->with(['badges', 'level', 'featuredContainers'])
+            ->withCount(['posts', 'followers', 'following'])
+            ->firstOrFail();
+
+        return new UserResource($user);
+    }
+
+    public function me(Request $req)
+    {
         // XATO KODNI O'CHIRDIK:
-        // return $req->user()->only(['id','name','username','avatar_url','xp','bio']); 
+        // return $req->user()->only(['id','name','username','avatar_url','xp','bio']);
         
         // ===========================================
         // TO'G'RI KODNI YOZDIK:
@@ -33,8 +45,47 @@ class ProfileController extends Controller
         ]);
         $user = $req->user();
         $user->fill($data)->save();
-        
+
         // Bu yerda to'g'ri edi, UserResource'ni to'liq namespace bilan chaqirsa ham bo'ladi
         return new \App\Http\Resources\UserResource($user);
+    }
+
+    public function updateResume(Request $req)
+    {
+        $data = $req->validate([
+            'resume_data' => ['required', 'array'],
+            'resume_data.summary' => 'nullable|string|max:500',
+            'resume_data.skills' => 'nullable|array',
+            'resume_data.skills.*' => 'string|max:100',
+            'resume_data.experience' => 'nullable|array',
+            'resume_data.experience.*.title' => 'required_with:resume_data.experience|string|max:150',
+            'resume_data.experience.*.company' => 'nullable|string|max:150',
+            'resume_data.experience.*.date' => 'nullable|string|max:100',
+            'resume_data.experience.*.desc' => 'nullable|string|max:2000',
+            'resume_data.education' => 'nullable|array',
+            'resume_data.education.*.school' => 'required_with:resume_data.education|string|max:150',
+            'resume_data.education.*.degree' => 'nullable|string|max:150',
+            'resume_data.education.*.date' => 'nullable|string|max:100',
+        ]);
+
+        $user = $req->user();
+        $user->resume_data = $data['resume_data'];
+        $user->save();
+
+        return new UserResource($user->fresh('featuredContainers'));
+    }
+
+    public function toggleProjectFeature(Request $req, int $container)
+    {
+        $container = Container::where('user_id', $req->user()->id)->findOrFail($container);
+
+        $container->is_featured = !$container->is_featured;
+        $container->save();
+
+        return response()->json([
+            'id' => $container->id,
+            'is_featured' => $container->is_featured,
+            'message' => 'Project feature flag updated.',
+        ]);
     }
 }
