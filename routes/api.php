@@ -72,6 +72,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/users/{username}', [UserController::class, 'show']);
     Route::get('/users/{username}/stats', [UserController::class, 'stats']);
     Route::get('/users/{username}/posts', [UserController::class, 'posts']); // ✅ muhim
+    Route::get('/profile/{username}', [ProfileController::class, 'show']);
 
     // Authenticated Routes
     Route::middleware(['auth:sanctum', RateLimitMiddleware::class . ':api,100'])->group(function () {
@@ -84,6 +85,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{container}', [ContainerController::class, 'show']);
             Route::post('/{container}/start', [ContainerController::class, 'start']);
             Route::post('/{container}/stop', [ContainerController::class, 'stop']);
+            Route::post('/{container}/toggle-feature', [ProfileController::class, 'toggleProjectFeature']);
             Route::delete('/{container}', [ContainerController::class, 'destroy']);
             Route::get('/{container}/stats', [ContainerController::class, 'stats']);
             Route::get('/{container}/logs', [ContainerController::class, 'logs']);
@@ -97,6 +99,7 @@ Route::prefix('v1')->group(function () {
         // Profile
         Route::get('/profile/me', [ProfileController::class, 'me']);
         Route::put('/profile', [ProfileController::class, 'update']);
+        Route::put('/profile/resume', [ProfileController::class, 'updateResume']);
 
         // Posts CRUD
         Route::post('/posts', [PostController::class, 'store']);
