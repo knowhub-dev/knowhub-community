@@ -1,3 +1,5 @@
+"use client";
+
 import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -15,51 +17,48 @@ import {
   Award,
   Shield
 } from 'lucide-react';
+import MobileNav from './MobileNav';
 
 export default function NavBar() {
   const { user, logout } = useAuth();
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? user?.username?.charAt(0)?.toUpperCase() ?? "?";
 
+  const navLinks = [
+    { href: '/', label: 'Bosh sahifa', icon: Home },
+    { href: '/posts', label: 'Maqolalar', icon: BookOpen },
+    { href: '/users', label: 'Foydalanuvchilar', icon: Users },
+    { href: '/tags', label: 'Teglar', icon: Tag },
+  ];
+
   return (
     <nav className="bg-[hsl(var(--background))] border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            {/* Logo */}
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex items-center gap-3">
+              <div className="md:hidden">
+                <MobileNav navLinks={navLinks} user={user} onLogout={logout} />
+              </div>
+
+              {/* Logo */}
               <Link href="/" className="text-2xl font-bold text-[hsl(var(--primary))]">
                 KnowHub
               </Link>
             </div>
 
             {/* Main navigation */}
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link href="/" className="inline-flex items-center px-1 pt-1 text-[hsl(var(--foreground))]">
-                <Home className="w-4 h-4 mr-2" />
-                Bosh sahifa
-              </Link>
-              <Link
-                href="/posts"
-                className="inline-flex items-center px-1 pt-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                Maqolalar
-              </Link>
-              <Link
-                href="/users"
-                className="inline-flex items-center px-1 pt-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Foydalanuvchilar
-              </Link>
-              <Link
-                href="/tags"
-                className="inline-flex items-center px-1 pt-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <Tag className="w-4 h-4 mr-2" />
-                Teglar
-              </Link>
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="inline-flex items-center px-1 pt-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  <link.icon className="w-4 h-4 mr-2" />
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </div>
 
