@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\CodeRun;
 
+use App\Models\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
@@ -10,9 +11,11 @@ use Illuminate\Support\Facades\Log;
 
 class PistonCodeRunner implements CodeRunner
 {
-    public function __construct(private string $baseUrl, private int $timeoutMs) {}
+    public function __construct(private string $baseUrl, private int $defaultTimeoutMs)
+    {
+    }
 
-    public function run(string $language, string $source): array
+    public function run(User $user, string $language, string $source): array
     {
         $lang = match ($language) {
             'javascript' => 'js',
@@ -23,8 +26,8 @@ class PistonCodeRunner implements CodeRunner
             default => $language
         };
 
-        $runTimeout = min($this->timeoutMs, 3000);
-        $client = new Client(['base_uri' => $this->baseUrl, 'timeout' => $this->timeoutMs / 1000]);
+        $timeout = $this->resolveTimeout($user);
+        $client = new Client(['base_uri' => $this->baseUrl, 'timeout' => $timeout / 1000]);
 
         $payload = [
             'language' => $lang,
@@ -32,9 +35,13 @@ class PistonCodeRunner implements CodeRunner
             'files' => [['content' => $source]],
             'stdin' => '',
             'args' => [],
-            'compile_timeout' => $runTimeout,
-            'run_timeout' => $runTimeout,
+            'compile_timeout' => $timeout,
+            'run_timeout' => $timeout,
         ];
+
+        if ($user->hasPriorityExecution()) {
+            $payload['priority'] = true;
+        }
 
         try {
             $resp = $client->post('/execute', ['json' => $payload]);
@@ -63,6 +70,17 @@ class PistonCodeRunner implements CodeRunner
         $timeMs = (int) round((float) (Arr::get($data, 'run.signal', 0)) ?: 0);
 
         return ['stdout'=>$stdout, 'stderr'=>$stderr, 'code'=>$code, 'time_ms'=>$timeMs];
+    }
+
+    private function resolveTimeout(User $user): int
+    {
+        $fromPlan = (int) Arr::get($user->planLimits(), 'timeout_ms', 0);
+
+        if ($fromPlan > 0) {
+            return $fromPlan;
+        }
+
+        return $user->isPro() ? 15000 : $this->defaultTimeoutMs;
     }
 }
 

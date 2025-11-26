@@ -88,7 +88,7 @@ Route::prefix('v1')->group(function () {
         // Container management
         Route::prefix('containers')->group(function () {
             Route::get('/', [ContainerController::class, 'index']);
-            Route::post('/', [ContainerController::class, 'store']);
+            Route::post('/', [ContainerController::class, 'store'])->middleware('plan.limits:create-container');
             Route::get('/options', [ContainerController::class, 'options']);
             Route::get('/{container}', [ContainerController::class, 'show']);
             Route::post('/{container}/start', [ContainerController::class, 'start']);
@@ -100,7 +100,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/{container}/env', [ContainerController::class, 'updateEnv']);
             Route::get('/{container}/files', [ContainerFileController::class, 'index']);
             Route::get('/{container}/files/show', [ContainerFileController::class, 'show']);
-            Route::post('/{container}/files', [ContainerFileController::class, 'store']);
+            Route::post('/{container}/files', [ContainerFileController::class, 'store'])->middleware('plan.limits:upload-file');
             Route::put('/{container}/files', [ContainerFileController::class, 'update']);
         });
 
