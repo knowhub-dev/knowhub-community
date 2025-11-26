@@ -1,20 +1,24 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/providers/AuthProvider';
-import { 
-  BarChart3, 
-  Users, 
-  FileText, 
-  MessageCircle, 
+import {
+  BarChart3,
+  Users,
+  FileText,
+  MessageCircle,
   TrendingUp,
   Calendar,
   Award,
   Code,
-  BookOpen
+  BookOpen,
+  PenTool
 } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
+import EmptyState from '@/components/EmptyState';
+import { cn } from '@/lib/utils';
+import { isProUser } from '@/lib/user';
 
 async function getDashboardStats() {
   const res = await api.get('/dashboard/stats');
@@ -52,6 +56,9 @@ export default function DashboardPage() {
     enabled: !!user,
   });
 
+  const hasRecentPosts = activity?.recent_posts && activity.recent_posts.length > 0;
+  const hasRecentComments = activity?.recent_comments && activity.recent_comments.length > 0;
+
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -73,7 +80,51 @@ export default function DashboardPage() {
   }
 
   if (statsLoading || activityLoading || trendingLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-lg border border-border/70 bg-white p-6 space-y-4">
+              <Skeleton className="h-6 w-10" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="rounded-lg border border-border/70 bg-white p-6 space-y-4">
+            <Skeleton className="h-5 w-48" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="space-y-2 rounded-lg border border-border/60 p-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/70 bg-white p-6 space-y-4">
+            <Skeleton className="h-5 w-36" />
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="space-y-2 rounded-lg border border-border/60 p-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -137,47 +188,66 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Sizning faoliyatingiz</h2>
           
           {/* Recent Posts */}
-          {activity?.recent_posts && activity.recent_posts.length > 0 && (
+          {hasRecentPosts ? (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">So'nggi postlaringiz</h3>
               <div className="space-y-2">
-                {activity.recent_posts.map((post: any) => (
+                {activity?.recent_posts?.map((post: any) => (
                   <Link
                     key={post.id}
                     href={`/posts/${post.slug}`}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="block rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
                   >
                     <p className="font-medium text-sm text-gray-900 line-clamp-1">{post.title}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-gray-500">
                       {new Date(post.created_at).toLocaleDateString('uz-UZ')}
                     </p>
                   </Link>
                 ))}
               </div>
             </div>
+          ) : (
+            <EmptyState
+              icon={PenTool}
+              title="Hozircha postlaringiz yo‘q"
+              description="Biror g'oya bilan jamiyatni ilhomlantiring."
+              action={{ label: 'Post yozish', href: '/posts/create' }}
+            />
           )}
 
           {/* Recent Comments */}
-          {activity?.recent_comments && activity.recent_comments.length > 0 && (
+          {hasRecentComments ? (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">So'nggi kommentlaringiz</h3>
               <div className="space-y-2">
-                {activity.recent_comments.map((comment: any) => (
+                {activity?.recent_comments?.map((comment: any) => (
                   <Link
                     key={comment.id}
                     href={`/posts/${comment.post.slug}#comment-${comment.id}`}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className={cn(
+                      'block rounded-lg p-3 transition-colors border',
+                      isProUser(comment.user)
+                        ? 'bg-yellow-500/5 border-yellow-200/70 hover:bg-yellow-500/10'
+                        : 'bg-gray-50 border-transparent hover:bg-gray-100',
+                    )}
                   >
                     <p className="text-sm text-gray-900 line-clamp-2">
                       {comment.content_markdown.substring(0, 100)}...
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-gray-500">
                       {comment.post.title} • {new Date(comment.created_at).toLocaleDateString('uz-UZ')}
                     </p>
                   </Link>
                 ))}
               </div>
             </div>
+          ) : (
+            <EmptyState
+              icon={MessageCircle}
+              title="Hozircha kommentlaringiz yo‘q"
+              description="Postlarga fikr bildirib suhbatlarni boshlang."
+              action={{ label: 'Postlarni ko‘rish', href: '/posts' }}
+            />
           )}
         </div>
 

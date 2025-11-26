@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   ArrowUpRight,
   Clock,
+  Crown,
   Eye,
   MessageCircle,
   Sparkles,
@@ -11,6 +12,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Post } from '@/types';
+import { isProUser } from '@/lib/user';
 
 import BookmarkButton from './BookmarkButton';
 import VoteButtons from './VoteButtons';
@@ -122,6 +124,13 @@ function PostCardContent({
     const { views, views_count, score } = post as EnrichedPost;
     return views ?? views_count ?? Math.max(score * 12, 48);
   }, [post]);
+  const isProAuthor = isProUser(post.user);
+  const proNameClass = isProAuthor
+    ? 'bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_2px_6px_rgba(251,191,36,0.35)]'
+    : '';
+  const avatarRing = isProAuthor
+    ? 'ring-2 ring-yellow-400 shadow-[0_0_14px_rgba(250,204,21,0.35)] border-yellow-200/70'
+    : 'border-primary/30';
 
   const cardClasses = cn(baseCardStyles, variantStyles[variant], className);
 
@@ -132,12 +141,16 @@ function PostCardContent({
           <img
             src={getAvatar(post.user.name, post.user.avatar_url)}
             alt={post.user.name}
-            className="h-12 w-12 rounded-full border border-primary/30 object-cover shadow-subtle"
+            className={cn(
+              'h-12 w-12 rounded-full object-cover shadow-subtle transition-shadow',
+              avatarRing,
+            )}
           />
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1 font-medium text-foreground">
-                {post.user.name}
+                <span className={cn(proNameClass)}>{post.user.name}</span>
+                {isProAuthor && <Crown className="h-4 w-4 text-amber-400" />}
               </span>
               <span className="h-1 w-1 rounded-full bg-muted/60" aria-hidden />
               <span className="flex items-center gap-1">

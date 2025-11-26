@@ -10,6 +10,8 @@ import { ProfileProjects } from '@/components/profile/ProfileProjects';
 import { SolveraChatCard } from '@/components/SolveraChatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { buildCanonicalUrl, buildMetadata } from '@/lib/seo';
+import { isProUser } from '@/lib/user';
+import { Crown, Lock, NotebookPen } from 'lucide-react';
 import type { Post, User as BaseUser } from '@/types';
 import type { Container } from '@/types/container';
 
@@ -38,6 +40,8 @@ interface UserProfile extends BaseUser {
   socials?: { github?: string | null; linkedin?: string | null; website?: string | null };
   tech_stack?: string[];
   level?: (BaseUser['level'] & { max_xp?: number | null; current?: number | null }) | null;
+  plan_type?: string | null;
+  is_pro?: boolean;
   is_current_user?: boolean;
 }
 
@@ -119,6 +123,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   const xpProgress = xpTarget > 0 ? Math.min(100, (user.xp / xpTarget) * 100) : 0;
   const levelLabel = user.level?.name ?? `Level ${user.level?.id ?? 1}`;
   const isCurrentUser = Boolean(user.is_current_user);
+  const isPro = isProUser(user);
 
   const profileJsonLd = {
     '@context': 'https://schema.org',
@@ -166,6 +171,15 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           >
             About & Resume
           </TabsTrigger>
+          <TabsTrigger
+            value="private"
+            className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+          >
+            <span className="inline-flex items-center gap-2">
+              <NotebookPen className="h-4 w-4" /> Private Notes
+              {!isPro && <Lock className="h-4 w-4 text-amber-500" />}
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -205,6 +219,42 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             techStack={user.tech_stack}
             username={user.username}
           />
+        </TabsContent>
+
+        <TabsContent
+          value="private"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
+        >
+          {isPro ? (
+            <div className="rounded-2xl border border-amber-300/60 bg-amber-50/60 p-6 shadow-[0_10px_40px_-24px_rgba(251,191,36,0.75)]">
+              <div className="flex items-center gap-3 text-amber-900">
+                <Crown className="h-5 w-5" />
+                <div>
+                  <p className="text-lg font-semibold">Pro Private Notes</p>
+                  <p className="text-sm text-amber-800/80">Shaxsiy draf va g'oyalarni shu yerda saqlang, faqat sizga ko'rinadi.</p>
+                </div>
+              </div>
+              <div className="mt-4 rounded-xl border border-amber-200/80 bg-white/70 p-4 text-sm text-amber-900/90">
+                Bu bo'lim tez orada shaxsiy eslatmalarni qo'llab-quvvatlaydi. Hozircha pro a'zolar ustunlik belgilaridan bahramand bo'lishmoqda.
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-6 text-amber-900">
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="text-lg font-semibold">Pro xususiy eslatmalar</p>
+                  <p className="text-sm text-amber-800/80">Bu xususiyat faqat Pro a'zolarga ochiq. Yangilanish orqali kirish oling.</p>
+                </div>
+              </div>
+              <a
+                href="/pricing"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(251,191,36,0.6)] transition hover:brightness-110"
+              >
+                <Crown className="h-4 w-4" /> Upgrade to Pro
+              </a>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

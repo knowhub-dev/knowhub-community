@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { AdminSidebar } from '@/components/AdminSidebar';
 import { cn } from '@/lib/utils';
+import TableSkeleton from '@/components/skeletons/TableSkeleton';
 
 interface AdminStats {
   users: { total: number; new_today: number; active?: number };
@@ -320,13 +321,7 @@ export default function AdminPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/70">
-                        {usersLoading && (
-                          <tr>
-                            <td colSpan={5} className="px-4 py-6 text-center">
-                              <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
-                            </td>
-                          </tr>
-                        )}
+                        {usersLoading && <TableSkeleton rows={5} />}
 
                         {!usersLoading && users?.data?.length === 0 && (
                           <tr>

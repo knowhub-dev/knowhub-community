@@ -57,5 +57,6 @@ class Kernel extends HttpKernel
         'rate.limit' => \App\Http\Middleware\RateLimitMiddleware::class,
         'cache' => \App\Http\Middleware\CacheMiddleware::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        'plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
     ];
 }

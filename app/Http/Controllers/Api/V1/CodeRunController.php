@@ -30,7 +30,7 @@ class CodeRunController extends Controller
             'status' => 'running',
         ]);
 
-        $result = $this->runner->run($run->language, $run->source);
+        $result = $this->runner->run($req->user(), $run->language, $run->source);
 
         DB::transaction(function () use ($run, $result) {
             $run->stdout = $result['stdout'];

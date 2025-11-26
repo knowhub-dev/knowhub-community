@@ -4,12 +4,14 @@ namespace App\Models;
 
 // Barcha kerakli importlar
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -29,6 +31,8 @@ class User extends Authenticatable
         'website_url',
         'github_url',
         'linkedin_url',
+        'plan_type',
+        'plan_expires_at',
     ];
 
     /**
@@ -47,6 +51,7 @@ class User extends Authenticatable
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
         'resume_data' => 'array',
+        'plan_expires_at' => 'datetime',
     ];
 
     /**
@@ -136,5 +141,63 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return (bool) ($this->is_admin ?? false);
+    }
+
+    public function isPro(): bool
+    {
+        return $this->plan_type === 'pro'
+            && $this->plan_expires_at instanceof Carbon
+            && $this->plan_expires_at->isFuture();
+    }
+
+    public function isLegend(): bool
+    {
+        return $this->plan_type === 'legend';
+    }
+
+    public function currentPlan(): string
+    {
+        if ($this->isLegend()) {
+            return 'legend';
+        }
+
+        if ($this->isPro()) {
+            return 'pro';
+        }
+
+        return 'free';
+    }
+
+    public function planLimits(): array
+    {
+        $plans = config('plans.plans', []);
+        $planKey = $this->currentPlan();
+
+        return $plans[$planKey] ?? ($plans['free'] ?? []);
+    }
+
+    public function canCreateContainer(): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $limit = (int) Arr::get($this->planLimits(), 'max_containers', 0);
+
+        if ($limit <= 0) {
+            return false;
+        }
+
+        return $this->containers()->count() < $limit;
+    }
+
+    public function getMaxUploadSize(): int
+    {
+        return (int) Arr::get($this->planLimits(), 'max_upload_kb', 2048);
+    }
+
+    public function hasPriorityExecution(): bool
+    {
+        return (bool) Arr::get($this->planLimits(), 'priority', false);
     }
 }
