@@ -6,15 +6,17 @@ import {
   BarChart3,
   Users,
   FileText,
-  MessageCircle, 
+  MessageCircle,
   TrendingUp,
   Calendar,
   Award,
   Code,
-  BookOpen
+  BookOpen,
+  PenTool
 } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import EmptyState from '@/components/EmptyState';
 
 async function getDashboardStats() {
   const res = await api.get('/dashboard/stats');
@@ -51,6 +53,9 @@ export default function DashboardPage() {
     queryFn: getTrending,
     enabled: !!user,
   });
+
+  const hasRecentPosts = activity?.recent_posts && activity.recent_posts.length > 0;
+  const hasRecentComments = activity?.recent_comments && activity.recent_comments.length > 0;
 
   if (!user) {
     return (
@@ -181,47 +186,61 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Sizning faoliyatingiz</h2>
           
           {/* Recent Posts */}
-          {activity?.recent_posts && activity.recent_posts.length > 0 && (
+          {hasRecentPosts ? (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">So'nggi postlaringiz</h3>
               <div className="space-y-2">
-                {activity.recent_posts.map((post: any) => (
+                {activity?.recent_posts?.map((post: any) => (
                   <Link
                     key={post.id}
                     href={`/posts/${post.slug}`}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="block rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
                   >
                     <p className="font-medium text-sm text-gray-900 line-clamp-1">{post.title}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-gray-500">
                       {new Date(post.created_at).toLocaleDateString('uz-UZ')}
                     </p>
                   </Link>
                 ))}
               </div>
             </div>
+          ) : (
+            <EmptyState
+              icon={PenTool}
+              title="Hozircha postlaringiz yo‘q"
+              description="Biror g'oya bilan jamiyatni ilhomlantiring."
+              action={{ label: 'Post yozish', href: '/posts/create' }}
+            />
           )}
 
           {/* Recent Comments */}
-          {activity?.recent_comments && activity.recent_comments.length > 0 && (
+          {hasRecentComments ? (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">So'nggi kommentlaringiz</h3>
               <div className="space-y-2">
-                {activity.recent_comments.map((comment: any) => (
+                {activity?.recent_comments?.map((comment: any) => (
                   <Link
                     key={comment.id}
                     href={`/posts/${comment.post.slug}#comment-${comment.id}`}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="block rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
                   >
                     <p className="text-sm text-gray-900 line-clamp-2">
                       {comment.content_markdown.substring(0, 100)}...
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-gray-500">
                       {comment.post.title} • {new Date(comment.created_at).toLocaleDateString('uz-UZ')}
                     </p>
                   </Link>
                 ))}
               </div>
             </div>
+          ) : (
+            <EmptyState
+              icon={MessageCircle}
+              title="Hozircha kommentlaringiz yo‘q"
+              description="Postlarga fikr bildirib suhbatlarni boshlang."
+              action={{ label: 'Postlarni ko‘rish', href: '/posts' }}
+            />
           )}
         </div>
 
