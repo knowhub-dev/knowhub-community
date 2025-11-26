@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, PenTool, LogIn, LogOut, UserPlus } from "lucide-react";
+import { Crown, Menu, PenTool, LogIn, LogOut, UserPlus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { isProUser } from "@/lib/user";
 
 interface NavLink {
   href: string;
@@ -20,6 +22,14 @@ interface MobileNavProps {
 
 export default function MobileNav({ navLinks, user, onLogout }: MobileNavProps) {
   const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? user?.username?.charAt(0)?.toUpperCase() ?? "?";
+  const isPro = isProUser(user as any);
+  const avatarRing = isPro
+    ? 'ring-2 ring-yellow-400 shadow-[0_0_14px_rgba(250,204,21,0.4)] border border-yellow-200/60'
+    : 'border border-border/70';
+  const nameClasses = cn(
+    'text-sm font-semibold text-[hsl(var(--foreground))]',
+    isPro && 'bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_2px_6px_rgba(251,191,36,0.35)]',
+  );
 
   return (
     <Sheet>
@@ -47,10 +57,15 @@ export default function MobileNav({ navLinks, user, onLogout }: MobileNavProps) 
                 <img
                   src={user.avatar_url}
                   alt={user.name ?? "Foydalanuvchi"}
-                  className="h-12 w-12 rounded-full border border-border/70 object-cover"
+                  className={cn('h-12 w-12 rounded-full object-cover', avatarRing)}
                 />
               ) : (
-                <span className="flex h-12 w-12 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))] text-sm font-semibold text-[hsl(var(--foreground))]">
+                <span
+                  className={cn(
+                    'flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--surface))] text-sm font-semibold text-[hsl(var(--foreground))]',
+                    avatarRing,
+                  )}
+                >
                   {userInitial}
                 </span>
               )
@@ -58,8 +73,13 @@ export default function MobileNav({ navLinks, user, onLogout }: MobileNavProps) 
               <Skeleton className="h-12 w-12 rounded-full" />
             )}
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-[hsl(var(--foreground))]">{user?.name ?? "Mehmon"}</p>
+              <p className={nameClasses}>{user?.name ?? "Mehmon"}</p>
               <p className="text-xs text-muted-foreground">{user?.username ? `@${user.username}` : "Tizimga kirmagansiz"}</p>
+              {isPro && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-300/70">
+                  <Crown className="h-3.5 w-3.5" /> Pro a'zo
+                </span>
+              )}
             </div>
           </div>
 

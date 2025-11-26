@@ -17,6 +17,8 @@ import {
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import EmptyState from '@/components/EmptyState';
+import { cn } from '@/lib/utils';
+import { isProUser } from '@/lib/user';
 
 async function getDashboardStats() {
   const res = await api.get('/dashboard/stats');
@@ -222,7 +224,12 @@ export default function DashboardPage() {
                   <Link
                     key={comment.id}
                     href={`/posts/${comment.post.slug}#comment-${comment.id}`}
-                    className="block rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+                    className={cn(
+                      'block rounded-lg p-3 transition-colors border',
+                      isProUser(comment.user)
+                        ? 'bg-yellow-500/5 border-yellow-200/70 hover:bg-yellow-500/10'
+                        : 'bg-gray-50 border-transparent hover:bg-gray-100',
+                    )}
                   >
                     <p className="text-sm text-gray-900 line-clamp-2">
                       {comment.content_markdown.substring(0, 100)}...

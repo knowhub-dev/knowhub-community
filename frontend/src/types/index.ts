@@ -2,6 +2,9 @@ export interface User {
   id: number;
   name: string;
   username: string;
+  plan_type?: 'free' | 'pro' | 'legend';
+  plan_expires_at?: string | null;
+  is_pro?: boolean;
   email?: string;
   avatar_url?: string;
   xp: number;
