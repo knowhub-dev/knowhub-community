@@ -8,9 +8,30 @@ import CookieNotice from "@/components/CookieNotice";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { buildMetadata, buildCanonicalUrl, getSiteName } from "@/lib/seo";
+import { buildCanonicalUrl, getSiteName } from "@/lib/seo";
 
-export const metadata: Metadata = buildMetadata();
+const siteName = getSiteName();
+const siteDescription =
+  process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+  "O'zbekiston va dunyo bo'ylab dasturchilar uchun hamjamiyat.";
+const canonicalUrl = buildCanonicalUrl("/");
+
+export const metadata: Metadata = {
+  metadataBase: new URL(canonicalUrl),
+  title: siteName,
+  description: siteDescription,
+  alternates: {
+    canonical: canonicalUrl,
+  },
+  openGraph: {
+    type: "website",
+    url: canonicalUrl,
+    title: siteName,
+    description: siteDescription,
+    siteName,
+    images: [{ url: buildCanonicalUrl("/globe.svg") }],
+  },
+};
 
 const organizationJsonLd = {
   "@context": "https://schema.org",

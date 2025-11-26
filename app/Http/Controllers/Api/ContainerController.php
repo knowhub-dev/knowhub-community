@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use App\Support\Settings;
 use RuntimeException;
 use Throwable;
+use Symfony\Component\HttpFoundation\Response;
 
 class ContainerController extends Controller
 {
@@ -48,14 +49,10 @@ class ContainerController extends Controller
 
         $user = $request->user();
 
-        if (!$user->is_admin) {
-            $maxContainers = (int) config('containers.max_containers_per_user', PHP_INT_MAX);
-            $currentCount = $user->containers()->count();
-            if ($currentCount >= $maxContainers) {
-                return response()->json([
-                    'message' => 'Container limit reached for your account.',
-                ], 422);
-            }
+        if (!$user->canCreateContainer()) {
+            return response()->json([
+                'message' => 'Pro versiyaga o‘ting!',
+            ], Response::HTTP_FORBIDDEN);
         }
 
         $validated = $request->validated();
@@ -245,7 +242,8 @@ class ContainerController extends Controller
 
         $templates = config('containers.templates', []);
         $allowedImages = array_values($templates ?: config('containers.allowed_images', []));
-        $maxContainers = (int) Settings::get('mini_services.max_per_user', config('containers.max_containers_per_user', PHP_INT_MAX));
+        $limits = $user->planLimits();
+        $maxContainers = (int) Settings::get('mini_services.max_per_user', $limits['max_containers'] ?? config('containers.max_containers_per_user', PHP_INT_MAX));
         $currentCount = $user->containers()->count();
         $isAdmin = (bool) $user->is_admin;
         $remaining = $isAdmin ? null : max(0, $maxContainers - $currentCount);

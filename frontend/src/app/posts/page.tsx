@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import PostCard from '@/components/PostCard';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import { Post, Tag, Category } from '@/types';
 import { Search, Filter } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import PostSkeleton from '@/components/skeletons/PostSkeleton';
 
 async function getPosts(params: { tag?: string; category?: string; search?: string; page?: number }) {
   const searchParams = new URLSearchParams();
@@ -52,11 +53,34 @@ export default function PostsPage() {
     queryFn: getCategories,
   });
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+  const handleFilterChange = (key: string, value: string | number) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      page: key === 'page' ? Number(value) : 1,
+    }));
   };
 
-  if (postsLoading) return <LoadingSpinner />;
+  if (postsLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
+
+        <PostSkeleton count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -165,7 +189,7 @@ export default function PostsPage() {
         <div className="flex justify-center mt-12">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => handleFilterChange('page', (filters.page - 1).toString())}
+              onClick={() => handleFilterChange('page', filters.page - 1)}
               disabled={filters.page <= 1}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
@@ -177,7 +201,7 @@ export default function PostsPage() {
             </span>
             
             <button
-              onClick={() => handleFilterChange('page', (filters.page + 1).toString())}
+              onClick={() => handleFilterChange('page', filters.page + 1)}
               disabled={filters.page >= posts.meta.last_page}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
