@@ -1,13 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { api } from '@/lib/api';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import { Category, Tag } from '@/types';
-import { Shield, Trophy, Sparkles } from 'lucide-react';
+import { Shield, Trophy, Sparkles, Loader2, Check, Tag as TagIcon } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
+import { AxiosError } from 'axios';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 async function getCategories() {
   const res = await api.get('/categories');
@@ -29,6 +36,8 @@ export default function NewPostForm() {
   const [requiredXp, setRequiredXp] = useState(0);
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [livePreview, setLivePreview] = useState(true);
+  const [tagQuery, setTagQuery] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: categories } = useQuery<Category[]>({
     queryKey: ['categories'],
@@ -53,14 +62,50 @@ export default function NewPostForm() {
       return res.data;
     },
     onSuccess: (data) => {
+      toast.success('Post muvaffaqiyatli chop etildi! 🚀');
+      setErrors({});
       router.push(`/posts/${data.slug}`);
       router.refresh();
+    },
+    onError: (error) => {
+      const axiosError = error as AxiosError<{ errors?: Record<string, string[]> }>;
+      if (axiosError.response?.status === 422) {
+        const validationErrors = axiosError.response.data?.errors ?? {};
+        const mappedErrors: Record<string, string> = {
+          title: validationErrors.title?.[0],
+          content: validationErrors.content?.[0] || validationErrors.content_markdown?.[0],
+          category: validationErrors.category_id?.[0],
+          tags: validationErrors.tags?.[0],
+        };
+        setErrors((prev) => ({ ...prev, ...mappedErrors }));
+        toast.error("Iltimos, kiritilgan ma'lumotlarni tekshiring");
+      } else {
+        toast.error('Xatolik yuz berdi');
+      }
     }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !content) return;
+    const localErrors: Record<string, string> = {};
+
+    if (!title.trim()) {
+      localErrors.title = 'Sarlavha talab qilinadi';
+    }
+    if (!content.trim()) {
+      localErrors.content = 'Kontent kiritilishi shart';
+    }
+    if (!selectedCategory) {
+      localErrors.category = 'Kategoriya tanlang';
+    }
+
+    if (Object.keys(localErrors).length > 0) {
+      setErrors(localErrors);
+      toast.error("Iltimos, majburiy maydonlarni to'ldiring");
+      return;
+    }
+
+    setErrors({});
     createPost.mutate();
   };
 
@@ -69,6 +114,12 @@ export default function NewPostForm() {
       prev.includes(tagName) ? prev.filter((t) => t !== tagName) : [...prev, tagName]
     );
   };
+
+  const filteredTags = useMemo(
+    () =>
+      tags?.filter((tag) => tag.name.toLowerCase().includes(tagQuery.toLowerCase())) || [],
+    [tags, tagQuery]
+  );
 
   if (!user) {
     return (
@@ -82,6 +133,7 @@ export default function NewPostForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 p-8 sm:p-10">
+      <Toaster position="top-right" />
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <p className="gradient-text text-xs font-semibold uppercase tracking-[0.3em]">Yangi Post</p>
@@ -95,16 +147,18 @@ export default function NewPostForm() {
 
       <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_-60px_rgba(99,102,241,0.7)] backdrop-blur-xl">
         <div className="relative group">
-          <input
+          <Input
             type="text"
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Proyektlaringiz haqidagi eng jasur g'oya..."
-            className="w-full bg-transparent text-4xl font-extrabold leading-tight text-white placeholder:text-white/40 focus:outline-none"
-            required
+            status={errors.title ? 'error' : 'default'}
+            className="bg-transparent text-2xl font-semibold text-white placeholder:text-white/40"
           />
-          <div className="absolute -bottom-1 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-transform duration-500 ease-out group-focus-within:scale-x-100" />
+          {errors.title ? (
+            <p className="mt-2 text-sm text-red-300">{errors.title}</p>
+          ) : null}
         </div>
 
         <div className="space-y-3">
@@ -117,27 +171,22 @@ export default function NewPostForm() {
               <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/70">Scroll</span>
             </div>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {categories?.map((category) => {
-              const isActive = String(category.id) === String(selectedCategory);
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(String(category.id))}
-                  className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ease-out ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/30'
-                      : 'border border-white/10 bg-white/10 text-white/80 hover:border-white/30 hover:text-white'
-                  }`}
-                >
-                  <span className="h-2 w-2 rounded-full bg-white/80" />
-                  {category.name}
-                  {isActive && <span className="absolute inset-0 rounded-full border border-white/30 animate-pulse" />}
-                </button>
-              );
-            })}
-          </div>
+          <Select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            status={errors.category ? 'error' : 'default'}
+            errorMessage={errors.category}
+            aria-label="Kategoriya tanlash"
+          >
+            <option value="" disabled>
+              Kategoriya tanlang
+            </option>
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
         </div>
 
         <div className="space-y-3">
@@ -148,29 +197,60 @@ export default function NewPostForm() {
             </div>
             <Sparkles className="h-4 w-4 text-blue-300" />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {tags?.map((tag) => {
-              const active = selectedTags.includes(tag.name);
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.name)}
-                  className={`group relative overflow-hidden rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-out ${
-                    active
-                      ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-sky-400 text-white shadow-[0_10px_40px_-15px_rgba(99,102,241,0.6)]'
-                      : 'border border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white'
-                  }`}
-                >
-                  {tag.name}
-                  <span
-                    className={`absolute inset-0 -z-10 scale-110 bg-white/10 blur-md transition-opacity duration-500 ${
-                      active ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                </button>
-              );
-            })}
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-white/60">
+                <TagIcon className="h-4 w-4 text-indigo-300" />
+                <span>Bir nechta tegni tanlang yoki qidiring</span>
+              </div>
+              <Badge variant="outline" className="border-white/20 text-white">
+                {selectedTags.length} tanlandi
+              </Badge>
+            </div>
+
+            <Input
+              placeholder="Teglarni qidiring..."
+              value={tagQuery}
+              onChange={(e) => setTagQuery(e.target.value)}
+              className="bg-slate-900/60 text-white placeholder:text-white/60"
+              status={errors.tags ? 'error' : 'default'}
+            />
+
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              {filteredTags.map((tag) => {
+                const active = selectedTags.includes(tag.name);
+                return (
+                  <Button
+                    key={tag.id}
+                    type="button"
+                    variant={active ? 'default' : 'outline'}
+                    onClick={() => toggleTag(tag.name)}
+                    className={cn(
+                      'justify-start gap-2 border-white/20 bg-slate-900/60 text-sm text-white',
+                      active && 'bg-gradient-to-r from-indigo-500 via-purple-500 to-sky-400 text-white'
+                    )}
+                  >
+                    {active ? <Check className="h-4 w-4" /> : <span className="h-4 w-4" />}
+                    {tag.name}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {selectedTags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {selectedTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="bg-white/10 text-white hover:bg-white/20"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+            {errors.tags ? <p className="text-sm text-red-300">{errors.tags}</p> : null}
           </div>
         </div>
 
@@ -208,6 +288,7 @@ export default function NewPostForm() {
               <MarkdownEditor value={content} onChange={setContent} preview={livePreview ? 'live' : 'edit'} />
             </div>
           </div>
+          {errors.content ? <p className="text-sm text-red-300">{errors.content}</p> : null}
         </div>
 
         <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 md:grid-cols-2">
@@ -215,12 +296,13 @@ export default function NewPostForm() {
             <label className="flex items-center gap-2 text-sm font-semibold text-white">
               <Trophy className="h-4 w-4 text-amber-300" /> Minimum XP talabi
             </label>
-            <input
+            <Input
               type="number"
               min="0"
               value={requiredXp}
               onChange={(e) => setRequiredXp(Number(e.target.value))}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/60"
+              className="bg-slate-900/70 text-white"
+              status={errors.requiredXp ? 'error' : 'default'}
             />
             <p className="text-xs text-white/60">O'quvchilar uchun minimal XP darajasini belgilang.</p>
           </div>
@@ -229,28 +311,46 @@ export default function NewPostForm() {
             <label className="flex items-center gap-2 text-sm font-semibold text-white">
               <Shield className="h-4 w-4 text-cyan-300" /> Faqat tasdiqlangan foydalanuvchilar
             </label>
-            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
-              <input
-                type="checkbox"
-                checked={requiresVerification}
-                onChange={(e) => setRequiresVerification(e.target.checked)}
-                className="h-4 w-4 rounded border-white/30 bg-slate-900 text-indigo-500 focus:ring-indigo-400/60"
-              />
-              Tasdiqlangan profilgagina ruxsat etish
-            </label>
+            <Button
+              type="button"
+              variant={requiresVerification ? 'default' : 'outline'}
+              onClick={() => setRequiresVerification((prev) => !prev)}
+              className="flex w-full items-center justify-between border-white/20 bg-slate-900/70 text-white"
+            >
+              <span>Tasdiqlangan profilgagina ruxsat etish</span>
+              <span
+                className={cn(
+                  'inline-flex h-6 w-12 items-center rounded-full border border-white/20 bg-slate-800 transition-all',
+                  requiresVerification && 'border-emerald-400 bg-emerald-500/20'
+                )}
+              >
+                <span
+                  className={cn(
+                    'mx-1 h-4 w-4 rounded-full bg-white transition-transform',
+                    requiresVerification ? 'translate-x-5 bg-emerald-300' : 'translate-x-0'
+                  )}
+                />
+              </span>
+            </Button>
             <p className="text-xs text-white/60">Kuchli moderatsiya talab etiladigan mavzular uchun tavsiya etiladi.</p>
           </div>
         </div>
 
         <div className="flex flex-col gap-3">
-          <button
+          <Button
             type="submit"
             disabled={createPost.isPending}
             className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 px-6 py-4 text-lg font-semibold text-white shadow-xl shadow-indigo-500/25 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <span className="absolute inset-0 w-1/3 -translate-x-full skew-x-12 bg-white/30 transition-transform duration-700 ease-out group-hover:translate-x-[200%]" />
-            {createPost.isPending ? 'Yuborilmoqda...' : '🚀 Publish to Community'}
-          </button>
+            {createPost.isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" /> Yuborilmoqda...
+              </span>
+            ) : (
+              '🚀 Publish to Community'
+            )}
+          </Button>
           <p className="text-center text-xs text-white/60">Kodlash, dizayn va tajribalarni bo'lishing. Jamiyat sizni kutmoqda.</p>
         </div>
       </div>

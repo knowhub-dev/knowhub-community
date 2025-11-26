@@ -9,12 +9,13 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      allow: ['/', '/posts', '/users'],
     },
     sitemap: [
       sitemap('sitemap.xml'),
       sitemap('sitemap-posts.xml'),
       sitemap('sitemap-users.xml'),
     ],
+    host: base.origin,
   };
 }
