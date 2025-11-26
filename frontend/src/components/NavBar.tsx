@@ -42,6 +42,13 @@ export default function NavBar() {
     { href: '/tags', label: 'Teglar', icon: Tag },
   ];
 
+  const navLinks = [
+    { href: '/', label: 'Bosh sahifa', icon: Home },
+    { href: '/posts', label: 'Maqolalar', icon: BookOpen },
+    { href: '/users', label: 'Foydalanuvchilar', icon: Users },
+    { href: '/tags', label: 'Teglar', icon: Tag },
+  ];
+
   return (
     <nav className="bg-[hsl(var(--background))] border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
