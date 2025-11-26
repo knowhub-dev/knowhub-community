@@ -2,11 +2,10 @@
 import type { Metadata } from 'next';
 import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
-import { buildMetadata, buildCanonicalUrl } from '@/lib/seo';
+import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
 import Script from 'next/script';
 
 interface Post {
@@ -55,30 +54,49 @@ async function getPost(slug: string): Promise<Post> {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+const buildSnippet = (markdown?: string) =>
+  markdown
+    ? markdown.replace(/[#*_`>\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)
+    : "O'qish uchun yangi post.";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params;
   const post = await getPost(slug);
-  const snippet = post.content_markdown
-    ? post.content_markdown.replace(/[#*_`>\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)
-    : undefined;
-
+  const description = buildSnippet(post.content_markdown);
   const keywords = post.tags?.map((tag) => tag.name) ?? [];
+  const canonical = buildCanonicalUrl(`/posts/${post.slug}`);
+  const ogImage = buildCanonicalUrl(`/posts/${post.slug}/opengraph-image`);
+  const siteName = getSiteName();
 
-  return buildMetadata({
-    title: post.title,
-    description: snippet,
+  return {
+    title: `${post.title} · ${siteName}`,
+    description,
     keywords,
-    url: `/posts/${post.slug}`,
-  });
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      type: 'article',
+      url: canonical,
+      title: post.title,
+      description,
+      siteName,
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 // ✅ Page component
-export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function PostPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const post = await getPost(slug);
-  const snippet = post.content_markdown
-    ? post.content_markdown.replace(/[#*_`>\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)
-    : undefined;
+  const snippet = buildSnippet(post.content_markdown);
 
   const postJsonLd = {
     '@context': 'https://schema.org',
