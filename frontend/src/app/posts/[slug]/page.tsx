@@ -12,6 +12,7 @@ interface Post {
   id: number;
   title: string;
   slug: string;
+  excerpt?: string;
   content_markdown: string;
   score: number;
   answers_count: number;
@@ -62,7 +63,7 @@ const buildSnippet = (markdown?: string) =>
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { slug } = params;
   const post = await getPost(slug);
-  const description = buildSnippet(post.content_markdown);
+  const description = post.excerpt?.trim() || buildSnippet(post.content_markdown);
   const keywords = post.tags?.map((tag) => tag.name) ?? [];
   const canonical = buildCanonicalUrl(`/posts/${post.slug}`);
   const ogImage = buildCanonicalUrl(`/posts/${post.slug}/opengraph-image`);
