@@ -28,6 +28,7 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         surface: {
+          DEFAULT: "hsl(var(--surface))",
           1: "hsl(var(--surface-1))",
           2: "hsl(var(--surface-2))",
           3: "hsl(var(--surface-3))",
@@ -42,6 +43,7 @@ const config: Config = {
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
+          light: "hsl(var(--primary-light))",
           soft: "hsl(var(--primary-soft))",
           foreground: "hsl(var(--primary-foreground))",
         },
@@ -51,6 +53,9 @@ const config: Config = {
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
+          purple: "hsl(var(--accent-purple))",
+          pink: "hsl(var(--accent-pink))",
+          green: "hsl(var(--accent-green))",
           foreground: "hsl(var(--accent-foreground))",
         },
         muted: {
@@ -62,6 +67,10 @@ const config: Config = {
         danger: {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
