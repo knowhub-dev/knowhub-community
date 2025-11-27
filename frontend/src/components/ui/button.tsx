@@ -6,24 +6,22 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] font-medium tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] border border-transparent px-4 py-2 font-medium tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary text-white shadow-subtle hover:bg-primary-light hover:shadow-neon",
+          "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-soft hover:shadow-glow hover:-translate-y-[1px]",
         secondary:
-          "bg-surface/85 text-foreground border border-border/80 backdrop-blur-sm hover:border-primary-light hover:bg-surface/95 hover:shadow-subtle",
+          "bg-surface-1 text-foreground border-border/70 backdrop-blur-sm hover:border-primary/60 hover:-translate-y-[1px] hover:shadow-soft",
+        subtle:
+          "bg-surface-1/80 text-foreground border-border/50 hover:border-border hover:bg-surface-2/80",
         ghost:
-          "bg-transparent text-foreground hover:bg-surface/70 hover:text-foreground",
+          "bg-transparent text-foreground hover:bg-surface-1/70 hover:text-foreground",
         outline:
-          "border border-primary text-primary hover:bg-primary/10 hover:text-white hover:shadow-neon",
+          "border border-primary text-primary hover:bg-primary/10 hover:shadow-glow",
         destructive:
-          "bg-red-600 text-white shadow-subtle hover:bg-red-700 hover:shadow-[0_0_22px_rgba(220,38,38,0.4)]",
-        neon:
-          "relative isolate overflow-hidden bg-transparent text-white shadow-neon hover:shadow-[0_0_30px_rgba(164,85,247,0.65)] before:absolute before:inset-0 before:-z-20 before:rounded-[var(--radius-md)] before:bg-gradient-to-r before:from-accent-purple before:to-accent-pink before:opacity-90 before:transition-opacity before:duration-200 before:content-[''] after:absolute after:inset-[1px] after:-z-10 after:rounded-[var(--radius-md)] after:bg-surface/80 after:content-[''] hover:before:opacity-100",
-        icon:
-          "bg-surface/85 text-foreground border border-border/80 backdrop-blur-sm hover:border-primary hover:bg-surface/95 hover:text-foreground hover:shadow-neon",
+          "bg-danger text-danger-foreground shadow-soft hover:bg-danger/90",
       },
       size: {
         sm: "h-9 px-3 text-sm",
@@ -36,27 +34,13 @@ const buttonVariants = cva(
       },
     },
     compoundVariants: [
-      {
-        variant: "icon",
-        size: "sm",
-        className: "h-9 w-9",
-      },
-      {
-        variant: "icon",
-        size: "md",
-        className: "h-10 w-10",
-      },
-      {
-        variant: "icon",
-        size: "lg",
-        className: "h-12 w-12 text-lg",
-      },
+      { variant: "ghost", size: "icon", className: "h-10 w-10" },
     ],
     defaultVariants: {
       variant: "primary",
       size: "md",
     },
-  }
+  },
 );
 
 export interface ButtonProps
