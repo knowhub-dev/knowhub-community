@@ -54,15 +54,14 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased transition-colors">
+      <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              <div className="flex min-h-screen flex-col bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+              <div className="relative flex min-h-screen flex-col">
+                <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-primary/20 via-accent/10 to-transparent" />
                 <Navbar />
-                <main className="flex-1">
-                  {children}
-                </main>
+                <main className="relative flex-1 pb-12">{children}</main>
                 <Footer />
                 <CookieNotice />
               </div>
