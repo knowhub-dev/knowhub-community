@@ -24,7 +24,7 @@ export function AdminSidebar({ items, active, onSelect }: AdminSidebarProps) {
         {items.map((item) => (
           <Button
             key={item.id}
-            variant={active === item.id ? 'primary' : 'secondary'}
+            variant={active === item.id ? 'default' : 'secondary'}
             size="lg"
             fullWidth
             className={cn('justify-start gap-3', active === item.id && 'shadow-neon')}
