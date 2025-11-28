@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { api } from '@/lib/api';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import MarkdownEditor from '@/components/MarkdownEditor';
+import MarkdownEditor from '@/components/features/posts/MarkdownEditor';
 import { Category, Tag } from '@/types';
 import { Shield, Trophy, Sparkles, Loader2, Check, Tag as TagIcon } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';

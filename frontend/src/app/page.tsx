@@ -1,7 +1,7 @@
 'use client';
 
-import GuestLanding from '@/components/home/GuestLanding';
-import UserDashboard from '@/components/home/UserDashboard';
+import GuestLanding from '@/components/features/home/GuestLanding';
+import UserDashboard from '@/components/features/home/UserDashboard';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function HomePage() {

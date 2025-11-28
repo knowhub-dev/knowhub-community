@@ -1,8 +1,8 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import PostCard from '@/components/PostCard';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import PostCard from '@/components/features/posts/PostCard';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/providers/AuthProvider';
 import { Post } from '@/types';
 import { Bookmark } from 'lucide-react';

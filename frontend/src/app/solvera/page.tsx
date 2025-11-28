@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SolveraChatCard } from "@/components/SolveraChatCard";
+import { SolveraChatCard } from "@/components/features/solvera/SolveraChatCard";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
 export const metadata = {

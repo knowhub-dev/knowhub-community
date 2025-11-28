@@ -17,10 +17,10 @@ import { useAuth } from '@/providers/AuthProvider';
 import { api } from '@/lib/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { AdminSidebar } from '@/components/AdminSidebar';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { cn } from '@/lib/utils';
-import TableSkeleton from '@/components/skeletons/TableSkeleton';
+import TableSkeleton from '@/components/ui/TableSkeleton';
 
 interface AdminStats {
   users: { total: number; new_today: number; active?: number };

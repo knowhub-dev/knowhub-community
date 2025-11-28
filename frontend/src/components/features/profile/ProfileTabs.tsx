@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Activity, ExternalLink, Github, Globe2, Layers, Link2, Linkedin, Pin, ScrollText, Sparkles } from 'lucide-react';
 
-import ContainerCard from '@/components/ContainerCard';
+import ContainerCard from '@/components/features/containers/ContainerCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Post } from '@/types';
 import { Container } from '@/types/container';

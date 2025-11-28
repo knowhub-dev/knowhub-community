@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Cpu, Server, Database, Users, Activity } from 'lucide-react';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ContainersTab from '@/components/ContainersTab';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import ContainersTab from '@/components/features/containers/ContainersTab';
 
 // Types for system resources
 interface SystemResources {

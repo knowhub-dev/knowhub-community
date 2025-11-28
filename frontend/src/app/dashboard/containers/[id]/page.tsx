@@ -10,8 +10,8 @@ import { containerService, getContainerLogs, getContainerStats } from '@/lib/ser
 import { Container, ContainerStats } from '@/types/container';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogViewer } from '@/components/containers/LogViewer';
-import ResourceChart, { ResourcePoint } from '@/components/containers/ResourceChart';
+import { LogViewer } from '@/components/features/containers/LogViewer';
+import ResourceChart, { ResourcePoint } from '@/components/features/containers/ResourceChart';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 

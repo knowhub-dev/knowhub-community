@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { notFound } from "next/navigation";
 import Script from 'next/script';
 
-import { ProfileHeader } from '@/components/profile/ProfileHeader';
-import { ProfileOverview } from '@/components/profile/ProfileOverview';
-import { ProfileAbout } from '@/components/profile/ProfileAbout';
-import { ProfilePosts } from '@/components/profile/ProfilePosts';
-import { ProfileProjects } from '@/components/profile/ProfileProjects';
-import { SolveraChatCard } from '@/components/SolveraChatCard';
+import { ProfileAbout } from '@/components/features/profile/ProfileAbout';
+import { ProfileHeader } from '@/components/features/profile/ProfileHeader';
+import { ProfileOverview } from '@/components/features/profile/ProfileOverview';
+import { ProfilePosts } from '@/components/features/profile/ProfilePosts';
+import { ProfileProjects } from '@/components/features/profile/ProfileProjects';
+import { SolveraChatCard } from '@/components/features/solvera/SolveraChatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { buildCanonicalUrl, buildMetadata } from '@/lib/seo';
 import { isProUser } from '@/lib/user';

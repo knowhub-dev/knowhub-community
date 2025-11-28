@@ -1,6 +1,6 @@
 'use client';
 
-import NewPostForm from '@/components/NewPostForm';
+import NewPostForm from '@/components/features/posts/NewPostForm';
 
 export default function CreatePostPage() {
   return (

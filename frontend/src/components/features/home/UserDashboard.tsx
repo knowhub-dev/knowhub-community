@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Sparkles } from 'lucide-react';
 
-import PostCard from '@/components/PostCard';
+import PostCard from '@/components/features/posts/PostCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';

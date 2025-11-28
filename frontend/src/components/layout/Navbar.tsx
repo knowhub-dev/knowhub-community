@@ -14,8 +14,8 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
-import SearchBar from './SearchBar';
 import NotificationDropdown from './NotificationDropdown';
+import SearchBar from '@/components/features/search/SearchBar';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { api } from '@/lib/api';

@@ -1,6 +1,6 @@
 import { Activity, Award, Flame } from 'lucide-react';
 
-import { GamificationStats } from '@/components/profile/GamificationStats';
+import { GamificationStats } from '@/components/features/profile/GamificationStats';
 
 interface Badge {
   id: number;

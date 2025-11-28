@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, HardDrive } from 'lucide-react';
-import { FileExplorer } from '@/components/containers/FileExplorer';
+import { FileExplorer } from '@/components/features/containers/FileExplorer';
 
 export default function ContainerFilesPage() {
   const params = useParams();

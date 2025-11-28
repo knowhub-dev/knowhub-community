@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCard } from '@/components/gamification/BadgeCard';
+import { BadgeCard } from '@/components/features/gamification/BadgeCard';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Sparkles, Trophy, Zap } from 'lucide-react';
 

@@ -2,11 +2,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { User } from '@/types';
 import { Search, Filter, Users, Award, FileText, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import FollowButton from '@/components/FollowButton';
+import FollowButton from '@/components/features/auth/FollowButton';
 
 type LevelOption = { id: number; name: string; slug: string; icon?: string | null };
 

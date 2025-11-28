@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Hash, TrendingUp, Search } from 'lucide-react';
 
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

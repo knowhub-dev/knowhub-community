@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 interface LogViewerProps {
   lines: string[];

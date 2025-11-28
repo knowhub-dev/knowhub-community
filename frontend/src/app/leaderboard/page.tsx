@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { User } from '@/types';
 import { Trophy, Medal, Award, Users, FileText, UserPlus, Calendar } from 'lucide-react';
 import Link from 'next/link';

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Users, Target, Heart, Code, Globe, Award } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 type PublicStatsResponse = {
   users?: { total?: number };

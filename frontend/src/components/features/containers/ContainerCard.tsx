@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Container } from '@/types/container';
 import { Play, Square, RefreshCw, Trash2, Settings, Server, Cpu, HardDrive, MemoryStick } from 'lucide-react';
 import { startContainer, stopContainer, deleteContainer, getContainerStats } from '@/lib/services/containers';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface ContainerCardProps {
   container: Container;

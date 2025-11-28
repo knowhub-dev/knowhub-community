@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
+import PostCollaborationPanelWrapper from '@/components/features/posts/PostCollaborationPanelWrapper';
 import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
 import Script from 'next/script';
 

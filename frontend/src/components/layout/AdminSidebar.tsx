@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { type LucideIcon } from 'lucide-react';
 
 export interface AdminSidebarItem {

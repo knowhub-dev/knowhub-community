@@ -1,7 +1,7 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/providers/AuthProvider';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import Link from 'next/link';

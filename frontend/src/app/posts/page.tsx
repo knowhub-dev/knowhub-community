@@ -2,11 +2,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import PostCard from '@/components/PostCard';
+import PostCard from '@/components/features/posts/PostCard';
 import { Post, Tag, Category } from '@/types';
 import { Search, Filter } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import PostSkeleton from '@/components/skeletons/PostSkeleton';
+import PostSkeleton from '@/components/features/posts/PostSkeleton';
 
 async function getPosts(params: { tag?: string; category?: string; search?: string; page?: number }) {
   const searchParams = new URLSearchParams();
