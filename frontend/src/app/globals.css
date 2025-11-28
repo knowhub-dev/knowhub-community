@@ -41,6 +41,11 @@
     --radius-lg: 22px;
     --radius-xl: 28px;
     --radius: var(--radius-md);
+    --terminal-green: 133 84% 62%;
+    --terminal-amber: 44 97% 58%;
+    --terminal-blue: 186 86% 62%;
+    --terminal-red: 0 78% 58%;
+    --terminal-bg: 120 14% 8%;
   }
 
   .dark,
@@ -75,6 +80,11 @@
     --shadow-soft: 0 24px 70px -32px rgba(0, 0, 0, 0.5);
     --shadow-glow: 0 0 32px rgba(77, 109, 255, 0.25);
     --shadow-focus: 0 0 0 4px rgba(147, 197, 253, 0.28);
+    --terminal-green: 133 84% 62%;
+    --terminal-amber: 44 97% 58%;
+    --terminal-blue: 186 86% 62%;
+    --terminal-red: 0 78% 58%;
+    --terminal-bg: 120 14% 8%;
   }
 
   *,
