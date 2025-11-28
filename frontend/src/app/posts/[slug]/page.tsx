@@ -3,11 +3,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
 import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
 import Script from 'next/script';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Post {
   id: number;
@@ -232,11 +231,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-          <div className="overflow-hidden rounded-3xl border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-[0_18px_70px_-45px_rgba(15,23,42,0.5)]">
-            <div className="prose max-w-none prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold prose-p:leading-relaxed prose-strong:text-foreground prose-ul:list-disc prose-li:text-foreground/90">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content_markdown}</ReactMarkdown>
-            </div>
-          </div>
+          <MarkdownRenderer content={post.content_markdown} />
 
           <div className="space-y-4">
             <div className="rounded-3xl border border-border/70 bg-[hsl(var(--surface))]/80 p-5 shadow-inner">
