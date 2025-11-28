@@ -1,6 +1,13 @@
 import { api } from '@/lib/api';
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
 import { Folder, FileText, TrendingUp, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'Kategoriyalar',
+  description: 'Eng mashhur mavzular va ularni o‘rganish bo‘yicha postlar to‘plami.',
+  path: '/categories',
+});
 
 interface Category {
   id: number;

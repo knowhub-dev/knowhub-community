@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWrapper';
 import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
@@ -162,9 +163,11 @@ export default async function PostPage({ params }: { params: { slug: string } })
 
               <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-[hsl(var(--surface))]/70 px-3 py-2 shadow-inner">
-                  <img
+                  <Image
                     src={post.user.avatar_url ?? '/default-avatar.png'}
                     alt={post.user.name}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 rounded-full border border-border/70 object-cover"
                   />
                   <div>

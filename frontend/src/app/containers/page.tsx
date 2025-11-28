@@ -2,6 +2,14 @@ import Link from "next/link";
 import { Rocket, Server, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { generateStaticMetadata } from "@/lib/metadata-helpers";
+
+export const generateMetadata = generateStaticMetadata({
+  title: "Container xizmati",
+  description: "Mini-serverlar va loyihalar uchun tezkor containerlar yarating.",
+  path: "/containers",
+});
+
 const FEATURES = [
   {
     title: "Izolyatsiyalangan ishga tushirish",

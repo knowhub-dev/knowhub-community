@@ -1,10 +1,13 @@
 import { api } from '@/lib/api';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User, CreditCard as Edit, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { WikiDiffExplorer } from '@/components/wiki/WikiDiffExplorer';
+import type { Metadata } from 'next';
+import { buildMetadata } from '@/lib/seo';
 
 interface WikiArticle {
   id: number;
@@ -66,6 +69,23 @@ async function getWikiArticle(slug: string): Promise<WikiArticle> {
   }
 }
 
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  try {
+    const article = await getWikiArticle(params.slug);
+    return buildMetadata({
+      title: article.title,
+      description: `${article.user.name} tomonidan yozilgan wiki maqola`,
+      url: `/wiki/${article.slug}`,
+    });
+  } catch {
+    return buildMetadata({
+      title: 'Wiki',
+      description: 'Jamiyat tomonidan yaratilgan texnik maqolalar.',
+      url: `/wiki/${params.slug}`,
+    });
+  }
+}
+
 export default async function WikiArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const article = await getWikiArticle(slug);
@@ -102,9 +122,11 @@ export default async function WikiArticlePage({ params }: { params: Promise<{ sl
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img
+              <Image
                 src={article.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(article.user.name)}`}
                 alt={article.user.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full"
               />
               <div>

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import {
@@ -149,9 +150,11 @@ function PostCardContent({
     <article className={cardClasses}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <img
+          <Image
             src={getAvatar(post.user.name, post.user.avatar_url)}
             alt={post.user.name}
+            width={48}
+            height={48}
             className={cn(
               'h-12 w-12 rounded-full object-cover shadow-subtle transition-shadow',
               avatarRing,

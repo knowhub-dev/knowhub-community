@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Target, Heart, Code, Globe, Award } from 'lucide-react';
@@ -183,9 +184,11 @@ export default function AboutPage() {
         <h2 className="text-3xl font-bold text-[hsl(var(--foreground))] text-center mb-12">Bizning Jamoa</h2>
         <div className="grid md:grid-cols-3 gap-8">
           <div className="text-center">
-            <img
+            <Image
               src="https://ui-avatars.com/api/?name=Founder&background=6366f1&color=fff&size=128"
               alt="Founder"
+              width={128}
+              height={128}
               className="w-32 h-32 rounded-full mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Asos Soluvchi</h3>
@@ -196,9 +199,11 @@ export default function AboutPage() {
           </div>
 
           <div className="text-center">
-            <img
+            <Image
               src="https://ui-avatars.com/api/?name=Tech+Lead&background=10b981&color=fff&size=128"
               alt="Tech Lead"
+              width={128}
+              height={128}
               className="w-32 h-32 rounded-full mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Texnik Rahbar</h3>
@@ -209,9 +214,11 @@ export default function AboutPage() {
           </div>
 
           <div className="text-center">
-            <img
+            <Image
               src="https://ui-avatars.com/api/?name=Community&background=f59e0b&color=fff&size=128"
               alt="Community Manager"
+              width={128}
+              height={128}
               className="w-32 h-32 rounded-full mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Hamjamiyat Menejeri</h3>

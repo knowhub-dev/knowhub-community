@@ -1,5 +1,6 @@
 'use client';
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -122,9 +123,11 @@ export default function Navbar() {
               onClick={() => setIsProfileOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-full border border-border/70 bg-[hsl(var(--surface))]/80 px-2 py-1 text-sm text-foreground transition hover:border-[hsl(var(--primary))]"
             >
-              <img
+              <Image
                 src={user.avatar_url ?? '/default-avatar.png'}
                 alt={user.name}
+                width={36}
+                height={36}
                 className="h-9 w-9 rounded-full border border-border/70 object-cover"
               />
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -192,7 +195,13 @@ export default function Navbar() {
           href={`/profile/${user.username}`}
           className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70"
         >
-          <img src={user.avatar_url ?? '/default-avatar.png'} alt={user.name} className="h-8 w-8 rounded-full object-cover" />
+          <Image
+            src={user.avatar_url ?? '/default-avatar.png'}
+            alt={user.name}
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-full object-cover"
+          />
         </Link>
       );
     }
@@ -222,7 +231,7 @@ export default function Navbar() {
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
             {activeLogo ? (
-              <img src={activeLogo.url} alt="KnowHub logo" className="h-12 w-auto" />
+              <Image src={activeLogo.url} alt="KnowHub logo" width={120} height={48} className="h-12 w-auto" />
             ) : (
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary-light to-secondary text-xl font-semibold text-white shadow-neon">
                 KH

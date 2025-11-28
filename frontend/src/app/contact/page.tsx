@@ -1,4 +1,11 @@
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
 import { Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'Aloqa',
+  description: "Biz bilan bog‘lanish uchun aloqa manzillari va tezkor forma.",
+  path: '/contact',
+});
 
 export default function ContactPage() {
   return (

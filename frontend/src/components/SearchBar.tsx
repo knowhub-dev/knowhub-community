@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -207,9 +208,11 @@ export default function SearchBar({
                       onClick={() => setIsOpen(false)}
                       className={resultRowClass('flex items-center gap-3')}
                     >
-                      <img
+                      <Image
                         src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                         alt={user.name}
+                        width={32}
+                        height={32}
                         className="h-8 w-8 rounded-full object-cover"
                       />
                       <div>

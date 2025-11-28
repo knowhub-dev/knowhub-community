@@ -1,12 +1,19 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { SolveraChatCard } from "@/components/SolveraChatCard";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
-export const metadata = {
+import { generateStaticMetadata } from "@/lib/metadata-helpers";
+
+const SolveraChatCard = dynamic(() => import("@/components/SolveraChatCard").then((mod) => mod.SolveraChatCard), {
+  ssr: false,
+});
+
+export const generateMetadata = generateStaticMetadata({
   title: "SolVera AI beta",
   description:
     "KnowHub jamoasining gtp-5 asosidagi SolVera modeli — postlarni jilolash, kod sharhlash va g'oyalarni tezlashtirish uchun",
-};
+  path: "/solvera",
+});
 
 const roadmap = [
   "Realtime streaming javoblar va kod bloklarni formatlash",

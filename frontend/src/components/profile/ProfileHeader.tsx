@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { CSSProperties } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -72,11 +73,13 @@ export function ProfileHeader({ user, xpTarget, xpProgress, isCurrentUser }: Pro
                 } as CSSProperties}
               >
                 <div className="relative flex h-full w-full items-center justify-center rounded-full bg-black/40 shadow-inner">
-                  <img
+                  <Image
                     src={user.avatar_url || avatarFallback(user.name)}
                     alt={user.name}
+                    fill
+                    sizes="112px"
                     className="h-full w-full rounded-full object-cover shadow-lg"
-                    loading="lazy"
+                    priority={false}
                   />
                   <span className="absolute -bottom-1 flex items-center gap-1 rounded-full bg-black/80 px-3 py-1 text-xs font-semibold text-white shadow-lg">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
