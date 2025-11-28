@@ -33,3 +33,29 @@ export const timeAgo = (timestamp?: string) => {
   if (seconds >= 0) return `${seconds} soniya oldin`;
   return "hozir";
 };
+
+export const buildSnippet = (content: {
+  excerpt?: string;
+  summary?: string;
+  content_preview?: string;
+  content_markdown?: string;
+  content?: string;
+},
+length = 160,
+) => {
+  const raw =
+    content.excerpt ??
+    content.summary ??
+    content.content_preview ??
+    content.content_markdown ??
+    content.content ??
+    "";
+
+  if (!raw) {
+    return "";
+  }
+
+  const sanitized = raw.replace(/<[^>]*>?/g, "");
+  const clean = sanitized.replace(/[#*_`>\-]/g, " ").replace(/\s+/g, " ").trim();
+  return clean.length > length ? `${clean.slice(0, length)}…` : clean;
+};
