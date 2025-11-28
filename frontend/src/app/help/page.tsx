@@ -1,6 +1,14 @@
 import { MessageCircle, Book, Users, Code, Award, Search } from 'lucide-react';
 import Link from 'next/link';
 
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'Yordam markazi',
+  description: 'Ko‘p beriladigan savollar, qo‘llanmalar va hamjamiyatdan yordam oling.',
+  path: '/help',
+});
+
 export default function HelpPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-[hsl(var(--foreground))]">

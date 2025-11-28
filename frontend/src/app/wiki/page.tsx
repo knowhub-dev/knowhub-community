@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -102,9 +103,11 @@ export default function WikiPage() {
                 </p>
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center">
-                    <img
+                    <Image
                       src={article.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(article.user.name)}`}
                       alt={article.user.name}
+                      width={24}
+                      height={24}
                       className="w-6 h-6 rounded-full mr-2"
                     />
                     <span>{article.user.name}</span>

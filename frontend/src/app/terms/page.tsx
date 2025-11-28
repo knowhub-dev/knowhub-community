@@ -1,3 +1,11 @@
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'Foydalanish shartlari',
+  description: "KnowHub xizmatlaridan foydalanish qoidalari va foydalanuvchi majburiyatlari.",
+  path: '/terms',
+});
+
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-[hsl(var(--foreground))]">

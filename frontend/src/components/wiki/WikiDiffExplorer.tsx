@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -123,11 +124,12 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
                       {proposal.user?.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={proposal.user.avatar_url}
                           alt={proposal.user.name || 'Foydalanuvchi'}
-                          className="w-full h-full object-cover"
+                          width={40}
+                          height={40}
+                          className="h-full w-full object-cover"
                         />
                       ) : (
                         <span className="text-sm font-semibold text-gray-600">

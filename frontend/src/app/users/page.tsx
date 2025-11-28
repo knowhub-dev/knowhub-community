@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { User } from '@/types';
 import { Search, Filter, Users, Award, FileText, UserPlus } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import FollowButton from '@/components/FollowButton';
 
@@ -163,9 +164,11 @@ export default function UsersPage() {
             {/* User Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <img
+                <Image
                   src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                   alt={user.name}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full"
                 />
                 <div>

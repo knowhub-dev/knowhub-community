@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -46,9 +47,11 @@ function CreatePostWidget({
   return (
     <div className="rounded-3xl border border-border/70 bg-surface/80 p-5 shadow-glass backdrop-blur">
       <div className="flex gap-4">
-        <img
+        <Image
           src={avatarUrl ?? 'https://ui-avatars.com/api/?name=KnowHub'}
           alt="User avatar"
+          width={48}
+          height={48}
           className="h-12 w-12 rounded-2xl border border-border/60 object-cover"
         />
         <div className="flex-1 space-y-3">

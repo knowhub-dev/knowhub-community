@@ -1,4 +1,5 @@
-'use client';
+"use client";
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api } from '@/lib/api';
@@ -129,9 +130,11 @@ export default function LeaderboardPage() {
             {/* 2nd Place */}
             <div className="text-center">
               <div className="bg-gradient-to-b from-gray-300 to-gray-400 rounded-lg p-6 mb-4 transform translate-y-4">
-                <img
+                <Image
                   src={users[1].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(users[1].name)}`}
                   alt={users[1].name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full mx-auto mb-3"
                 />
                 <Medal className="w-8 h-8 text-gray-600 mx-auto mb-2" />
@@ -146,9 +149,11 @@ export default function LeaderboardPage() {
             {/* 1st Place */}
             <div className="text-center">
               <div className="bg-gradient-to-b from-yellow-400 to-yellow-500 rounded-lg p-6 mb-4">
-                <img
+                <Image
                   src={users[0].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(users[0].name)}`}
                   alt={users[0].name}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-white"
                 />
                 <Trophy className="w-10 h-10 text-yellow-700 mx-auto mb-2" />
@@ -163,9 +168,11 @@ export default function LeaderboardPage() {
             {/* 3rd Place */}
             <div className="text-center">
               <div className="bg-gradient-to-b from-amber-500 to-amber-600 rounded-lg p-6 mb-4 transform translate-y-4">
-                <img
+                <Image
                   src={users[2].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(users[2].name)}`}
                   alt={users[2].name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full mx-auto mb-3"
                 />
                 <Award className="w-8 h-8 text-amber-700 mx-auto mb-2" />
@@ -195,9 +202,11 @@ export default function LeaderboardPage() {
                     {getRankIcon(index + 1)}
                   </div>
                   
-                  <img
+                  <Image
                     src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                     alt={user.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full"
                   />
                   

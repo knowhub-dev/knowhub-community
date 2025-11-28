@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Loader2, Search, X } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import { Search, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -208,15 +209,27 @@ export default function SearchBar({
                   </CommandGroup>
                 )}
 
-                {results.wiki && results.wiki.length > 0 && (
-                  <CommandGroup heading="Wiki">
-                    {results.wiki.map((article) => (
-                      <CommandItem key={article.id} onClick={() => handleNavigate(`/wiki/${article.slug}`)}>
-                        <div className="space-y-1">
-                          <div className="font-medium leading-tight">{article.title}</div>
-                          <div className={cn('text-xs text-muted-foreground', isInverted && 'text-white/70')}>
-                            Wiki • Versiya {article.version}
-                          </div>
+              {results.users && results.users.length > 0 && (
+                <div className="space-y-1">
+                  <div className={sectionLabelClass}>Foydalanuvchilar</div>
+                  {results.users.map((user) => (
+                    <Link
+                      key={user.id}
+                      href={`/profile/${user.username}`}
+                      onClick={() => setIsOpen(false)}
+                      className={resultRowClass('flex items-center gap-3')}
+                    >
+                      <Image
+                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
+                        alt={user.name}
+                        width={32}
+                        height={32}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className={cn('text-xs', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
+                          @{user.username}
                         </div>
                       </CommandItem>
                     ))}

@@ -1,15 +1,15 @@
-'use client';
+import dynamic from 'next/dynamic';
 
-import GuestLanding from '@/components/home/GuestLanding';
-import UserDashboard from '@/components/home/UserDashboard';
-import { useAuth } from '@/providers/AuthProvider';
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
+
+const HomeClient = dynamic(() => import('./home-client'), { ssr: false });
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'Bosh sahifa',
+  description: "KnowHub Community — dasturchilar uchun bilim almashish va hamkorlik maydoni.",
+  path: '/',
+});
 
 export default function HomePage() {
-  const auth = useAuth();
-
-  if (!auth.isAuthenticated) {
-    return <GuestLanding />;
-  }
-
-  return <UserDashboard />;
+  return <HomeClient />;
 }

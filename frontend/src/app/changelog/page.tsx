@@ -1,5 +1,13 @@
 import { Calendar, Code, Users } from 'lucide-react';
 
+import { generateStaticMetadata } from '@/lib/metadata-helpers';
+
+export const generateMetadata = generateStaticMetadata({
+  title: 'O‘zgarishlar jurnali',
+  description: 'Yangilanishlar, tuzatishlar va yangi funksiyalar tarixi.',
+  path: '/changelog',
+});
+
 type ChangeType = 'added' | 'changed' | 'fixed' | 'removed';
 
 interface ChangelogEntry {

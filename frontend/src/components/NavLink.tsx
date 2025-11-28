@@ -13,9 +13,19 @@ export type NavLinkProps = {
   onClick?: () => void;
   className?: string;
   variant?: "pill" | "ghost" | "list";
+  prefetch?: boolean;
 };
 
-export function NavLink({ href, label, exact, icon: Icon, onClick, className, variant = "pill" }: NavLinkProps) {
+export function NavLink({
+  href,
+  label,
+  exact,
+  icon: Icon,
+  onClick,
+  className,
+  variant = "pill",
+  prefetch = false,
+}: NavLinkProps) {
   const pathname = usePathname();
   const isActive = exact ? pathname === href : pathname?.startsWith(href);
 
@@ -44,6 +54,7 @@ export function NavLink({ href, label, exact, icon: Icon, onClick, className, va
     <Link
       href={href}
       onClick={onClick}
+      prefetch={prefetch}
       className={cn(
         baseStyles[variant],
         isActive ? activeStyles[variant] : inactiveStyles[variant],
