@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 export function HomepageSkeleton() {
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-6 py-12 lg:px-8">
@@ -21,17 +19,7 @@ export function HomepageSkeleton() {
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         {Array.from({ length: 2 }).map((_, index) => (
-          <div
-            key={`skeleton-card-${index}`}
-            className="h-64 rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/60 shadow-sm animate-pulse"
-          />
-        ))}
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Fragment key={`skeleton-post-${index}`}>
-            <div className="h-40 rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/60 shadow-sm animate-pulse" />
-          </Fragment>
+          <div key={`skeleton-card-${index}`} className="h-64 rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/60 shadow-sm animate-pulse" />
         ))}
       </div>
     </div>

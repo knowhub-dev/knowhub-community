@@ -1,14 +1,14 @@
 import Link from "next/link";
 
-import type { PostSummary } from "@/components/home/types";
-import { buildSnippet, timeAgo } from "@/components/home/utils";
+import type { TrendSignalsSectionProps } from "@/components/home/sections/types";
+import { timeAgo } from "@/components/home/utils";
 import { ArrowRight, TrendingUp } from "lucide-react";
 
-interface TrendSignalsSectionProps {
-  spotlightPost: PostSummary | null;
-  secondaryPosts: PostSummary[];
-  queuePosts: PostSummary[];
-}
+const buildSnippet = (raw: string, length = 160) => {
+  const sanitized = raw.replace(/<[^>]*>?/g, "");
+  const clean = sanitized.replace(/[#*_`>\-]/g, " ").replace(/\s+/g, " ").trim();
+  return clean.length > length ? `${clean.slice(0, length)}…` : clean;
+};
 
 export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts }: TrendSignalsSectionProps) {
   return (
@@ -31,7 +31,17 @@ export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts 
               <h3 className="mt-4 text-2xl font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">
                 {spotlightPost.title}
               </h3>
-              <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{buildSnippet(spotlightPost, 220)}</p>
+              <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">
+                {buildSnippet(
+                  spotlightPost.excerpt ??
+                    spotlightPost.summary ??
+                    spotlightPost.content_preview ??
+                    spotlightPost.content_markdown ??
+                    spotlightPost.content ??
+                    "",
+                  220,
+                )}
+              </p>
               {spotlightPost.user && <p className="mt-4 text-xs text-muted-foreground">Muallif: {spotlightPost.user.name}</p>}
             </Link>
           ) : (
@@ -47,7 +57,17 @@ export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts 
                 className="group rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--secondary))]/60 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
               >
                 <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">{post.title}</h4>
-                <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">{buildSnippet(post, 120)}</p>
+                <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">
+                  {buildSnippet(
+                    post.excerpt ??
+                      post.summary ??
+                      post.content_preview ??
+                      post.content_markdown ??
+                      post.content ??
+                      "",
+                    120,
+                  )}
+                </p>
                 <span className="mt-3 inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-widest text-[hsl(var(--secondary))]">
                   Batafsil <ArrowRight className="h-3 w-3" />
                 </span>

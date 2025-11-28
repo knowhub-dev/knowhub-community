@@ -1,25 +1,8 @@
-'use client';
-
 import { useEffect, useState } from "react";
 
+import type { ActivityFeedResponse, HomepageDataState, HomepageStatsResponse } from "@/components/home/sections/types";
+import type { SystemStatusSummary, WeeklyHeroesResponse } from "@/components/home/types";
 import { api } from "@/lib/api";
-
-import type {
-  ActivityEvent,
-  ActivityFeedResponse,
-  HomepageStatsResponse,
-  SystemStatusSummary,
-  WeeklyHeroesResponse,
-} from "./types";
-
-export interface HomepageDataState {
-  homeStats: HomepageStatsResponse | null;
-  heroes: WeeklyHeroesResponse | null;
-  feed: ActivityEvent[];
-  systemStatus: SystemStatusSummary | null;
-  loading: boolean;
-  error: string | null;
-}
 
 const initialHomepageState: HomepageDataState = {
   homeStats: null,
