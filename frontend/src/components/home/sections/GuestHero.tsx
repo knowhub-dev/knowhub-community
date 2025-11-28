@@ -4,6 +4,7 @@ import { ActivityFeed } from "@/components/home/ActivityFeed";
 import type { GuestHeroProps } from "@/components/home/sections/types";
 import { formatNumber } from "@/components/home/utils";
 import { Button } from "@/components/ui/button";
+import { GradientButton } from "@/components/ui/GradientButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TypewriterText } from "@/components/ui/TypewriterText";
 import { ArrowRight, Medal, TrendingUp } from "lucide-react";
@@ -20,39 +21,37 @@ export function GuestHero({
   if (!isAuthenticated) return null;
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
-      <div className="absolute inset-0 -z-10 opacity-80" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.18),_transparent_65%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.18),_transparent_60%)]" />
+    <section className="relative isolate overflow-hidden border-b border-border/50 bg-[hsl(var(--surface))]">
+      <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsla(var(--primary)/0.22),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,hsla(var(--secondary)/0.2),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_80%,hsla(var(--accent)/0.18),transparent_46%)]" />
       </div>
-      <div className="mx-auto max-w-6xl px-6 py-12 lg:px-8">
+      <div className="absolute left-1/2 top-[-10%] -z-20 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,hsla(var(--primary)/0.16)_0%,transparent_60%)] blur-3xl" />
+      <div className="mx-auto max-w-6xl px-6 pb-14 pt-12 lg:px-8 lg:pb-20">
         <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="space-y-6 rounded-[var(--radius-md)] border border-border/60 bg-[hsl(var(--card))]/90 p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_rgba(14,116,144,0.18)]">
+          <div className="space-y-7 rounded-[var(--radius-md)] border border-white/5 bg-[hsl(var(--card))]/75 p-8 shadow-[0_25px_90px_hsla(var(--primary)/0.18)] backdrop-blur-xl dark:border-border/60">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_hsla(var(--primary)/0.18)]">
               Xush kelibsiz, {userName ?? "a'zo"}
             </div>
-            <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
+            <h1 className="text-4xl font-semibold leading-[1.05] text-[hsl(var(--foreground))] sm:text-5xl lg:text-6xl">
               <TypewriterText phrases={["Bugun nimani o'rganamiz?", "Shaxsiy lentani davom ettiring"]} className="block" />
             </h1>
-            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">
               SolVera bilan to'liq jihozlangan: kuzatayotganingiz, saqlaganlaringiz va yangi postlar uchun shaxsiy maydon.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="gap-2 rounded-[var(--radius-md)] px-6 text-base font-semibold shadow-[0_18px_45px_rgba(14,116,144,0.35)]"
-              >
+              <GradientButton asChild className="px-7 py-3 text-base">
                 <Link href="/posts/create">
                   Post yaratish
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Button>
+              </GradientButton>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="gap-2 rounded-[var(--radius-md)] border-border px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]"
+                className="gap-2 rounded-[var(--radius-md)] border-border/80 bg-[hsl(var(--surface))]/40 px-6 text-base font-semibold text-[hsl(var(--foreground))] shadow-[0_12px_35px_hsla(var(--foreground)/0.06)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--surface))]"
               >
                 <Link href="/dashboard">
                   Mening dashboardim
@@ -63,7 +62,7 @@ export function GuestHero({
                 asChild
                 variant="ghost"
                 size="lg"
-                className="gap-2 rounded-[var(--radius-md)] text-base font-semibold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10"
+                className="gap-2 rounded-[var(--radius-md)] text-base font-semibold text-[hsl(var(--primary))] transition hover:-translate-y-0.5 hover:bg-[hsl(var(--primary))]/10"
               >
                 <Link href="/bookmarks">
                   Saqlanganlar
@@ -95,7 +94,7 @@ export function GuestHero({
             </div>
           </div>
           <div className="space-y-5">
-            <div className="rounded-[var(--radius-md)] border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+            <div className="rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--card))]/70 p-6 shadow-[0_18px_45px_hsla(var(--primary)/0.14)] backdrop-blur-xl dark:border-border/70">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-muted-foreground">Siz uchun tezkor ishlar</p>
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
@@ -107,15 +106,15 @@ export function GuestHero({
                     <Link
                       key={action.href}
                       href={action.href}
-                      className={`group flex items-start gap-3 rounded-[var(--radius-md)] border border-border/70 bg-[hsl(var(--surface))] p-4 text-left text-sm text-[hsl(var(--foreground))] shadow-sm transition ${action.hoverClass}`}
+                      className={`group flex items-start gap-3 rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--surface))]/70 p-4 text-left text-sm text-[hsl(var(--foreground))] shadow-[0_14px_40px_hsla(var(--foreground)/0.08)] backdrop-blur transition hover:-translate-y-1 ${action.hoverClass}`}
                     >
                       <span className={`rounded-[var(--radius-md)] bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
                         <Icon className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="font-semibold">{action.title}</p>
+                        <p className="font-semibold text-[hsl(var(--foreground))]">{action.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{action.description}</p>
-                        <span className={`mt-3 inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                        <span className={`mt-3 inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-[hsl(var(--primary))] ${action.ctaClass}`}>
                           {action.ctaLabel} <ArrowRight className="h-3 w-3" />
                         </span>
                       </div>

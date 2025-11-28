@@ -7,6 +7,7 @@ import type { ActivityEvent, QuickAction, StatCard, TagSummary } from "@/compone
 import { formatNumber } from "@/components/home/utils";
 import { SolveraChatCard } from "@/components/SolveraChatCard";
 import { Button } from "@/components/ui/button";
+import { GradientButton } from "@/components/ui/GradientButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TypewriterText } from "@/components/ui/TypewriterText";
 import type { AuthContextValue } from "@/providers/AuthProvider";
@@ -30,42 +31,40 @@ export function AuthenticatedHero({
   heroFeed,
 }: AuthenticatedHeroProps) {
   return (
-    <section className="relative isolate overflow-hidden border-b border-border/40 bg-[hsl(var(--surface))]">
-      <div className="absolute inset-0 -z-10 opacity-80" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsla(198,93%,60%,0.18),_transparent_65%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_hsla(154,82%,58%,0.18),_transparent_60%)]" />
+    <section className="relative isolate overflow-hidden border-b border-border/50 bg-[hsl(var(--surface))]">
+      <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,hsla(var(--primary)/0.22),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,hsla(var(--secondary)/0.2),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_85%,hsla(var(--accent)/0.18),transparent_46%)]" />
       </div>
-      <div className="mx-auto max-w-6xl px-6 py-12 lg:px-8">
+      <div className="absolute left-1/2 top-[-12%] -z-20 h-[520px] w-[780px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,hsla(var(--primary)/0.16)_0%,transparent_60%)] blur-3xl" />
+      <div className="mx-auto max-w-6xl px-6 pb-14 pt-12 lg:px-8 lg:pb-20">
         <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="space-y-6 rounded-[var(--radius-md)] border border-border/60 bg-[hsl(var(--card))]/90 p-8 shadow-[0_25px_75px_rgba(15,23,42,0.12)] backdrop-blur">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_rgba(14,116,144,0.18)]">
+          <div className="space-y-7 rounded-[var(--radius-md)] border border-white/5 bg-[hsl(var(--card))]/75 p-8 shadow-[0_25px_90px_hsla(var(--primary)/0.18)] backdrop-blur-xl dark:border-border/60">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_hsla(var(--primary)/0.18)]">
               Xush kelibsiz, {auth.user?.name ?? auth.user?.username ?? "a'zo"}
             </div>
-            <h1 className="text-4xl font-semibold leading-tight text-[hsl(var(--foreground))] sm:text-5xl">
+            <h1 className="text-4xl font-semibold leading-[1.05] text-[hsl(var(--foreground))] sm:text-5xl lg:text-6xl">
               <TypewriterText
                 phrases={["Bugun nimani o'rganamiz?", "Shaxsiy lentani davom ettiring"]}
                 className="block"
               />
             </h1>
-            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">
               SolVera bilan to'liq jihozlangan: kuzatayotganingiz, saqlaganlaringiz va yangi postlar uchun shaxsiy maydon.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="gap-2 rounded-[var(--radius-md)] px-6 text-base font-semibold shadow-[0_18px_45px_rgba(14,116,144,0.35)]"
-              >
+              <GradientButton asChild className="px-7 py-3 text-base">
                 <Link href="/posts/create">
                   Post yaratish
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Button>
+              </GradientButton>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="gap-2 rounded-[var(--radius-md)] border-border px-6 text-base font-semibold text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface))]"
+                className="gap-2 rounded-[var(--radius-md)] border-border/80 bg-[hsl(var(--surface))]/40 px-6 text-base font-semibold text-[hsl(var(--foreground))] shadow-[0_12px_35px_hsla(var(--foreground)/0.06)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--surface))]"
               >
                 <Link href="/dashboard">
                   Mening dashboardim
@@ -110,7 +109,7 @@ export function AuthenticatedHero({
             </div>
           </div>
           <div className="space-y-5">
-            <div className="rounded-[var(--radius-md)] border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+            <div className="rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--card))]/70 p-6 shadow-[0_18px_45px_hsla(var(--primary)/0.14)] backdrop-blur-xl dark:border-border/70">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-muted-foreground">Siz uchun tezkor ishlar</p>
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))]">Builder mode</span>
@@ -122,7 +121,7 @@ export function AuthenticatedHero({
                     <Link
                       key={action.href}
                       href={action.href}
-                      className={`group flex flex-col justify-between rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))] p-4 text-[hsl(var(--foreground))] shadow-sm shadow-[0_15px_35px_rgba(15,23,42,0.07)] transition ${action.hoverClass}`}
+                      className={`group flex flex-col justify-between rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--surface))]/70 p-4 text-[hsl(var(--foreground))] shadow-[0_15px_40px_hsla(var(--foreground)/0.08)] backdrop-blur transition hover:-translate-y-1 ${action.hoverClass}`}
                     >
                       <div className="flex items-center gap-3">
                         <span className={`rounded-[var(--radius-md)] bg-[hsl(var(--foreground))]/5 p-2 ${action.accentClass}`}>
@@ -131,7 +130,7 @@ export function AuthenticatedHero({
                         <div className="text-sm font-semibold">{action.title}</div>
                       </div>
                       <p className="mt-3 text-sm text-muted-foreground">{action.description}</p>
-                      <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${action.ctaClass}`}>
+                      <span className={`mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[hsl(var(--primary))] ${action.ctaClass}`}>
                         {action.ctaLabel} <ArrowRight className="h-3 w-3" />
                       </span>
                     </Link>
@@ -139,7 +138,7 @@ export function AuthenticatedHero({
                 })}
               </div>
             </div>
-            <div className="rounded-[var(--radius-md)] border border-border/70 bg-[hsl(var(--card))]/80 p-6 shadow-lg backdrop-blur">
+            <div className="rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--card))]/70 p-6 shadow-[0_16px_38px_hsla(var(--foreground)/0.1)] backdrop-blur-xl dark:border-border/70">
               <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
                 <Users className="h-4 w-4 text-[hsl(var(--secondary))]" />
                 Builder hamjamiyati faoliyatlari
