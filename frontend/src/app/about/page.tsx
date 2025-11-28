@@ -150,7 +150,7 @@ export default function AboutPage() {
               reyting jadvalida yuqoriga chiqing.
             </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Stats */}
