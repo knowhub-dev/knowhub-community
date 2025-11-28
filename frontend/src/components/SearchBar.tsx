@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -190,12 +190,14 @@ export default function SearchBar({
                         onClick={() => handleNavigate(`/profile/${user.username}`)}
                         className="items-center"
                       >
-                        <img
+                        <Image
                           src={
                             user.avatar_url ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
                           }
                           alt={user.name}
+                          width={36}
+                          height={36}
                           className="h-9 w-9 rounded-full object-cover"
                         />
                         <div>
@@ -203,33 +205,6 @@ export default function SearchBar({
                           <div className={cn('text-xs text-muted-foreground', isInverted && 'text-white/70')}>
                             @{user.username}
                           </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-
-              {results.users && results.users.length > 0 && (
-                <div className="space-y-1">
-                  <div className={sectionLabelClass}>Foydalanuvchilar</div>
-                  {results.users.map((user) => (
-                    <Link
-                      key={user.id}
-                      href={`/profile/${user.username}`}
-                      onClick={() => setIsOpen(false)}
-                      className={resultRowClass('flex items-center gap-3')}
-                    >
-                      <Image
-                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
-                        alt={user.name}
-                        width={32}
-                        height={32}
-                        className="h-8 w-8 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className={cn('text-xs', isInverted ? 'text-white/70' : 'text-muted-foreground')}>
-                          @{user.username}
                         </div>
                       </CommandItem>
                     ))}
