@@ -1,6 +1,6 @@
 import { Layers, Rocket } from 'lucide-react';
 
-import ContainerCard from '@/components/ContainerCard';
+import ContainerCard from '@/components/containers/ContainerCard';
 import type { Container } from '@/types/container';
 
 interface ProfileProjectsProps {

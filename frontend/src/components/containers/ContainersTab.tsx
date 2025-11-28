@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { containerService } from '@/lib/services/containers';
-import ContainerCard from '@/components/ContainerCard';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Server, Plus } from 'lucide-react';
-import { Container, CreateContainerDto } from '@/types/container';
+
+import { containerService } from '@/lib/services/containers';
+import type { Container, CreateContainerDto } from '@/types/container';
+
+import ContainerCard from './ContainerCard';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 const DEFAULT_CONTAINER: CreateContainerDto = {
   name: '',
@@ -31,6 +33,10 @@ export default function ContainersTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<CreateContainerDto>(DEFAULT_CONTAINER);
   const queryClient = useQueryClient();
+  const handleContainerRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['containers'] });
+    queryClient.invalidateQueries({ queryKey: ['containers', 'options'] });
+  };
   
   // Get containers
   const { data: options } = useQuery({
@@ -76,36 +82,12 @@ export default function ContainersTab() {
   const createMutation = useMutation({
     mutationFn: containerService.createContainer,
     onSuccess: () => {
-      queryClient.invalidateQueries(['containers']);
+      handleContainerRefresh();
       setIsDialogOpen(false);
       setFormData({
         ...DEFAULT_CONTAINER,
         type: templates[0]?.type ?? 'node',
       });
-    },
-  });
-
-  // Start container
-  const startMutation = useMutation({
-    mutationFn: containerService.startContainer,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['containers']);
-    },
-  });
-
-  // Stop container
-  const stopMutation = useMutation({
-    mutationFn: containerService.stopContainer,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['containers']);
-    },
-  });
-
-  // Delete container
-  const deleteMutation = useMutation({
-    mutationFn: containerService.deleteContainer,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['containers']);
     },
   });
 
@@ -294,13 +276,7 @@ export default function ContainersTab() {
           <ContainerCard
             key={container.id}
             container={container}
-            onStart={() => startMutation.mutate(container.id)}
-            onStop={() => stopMutation.mutate(container.id)}
-            onDelete={() => {
-              if (window.confirm('Are you sure you want to delete this container?')) {
-                deleteMutation.mutate(container.id);
-              }
-            }}
+            onRefresh={handleContainerRefresh}
           />
         ))}
 

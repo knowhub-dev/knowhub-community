@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Cpu, Server, Database, Users, Activity } from 'lucide-react';
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import ContainersTab from '@/components/ContainersTab';
+import ContainersTab from '@/components/containers/ContainersTab';
 
 // Types for system resources
 interface SystemResources {
@@ -261,9 +261,7 @@ export default function SystemMonitorPage() {
         )}
 
         {/* Containers Tab */}
-        {selectedTab === 'containers' && (
-          <ContainersTab userId={1} userXp={1000} />
-        )}
+        {selectedTab === 'containers' && <ContainersTab />}
 
         {/* Users Tab */}
         {selectedTab === 'users' && (
