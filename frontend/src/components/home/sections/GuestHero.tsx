@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TypewriterText } from "@/components/ui/TypewriterText";
+import { AuroraBackground } from "@/components/backgrounds";
 import { ArrowRight, Medal, TrendingUp } from "lucide-react";
 
 export function GuestHero({
@@ -22,6 +23,7 @@ export function GuestHero({
 
   return (
     <section className="relative isolate overflow-hidden border-b border-border/50 bg-[hsl(var(--surface))]">
+      <AuroraBackground />
       <div className="absolute inset-0 -z-10 opacity-90" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsla(var(--primary)/0.22),transparent_42%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,hsla(var(--secondary)/0.2),transparent_40%)]" />
