@@ -138,7 +138,7 @@ export default function ContainerDashboardPage() {
             </Button>
             {container.subdomain && (
               <Link href={`https://${domainSuffix}`} target="_blank" rel="noreferrer">
-                <Button variant="primary">
+                <Button variant="default">
                   <ExternalLink className="h-4 w-4" /> Visit site
                 </Button>
               </Link>
@@ -234,7 +234,7 @@ export default function ContainerDashboardPage() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button variant="primary" isLoading={updateEnvMutation.isLoading} onClick={() => updateEnvMutation.mutate()}>
+              <Button variant="default" isLoading={updateEnvMutation.isLoading} onClick={() => updateEnvMutation.mutate()}>
                 Save changes
               </Button>
             </div>

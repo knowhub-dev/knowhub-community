@@ -2,11 +2,9 @@ import * as React from "react"
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { InputStatus } from "./input"
 
 type SelectSize = "sm" | "md" | "lg"
-
-type SelectStatus = InputStatus
+type SelectStatus = "default" | "error" | "success"
 
 export interface SelectProps
   extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size"> {
@@ -33,11 +31,9 @@ const paddingStyles: Record<SelectSize, string> = {
 }
 
 const statusStyles: Record<SelectStatus, string> = {
-  default:
-    "border-border/60 focus-visible:border-transparent focus-visible:ring-primary/65",
+  default: "border-input focus-visible:border-transparent focus-visible:ring-primary/65",
   error: "border-red-500/70 focus-visible:border-transparent focus-visible:ring-red-500/70",
-  success:
-    "border-accent-green/70 focus-visible:border-transparent focus-visible:ring-accent-green/60",
+  success: "border-accent-green/70 focus-visible:border-transparent focus-visible:ring-accent-green/60",
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
@@ -60,18 +56,13 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const hasLeftIcon = Boolean(leftIcon)
     const hasRightAdornment = Boolean(rightIcon)
 
-    const padding = cn(
-      paddingStyles[size],
-      hasLeftIcon && "pl-12",
-      hasRightAdornment && "pr-14"
-    )
+    const padding = cn(paddingStyles[size], hasLeftIcon && "pl-12", hasRightAdornment && "pr-14")
 
     const baseClasses = cn(
-      "w-full appearance-none rounded-md border bg-surface/85",
-      "backdrop-blur-sm transition-colors duration-200 shadow-subtle",
+      "w-full appearance-none rounded-md border bg-background",
+      "transition-colors duration-200 shadow-sm",
       "placeholder:text-muted-foreground text-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
-      "hover:bg-surface/95",
       "disabled:cursor-not-allowed disabled:opacity-60",
       statusStyles[status],
       sizeStyles[size],
@@ -80,13 +71,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     )
 
     return (
-      <div
-        className={cn(
-          "flex flex-col gap-1.5",
-          fullWidth ? "w-full" : "inline-flex",
-          wrapperClassName
-        )}
-      >
+      <div className={cn("flex flex-col gap-1.5", fullWidth ? "w-full" : "inline-flex", wrapperClassName)}>
         <div className="relative">
           {hasLeftIcon ? (
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -105,9 +90,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             <ChevronDown className="h-4 w-4" aria-hidden="true" />
           </div>
         </div>
-        {status === "error" && errorMessage ? (
-          <p className="text-sm text-red-400">{errorMessage}</p>
-        ) : null}
+        {status === "error" && errorMessage ? <p className="text-sm text-red-400">{errorMessage}</p> : null}
         {status === "success" && successMessage ? (
           <p className="text-sm text-accent-green/80">{successMessage}</p>
         ) : null}

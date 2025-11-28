@@ -356,8 +356,9 @@ export default function AdminPage() {
                             <td className="px-4 py-3 text-right text-sm">
                               <div className="flex justify-end gap-2">
                                 <Button
-                                  variant="destructive"
+                                  variant="outline"
                                   size="sm"
+                                  className="border-red-500/60 text-red-500 hover:bg-red-500/10"
                                   isLoading={banMutation.isPending && banMutation.variables === user.id}
                                   onClick={() => banMutation.mutate(user.id)}
                                 >
