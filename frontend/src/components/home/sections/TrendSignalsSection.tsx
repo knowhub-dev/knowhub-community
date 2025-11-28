@@ -11,6 +11,8 @@ const buildSnippet = (raw: string, length = 160) => {
 };
 
 export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts }: TrendSignalsSectionProps) {
+  const fadeIn = "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2";
+
   return (
     <section className="max-w-6xl px-6 pb-16 lg:px-8">
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
@@ -22,7 +24,7 @@ export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts 
           {spotlightPost ? (
             <Link
               href={`/posts/${spotlightPost.slug}`}
-              className="group block overflow-hidden rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/90 p-6 shadow-lg transition hover:-translate-y-1 hover:border-[hsl(var(--secondary))]/60 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] dark:border-border dark:bg-[hsl(var(--foreground))]/80"
+              className={`group block overflow-hidden rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--card))]/65 p-6 shadow-[0_20px_55px_hsla(var(--secondary)/0.2)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-[hsl(var(--secondary))]/60 hover:shadow-[0_25px_70px_hsla(var(--secondary)/0.25)] dark:border-border/70 dark:bg-[hsl(var(--card))]/70 ${fadeIn}`}
             >
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-[hsl(var(--secondary))]">
                 Spotlight
@@ -54,7 +56,7 @@ export function TrendSignalsSection({ spotlightPost, secondaryPosts, queuePosts 
               <Link
                 key={post.id}
                 href={`/posts/${post.slug}`}
-                className="group rounded-[var(--radius-md)] border border-border bg-[hsl(var(--card))]/80 p-4 shadow-sm transition hover:border-[hsl(var(--secondary))]/60 hover:shadow-lg dark:border-border dark:bg-[hsl(var(--card))]/70"
+                className={`group rounded-[var(--radius-md)] border border-white/10 bg-[hsl(var(--card))]/60 p-4 shadow-[0_14px_36px_hsla(var(--foreground)/0.08)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-[hsl(var(--secondary))]/60 hover:shadow-[0_20px_50px_hsla(var(--secondary)/0.2)] dark:border-border/70 dark:bg-[hsl(var(--card))]/65 ${fadeIn}`}
               >
                 <h4 className="text-base font-semibold text-[hsl(var(--foreground))] transition group-hover:text-[hsl(var(--secondary))] dark:text-[hsl(var(--foreground))]">{post.title}</h4>
                 <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">
