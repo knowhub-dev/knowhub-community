@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
+import { FloatingBlobs } from '@/components/backgrounds';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +56,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen bg-[hsl(var(--background))] px-4 py-16 text-[hsl(var(--foreground))]">
+      <FloatingBlobs />
       <div className="mx-auto flex max-w-md flex-col gap-8">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]">

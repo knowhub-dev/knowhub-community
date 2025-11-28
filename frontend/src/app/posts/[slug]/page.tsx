@@ -8,6 +8,7 @@ import PostCollaborationPanelWrapper from '@/components/PostCollaborationPanelWr
 import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
 import Script from 'next/script';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { CyberGrid } from '@/components/backgrounds';
 
 interface Post {
   id: number;
@@ -133,8 +134,9 @@ export default async function PostPage({ params }: { params: { slug: string } })
   return (
     <div className="relative min-h-screen overflow-hidden bg-[hsl(var(--background))]">
       <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.08),transparent_25%),radial-gradient(circle_at_40%_70%,rgba(16,185,129,0.08),transparent_20%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.08),transparent_28%),radial-gradient(circle_at_80%_0%,hsl(var(--secondary)/0.08),transparent_25%),radial-gradient(circle_at_40%_70%,hsl(var(--muted)/0.08),transparent_20%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--surface))]/70 via-transparent to-[hsl(var(--background))]" />
+        <CyberGrid />
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-10 lg:px-8 lg:pt-14">

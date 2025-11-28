@@ -1,0 +1,83 @@
+@layer components {
+  .aurora-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .aurora-layer {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      800px circle at var(--x, 50%) var(--y, 50%),
+      hsl(var(--primary) / 0.35),
+      transparent 60%
+    );
+    filter: blur(120px);
+    transition: background-position 0.2s ease-out;
+    will-change: background-position;
+  }
+
+  .floating-blobs {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .blob {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle,
+      hsl(var(--secondary) / 0.4),
+      transparent 70%
+    );
+    filter: blur(60px);
+    animation: float 16s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+    50% {
+      transform: translateY(-30px) translateX(20px);
+    }
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(
+        hsl(var(--foreground) / 0.04) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        hsl(var(--foreground) / 0.04) 1px,
+        transparent 1px
+      );
+    background-size: 42px 42px;
+    animation: pan-grid 22s linear infinite;
+    opacity: 0.6;
+    z-index: -1;
+    will-change: background-position;
+  }
+
+  @keyframes pan-grid {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 180px 180px;
+    }
+  }
+}
