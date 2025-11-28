@@ -1,32 +1,33 @@
 'use client';
 
-import Link from 'next/link';
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Menu,
-  X,
-  User,
-  LogOut,
-  Plus,
   ChevronDown,
+  LogOut,
+  Menu,
+  Moon,
+  Plus,
   Settings,
   Sun,
-  Moon,
-} from 'lucide-react';
-import SearchBar from './SearchBar';
-import NotificationDropdown from './NotificationDropdown';
-import { useAuth } from '@/providers/AuthProvider';
-import { useTheme } from '@/providers/ThemeProvider';
-import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
+  User,
+  X,
+} from "lucide-react";
+import SearchBar from "./SearchBar";
+import NotificationDropdown from "./NotificationDropdown";
+import { NavLink } from "./NavLink";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/providers/AuthProvider";
+import { useTheme } from "@/providers/ThemeProvider";
+import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type BrandingLogo = {
   url: string;
   path?: string;
 };
 
-interface NavLink {
+interface NavItem {
   href: string;
   label: string;
   exact?: boolean;
@@ -37,10 +38,10 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [branding, setBranding] = useState<{ light?: BrandingLogo | null; dark?: BrandingLogo | null }>({});
   const profileRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
+  const [mobileMenuVariant, setMobileMenuVariant] = useState<'left' | 'bottom'>('left');
 
   useEffect(() => {
     let active = true;
@@ -65,7 +66,7 @@ export default function Navbar() {
     };
   }, []);
 
-  const navLinks = useMemo<NavLink[]>(
+  const navLinks = useMemo<NavItem[]>(
     () => [
       { href: '/posts', label: 'Blog' },
       { href: '/wiki', label: 'Wiki' },
@@ -93,40 +94,16 @@ export default function Navbar() {
     };
   }, []);
 
-  const renderNavLink = (link: NavLink) => {
-    const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
+  useEffect(() => {
+    const updateVariant = () => {
+      if (typeof window === 'undefined') return;
+      setMobileMenuVariant(window.innerWidth < 480 ? 'bottom' : 'left');
+    };
 
-    return (
-      <Link
-        key={link.href}
-        href={link.href}
-        className={cn(
-          'group relative inline-flex items-center rounded-full px-4 py-2 text-sm font-medium tracking-wide text-muted-foreground transition',
-          'hover:text-foreground',
-          isActive && 'text-foreground',
-        )}
-        aria-current={isActive ? 'page' : undefined}
-      >
-        <span className="relative z-10">{link.label}</span>
-        <span
-          aria-hidden
-          className={cn(
-            'absolute inset-0 rounded-full bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/20 opacity-0 transition duration-200',
-            'group-hover:opacity-100',
-            isActive && 'opacity-100 shadow-inner shadow-primary/10',
-          )}
-        />
-        <span
-          aria-hidden
-          className={cn(
-            'absolute inset-x-6 -bottom-px h-0.5 rounded-full bg-primary/60 opacity-0 transition duration-200',
-            'group-hover:opacity-100',
-            isActive && 'opacity-100',
-          )}
-        />
-      </Link>
-    );
-  };
+    updateVariant();
+    window.addEventListener('resize', updateVariant);
+    return () => window.removeEventListener('resize', updateVariant);
+  }, []);
 
   const renderDesktopAuth = () => {
     if (user) {
@@ -240,7 +217,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/40 bg-[hsl(var(--background))]/90 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/40 bg-[hsl(var(--background))]/80 shadow-[0_6px_30px_-10px_rgba(0,0,0,0.35)] backdrop-blur-xl supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
       <div className="container flex h-20 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
@@ -258,7 +235,9 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden items-center gap-1 rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 p-1 shadow-inner md:flex">
-            {navLinks.map(renderNavLink)}
+            {navLinks.map((link) => (
+              <NavLink key={link.href} {...link} />
+            ))}
           </div>
         </div>
 
@@ -291,86 +270,136 @@ export default function Navbar() {
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           {renderMobileAuth()}
-          <button
-            type="button"
-            onClick={() => setIsOpen((prev) => !prev)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))]"
-            aria-label="Navigatsiyani ochish"
-          >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))]"
+                aria-label="Navigatsiyani ochish"
+              >
+                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </SheetTrigger>
+
+            <SheetContent
+              side={mobileMenuVariant}
+              className={cn(
+                "w-[92vw] max-w-sm border-border/60 bg-[hsl(var(--background))]/85 shadow-2xl backdrop-blur-xl sm:max-w-md",
+                mobileMenuVariant === 'bottom' && 'rounded-t-3xl pb-10 pt-6',
+              )}
+            >
+              <SheetHeader className="items-start text-left">
+                <SheetTitle className="text-xl font-bold text-[hsl(var(--foreground))]">Navigatsiya</SheetTitle>
+                <p className="text-sm text-muted-foreground">Menyuga va asosiy amallarga tezkor ulanish</p>
+              </SheetHeader>
+
+              {mobileMenuVariant === 'bottom' && <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-border" />}
+
+              <div className="mt-6 space-y-5">
+                <SearchBar variant={isDark ? 'inverted' : 'default'} />
+                <div className="grid gap-2">
+                  {navLinks.map((link) => (
+                    <SheetClose asChild key={link.href}>
+                      <NavLink
+                        {...link}
+                        variant="list"
+                        className="w-full"
+                        onClick={() => setIsOpen(false)}
+                      />
+                    </SheetClose>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-[hsl(var(--surface))]/70 px-4 py-3 shadow-inner">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Mavzu</p>
+                    <p className="text-xs text-muted-foreground">Yorqin / Tungi rejim</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--background))]/80 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                    aria-label="Mavzuni almashtirish"
+                  >
+                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-[hsl(var(--surface))]/70 px-4 py-3 shadow-inner">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-[hsl(var(--background))]/80 text-foreground">
+                      {user ? <NotificationDropdown /> : <Sun className="h-4 w-4" />}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Bildirishnomalar</p>
+                      <p className="text-xs text-muted-foreground">So'nggi yangiliklardan xabardor bo'ling</p>
+                    </div>
+                  </div>
+                  <SheetClose asChild>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-xs font-semibold text-white shadow-neon"
+                    >
+                      Yopish
+                    </button>
+                  </SheetClose>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {user ? (
+                    <>
+                      <SheetClose asChild>
+                        <Link
+                          href="/posts/create"
+                          onClick={() => setIsOpen(false)}
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-3 text-sm font-semibold text-white shadow-neon"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Yangi post
+                        </Link>
+                      </SheetClose>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          logout();
+                        }}
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-border/70 px-4 py-3 text-sm font-semibold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-200"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Chiqish
+                      </button>
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <SheetClose asChild>
+                        <Link
+                          href="/auth/login"
+                          onClick={() => setIsOpen(false)}
+                          className="rounded-full border border-border/60 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground"
+                        >
+                          Kirish
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/auth/register"
+                          onClick={() => setIsOpen(false)}
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
+                        >
+                          <User className="h-4 w-4" />
+                          Ro'yxatdan o'tish
+                        </Link>
+                      </SheetClose>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {isOpen && (
-        <div className="border-b border-border/50 bg-[hsl(var(--background))]/95 shadow-subtle backdrop-blur-md lg:hidden">
-          <div className="space-y-6 px-6 pb-6 pt-4">
-            <SearchBar variant={isDark ? 'inverted' : 'default'} />
-            <div className="flex flex-col gap-3">
-              {navLinks.map((link) => {
-                const isActive = link.exact ? pathname === link.href : pathname?.startsWith(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      'rounded-2xl border border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground',
-                      isActive && 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-foreground',
-                    )}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Mavzu</span>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-[hsl(var(--surface))]/70 text-foreground transition hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                  aria-label="Mavzuni almashtirish"
-                >
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <NotificationDropdown />
-                {user ? (
-                  <Link
-                    href="/posts/create"
-                    onClick={() => setIsOpen(false)}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Yangi post
-                  </Link>
-                ) : (
-                  <div className="flex flex-1 flex-col gap-2">
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setIsOpen(false)}
-                    className="rounded-full border border-border/60 px-4 py-2 text-center text-sm font-medium text-muted-foreground transition hover:border-[hsl(var(--primary))] hover:text-foreground"
-                  >
-                    Kirish
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setIsOpen(false)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
-                  >
-                      <User className="h-4 w-4" />
-                      Ro'yxatdan o'tish
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
