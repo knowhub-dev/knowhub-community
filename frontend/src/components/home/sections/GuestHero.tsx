@@ -19,7 +19,13 @@ export function GuestHero({
   heroFeed,
   xpProgress,
 }: GuestHeroProps) {
-  if (!isAuthenticated) return null;
+  const heroPhrases = isAuthenticated
+    ? ["Bugun nimani o'rganamiz?", "Shaxsiy lentani davom ettiring"]
+    : ["SolVera bilan zamonaviy postlar", "O'zbekcha dev hamjamiyatini kashf eting"];
+
+  const subtitle = isAuthenticated
+    ? "SolVera bilan to'liq jihozlangan: kuzatayotganingiz, saqlaganlaringiz va yangi postlar uchun shaxsiy maydon."
+    : "KnowHub Community — postlaringizni jilolaydigan, savollaringizga javob topadigan va jamoadoshlar bilan hamkorlikni osonlashtiradigan platforma.";
 
   return (
     <section className="relative isolate overflow-hidden border-b border-border/50 bg-[hsl(var(--surface))]">
@@ -34,18 +40,16 @@ export function GuestHero({
         <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="space-y-7 rounded-[var(--radius-md)] border border-white/5 bg-[hsl(var(--card))]/75 p-8 shadow-[0_25px_90px_hsla(var(--primary)/0.18)] backdrop-blur-xl dark:border-border/60">
             <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/15 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-[hsl(var(--primary))] shadow-[0_6px_20px_hsla(var(--primary)/0.18)]">
-              Xush kelibsiz, {userName ?? "a'zo"}
+              {isAuthenticated ? `Xush kelibsiz, ${userName ?? "a'zo"}` : "Yangi mehmon"}
             </div>
             <h1 className="text-4xl font-semibold leading-[1.05] text-[hsl(var(--foreground))] sm:text-5xl lg:text-6xl">
-              <TypewriterText phrases={["Bugun nimani o'rganamiz?", "Shaxsiy lentani davom ettiring"]} className="block" />
+              <TypewriterText phrases={heroPhrases} className="block" />
             </h1>
-            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">
-              SolVera bilan to'liq jihozlangan: kuzatayotganingiz, saqlaganlaringiz va yangi postlar uchun shaxsiy maydon.
-            </p>
+            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">{subtitle}</p>
             <div className="flex flex-wrap items-center gap-3">
               <GradientButton asChild className="px-7 py-3 text-base">
-                <Link href="/posts/create">
-                  Post yaratish
+                <Link href={isAuthenticated ? "/posts/create" : "/auth/register"}>
+                  {isAuthenticated ? "Post yaratish" : "Hamjamiyatga qo'shilish"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </GradientButton>
@@ -55,8 +59,8 @@ export function GuestHero({
                 size="lg"
                 className="gap-2 rounded-[var(--radius-md)] border-border/80 bg-[hsl(var(--surface))]/40 px-6 text-base font-semibold text-[hsl(var(--foreground))] shadow-[0_12px_35px_hsla(var(--foreground)/0.06)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--surface))]"
               >
-                <Link href="/dashboard">
-                  Mening dashboardim
+                <Link href={isAuthenticated ? "/dashboard" : "/auth/login"}>
+                  {isAuthenticated ? "Mening dashboardim" : "Kirish"}
                   <TrendingUp className="h-4 w-4" />
                 </Link>
               </Button>
@@ -66,8 +70,8 @@ export function GuestHero({
                 size="lg"
                 className="gap-2 rounded-[var(--radius-md)] text-base font-semibold text-[hsl(var(--primary))] transition hover:-translate-y-0.5 hover:bg-[hsl(var(--primary))]/10"
               >
-                <Link href="/bookmarks">
-                  Saqlanganlar
+                <Link href={isAuthenticated ? "/bookmarks" : "/about"}>
+                  {isAuthenticated ? "Saqlanganlar" : "Platforma haqida"}
                   <Medal className="h-4 w-4" />
                 </Link>
               </Button>
