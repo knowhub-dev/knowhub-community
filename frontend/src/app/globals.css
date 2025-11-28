@@ -187,4 +187,71 @@
   .creator-editor .w-md-editor-toolbar {
     border-color: rgba(255, 255, 255, 0.1);
   }
+
+  .markdown-article {
+    @apply max-w-none text-foreground;
+  }
+
+  .markdown-article pre {
+    background: radial-gradient(circle at 12% 20%, rgba(79, 70, 229, 0.08), transparent 38%),
+      radial-gradient(circle at 82% 10%, rgba(56, 189, 248, 0.08), transparent 34%),
+      hsl(var(--surface-1));
+    border: 1px solid hsl(var(--border) / 0.6);
+    box-shadow: 0 24px 80px -46px rgba(15, 23, 42, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .markdown-article code {
+    @apply rounded-md bg-muted/20 px-1.5 py-0.5 text-foreground;
+  }
+
+  .markdown-article .inline-code {
+    @apply rounded-md bg-primary/10 px-1.5 py-0.5 text-[0.92rem] font-semibold text-primary;
+  }
+
+  .markdown-article blockquote {
+    @apply border-l-4 border-primary/40 bg-primary/5 px-4 py-2 text-foreground;
+  }
+
+  .markdown-article table {
+    @apply w-full border-collapse overflow-hidden rounded-xl border border-border/60 text-sm;
+  }
+
+  .markdown-article th,
+  .markdown-article td {
+    @apply border border-border/60 px-3 py-2;
+  }
+
+  .markdown-article a {
+    @apply font-semibold text-primary underline decoration-primary/40 decoration-2 underline-offset-4 transition-colors hover:text-primary-soft;
+  }
+}
+
+.token.comment {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.token.string {
+  color: #38bdf8;
+}
+
+.token.keyword {
+  color: #c084fc;
+}
+
+.token.boolean,
+.token.constant {
+  color: #fbbf24;
+}
+
+.token.number {
+  color: #34d399;
+}
+
+.token.function {
+  color: #60a5fa;
+}
+
+.token.operator {
+  color: #f472b6;
+}
 }

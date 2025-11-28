@@ -94,6 +94,17 @@ function SkeletonCard({ className }: { className?: string }) {
         <div className="h-4 w-full rounded bg-muted/30" />
         <div className="h-4 w-5/6 rounded bg-muted/30" />
       </div>
+      <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-muted-foreground md:flex md:flex-wrap md:gap-4">
+        <div className="h-4 w-32 rounded bg-muted/30" />
+        <div className="h-4 w-28 rounded bg-muted/30" />
+        <div className="h-4 w-28 rounded bg-muted/30" />
+        <div className="h-4 w-24 rounded bg-muted/30" />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <div className="h-6 w-20 rounded-full bg-muted/20" />
+        <div className="h-6 w-24 rounded-full bg-muted/25" />
+        <div className="h-6 w-16 rounded-full bg-muted/20" />
+      </div>
       <div className="mt-6 flex items-center justify-between">
         <div className="h-4 w-32 rounded bg-muted/30" />
         <div className="h-9 w-24 rounded bg-muted/40" />
@@ -153,21 +164,15 @@ function PostCardContent({
                 {isProAuthor && <Crown className="h-4 w-4 text-amber-400" />}
               </span>
               <span className="h-1 w-1 rounded-full bg-muted/60" aria-hidden />
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 rounded-full bg-muted/20 px-2 py-0.5">
                 <Clock className="h-3.5 w-3.5" />
                 {formattedDate}
               </span>
             </div>
             <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Timer className="h-3.5 w-3.5" />
-                {readTime} min o'qish
-              </span>
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">@{post.user.username}</span>
               <span className="h-1 w-1 rounded-full bg-muted/60" aria-hidden />
-              <span className="flex items-center gap-1">
-                <Eye className="h-3.5 w-3.5" />
-                {views.toLocaleString('en-US')} marta ko'rildi
-              </span>
+              <span className="rounded-full bg-muted/15 px-2.5 py-1">{views.toLocaleString('en-US')} ta ko'rish</span>
             </div>
           </div>
         </div>
@@ -202,14 +207,34 @@ function PostCardContent({
           )}
         </Link>
 
+        <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground md:flex md:flex-wrap md:items-center md:gap-4">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted/15 px-3 py-1">
+            <Clock className="h-3.5 w-3.5" />
+            {formattedDate}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-primary">
+            <Timer className="h-3.5 w-3.5" />
+            {readTime} min o'qish
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/10 px-3 py-1 text-secondary">
+            <Eye className="h-3.5 w-3.5" />
+            {views.toLocaleString('en-US')} marta ko'rildi
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted/15 px-3 py-1">
+            <MessageCircle className="h-3.5 w-3.5" />
+            {post.answers_count} izoh
+          </span>
+        </div>
+
         {post.tags?.length ? (
           <div className="flex flex-wrap gap-2">
             {post.tags.slice(0, 3).map((tag) => (
               <Link
                 key={tag.slug}
                 href={`/posts?tag=${tag.slug}`}
-                className="inline-flex items-center gap-1 rounded-full border border-muted/40 bg-muted/20 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:border-primary/40 hover:text-foreground"
+                className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-secondary/10 px-3 py-1 text-xs font-semibold text-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-neon"
               >
+                <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
                 #{tag.name}
               </Link>
             ))}
