@@ -70,11 +70,20 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
     enabled: selectedProposalId !== null,
   });
 
-  const statusLabels = useMemo(() => ({
-    pending: { label: 'Ko’rib chiqilmoqda', className: 'bg-amber-50 text-amber-700 border border-amber-200' },
-    merged: { label: 'Birlashtirilgan', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    rejected: { label: 'Rad etilgan', className: 'bg-rose-50 text-rose-700 border border-rose-200' },
-  } as const), []);
+  const statusLabels = useMemo(
+    () => ({
+      pending: {
+        label: "Ko’rib chiqilmoqda",
+        className: 'bg-amber-50 text-amber-700 border border-amber-200',
+      },
+      merged: {
+        label: "Birlashtirilgan",
+        className: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      },
+      rejected: { label: "Rad etilgan", className: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    } as const),
+    []
+  );
 
   return (
     <section className="mt-10 space-y-6">
@@ -85,7 +94,7 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Wiki takliflarini solishtirish</h2>
           <p className="text-sm text-gray-600">
-            Hamjamiyat yuborgan takliflarni tanlab, o’zgarishlarni birma-bir ko’rib chiqing.
+            {"Hamjamiyat yuborgan takliflarni tanlab, o’zgarishlarni birma-bir ko’rib chiqing."}
           </p>
         </div>
       </div>
@@ -102,13 +111,13 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
 
             {isProposalsError && (
               <div className="text-sm text-rose-600">
-                Takliflarni yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko’ring.
+                {"Takliflarni yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko’ring."}
               </div>
             )}
 
             {!isLoadingProposals && proposals.length === 0 && (
               <div className="text-sm text-gray-500">
-                Hozircha takliflar mavjud emas. Birinchi bo’lib tahrir taklif qiling!
+                {"Hozircha takliflar mavjud emas. Birinchi bo’lib tahrir taklif qiling!"}
               </div>
             )}
 
@@ -167,10 +176,10 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">O’zgarishlar</h3>
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{"O’zgarishlar"}</h3>
           {selectedProposalId === null && (
             <div className="text-sm text-gray-500">
-              Avval chap tomondan taklifni tanlang va uning tafovutlarini ko’ring.
+              {"Avval chap tomondan taklifni tanlang va uning tafovutlarini ko’ring."}
             </div>
           )}
 
@@ -182,7 +191,7 @@ export function WikiDiffExplorer({ slug }: WikiDiffExplorerProps) {
 
           {isDiffError && (
             <div className="text-sm text-rose-600">
-              Tafovutlarni yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko’ring.
+              {"Tafovutlarni yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko’ring."}
             </div>
           )}
 
