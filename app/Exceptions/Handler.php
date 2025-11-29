@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 use Illuminate\Auth\AuthenticationException; // <-- BU ENG MUHIM IMPORT
 
@@ -44,6 +45,20 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (ContainerRuntimeException $exception, $request) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'code' => 'container_runtime_error',
+            ], 500);
+        });
+
+        $this->renderable(function (ValidationException $exception, $request) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $exception->errors(),
+            ], 422);
         });
     }
 

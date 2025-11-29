@@ -9,15 +9,15 @@ use App\Http\Controllers\Api\V1\{
     NotificationController, BookmarkController, FollowController, UserController, LevelController,
     DashboardController, AdminController, StatsController, ActivityFeedController,
     ProjectSubdomainController, BrandingController, SystemStatusController, SolveraController,
-    PaymentCallbackController
+    PaymentCallbackController, ContainerController, ContainerLifecycleController,
+    ContainerLogsController, ContainerStatsController, ContainerFilesController,
+    ContainerEnvController
 };
 use App\Http\Controllers\Api\V1\Admin\PaymentSettingsController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Api\V1\CollaborationController;
-use App\Http\Controllers\Api\V1\ContainerFileController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Middleware\CacheMiddleware;
-use App\Http\Controllers\Api\ContainerController;
 
 Route::prefix('v1')->group(function () {
 
@@ -86,23 +86,28 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', RateLimitMiddleware::class . ':api,100'])->group(function () {
 
         // Container management
-        Route::prefix('containers')->group(function () {
-            Route::get('/', [ContainerController::class, 'index']);
-            Route::post('/', [ContainerController::class, 'store'])->middleware('plan.limits:create-container');
-            Route::get('/options', [ContainerController::class, 'options']);
-            Route::get('/{container}', [ContainerController::class, 'show']);
-            Route::post('/{container}/start', [ContainerController::class, 'start']);
-            Route::post('/{container}/stop', [ContainerController::class, 'stop']);
-            Route::post('/{container}/toggle-feature', [ProfileController::class, 'toggleProjectFeature']);
-            Route::delete('/{container}', [ContainerController::class, 'destroy']);
-            Route::get('/{container}/stats', [ContainerController::class, 'stats']);
-            Route::get('/{container}/logs', [ContainerController::class, 'logs']);
-            Route::put('/{container}/env', [ContainerController::class, 'updateEnv']);
-            Route::get('/{container}/files', [ContainerFileController::class, 'index']);
-            Route::get('/{container}/files/show', [ContainerFileController::class, 'show']);
-            Route::post('/{container}/files', [ContainerFileController::class, 'store'])->middleware('plan.limits:upload-file');
-            Route::put('/{container}/files', [ContainerFileController::class, 'update']);
-        });
+        Route::get('/containers', [ContainerController::class, 'index']);
+        Route::post('/containers', [ContainerController::class, 'store']);
+        Route::get('/containers/{container}', [ContainerController::class, 'show']);
+        Route::patch('/containers/{container}', [ContainerController::class, 'update']);
+        Route::delete('/containers/{container}', [ContainerController::class, 'destroy']);
+
+        Route::patch('/containers/{container}/start', [ContainerLifecycleController::class, 'start']);
+        Route::patch('/containers/{container}/stop', [ContainerLifecycleController::class, 'stop']);
+        Route::patch('/containers/{container}/restart', [ContainerLifecycleController::class, 'restart']);
+
+        Route::get('/containers/{container}/logs', [ContainerLogsController::class, 'stream']);
+        Route::get('/containers/{container}/stats', [ContainerStatsController::class, 'show']);
+
+        Route::get('/containers/{container}/files', [ContainerFilesController::class, 'index']);
+        Route::get('/containers/{container}/files/content', [ContainerFilesController::class, 'show']);
+        Route::patch('/containers/{container}/files/content', [ContainerFilesController::class, 'update']);
+        Route::delete('/containers/{container}/files', [ContainerFilesController::class, 'destroy']);
+
+        Route::get('/containers/{container}/env', [ContainerEnvController::class, 'index']);
+        Route::post('/containers/{container}/env', [ContainerEnvController::class, 'store']);
+        Route::patch('/containers/{container}/env/{env}', [ContainerEnvController::class, 'update']);
+        Route::delete('/containers/{container}/env/{env}', [ContainerEnvController::class, 'destroy']);
 
         // Profile
         Route::get('/profile/me', [ProfileController::class, 'me']);
@@ -202,17 +207,6 @@ Route::prefix('v1')->group(function () {
             Route::get('/system/resources', [AdminController::class, 'systemResources']);
             Route::get('/system/containers', [AdminController::class, 'containerStats']);
 
-            // Container Management Routes
-            Route::get('/containers', [ContainerController::class, 'index']);
-            Route::get('/containers/options', [ContainerController::class, 'options']);
-            Route::get('/containers/{container}', [ContainerController::class, 'show']);
-            Route::post('/containers', [ContainerController::class, 'store']);
-            Route::post('/containers/{container}/start', [ContainerController::class, 'start']);
-            Route::post('/containers/{container}/stop', [ContainerController::class, 'stop']);
-            Route::delete('/containers/{container}', [ContainerController::class, 'destroy']);
-            Route::get('/containers/{container}/stats', [ContainerController::class, 'stats']);
-            Route::get('/containers/{container}/logs', [ContainerController::class, 'logs']);
-            Route::put('/containers/{container}/env', [ContainerController::class, 'updateEnv']);
         });
 
         // Wiki PR-like
