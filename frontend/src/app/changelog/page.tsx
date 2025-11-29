@@ -146,9 +146,9 @@ export default function ChangelogPage() {
             <div className="flex items-center justify-center mb-4">
               <Calendar className="w-12 h-12" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">O'zgarishlar Tarixi</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{"O'zgarishlar Tarixi"}</h1>
             <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              KnowHub Community platformasining barcha yangilanishlari va o'zgarishlari
+              {"KnowHub Community platformasining barcha yangilanishlari va o'zgarishlari"}
             </p>
           </div>
         </div>
@@ -225,9 +225,9 @@ export default function ChangelogPage() {
               </h3>
               <ul className="space-y-2 text-white/80">
                 <li>• Interaktiv darslar va kurslar</li>
-                <li>• Kodlash challenge'lari</li>
+                <li>{"• Kodlash challenge'lari"}</li>
                 <li>• Skill badgelari va sertifikatlar</li>
-                <li>• Ish e'lonlari bo'limi</li>
+                <li>{"• Ish e'lonlari bo'limi"}</li>
               </ul>
             </div>
           </div>

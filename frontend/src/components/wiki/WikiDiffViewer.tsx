@@ -22,8 +22,8 @@ export function WikiDiffViewer({ lines, summary }: WikiDiffViewerProps) {
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center gap-4 text-sm">
-        <span className="font-medium text-green-600">+{summary.added} qo’shimcha</span>
-        <span className="font-medium text-rose-600">-{summary.removed} o’chirish</span>
+        <span className="font-medium text-green-600">+{summary.added} {"qo’shimcha"}</span>
+        <span className="font-medium text-rose-600">-{summary.removed} {"o’chirish"}</span>
         <span className="font-medium text-gray-600">
           Net {summary.net >= 0 ? `+${summary.net}` : summary.net}
         </span>
