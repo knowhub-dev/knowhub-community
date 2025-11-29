@@ -1,8 +1,9 @@
-import dynamic from 'next/dynamic';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { generateStaticMetadata } from '@/lib/metadata-helpers';
 
-const HomeClient = dynamic(() => import('./home-client'), { ssr: false });
+import GuestLandingServer from './home/GuestLandingServer';
 
 export const generateMetadata = generateStaticMetadata({
   title: 'Bosh sahifa',
@@ -10,6 +11,12 @@ export const generateMetadata = generateStaticMetadata({
   path: '/',
 });
 
-export default function HomePage() {
-  return <HomeClient />;
+export default async function HomePage() {
+  const authToken = cookies().get('auth_token')?.value;
+
+  if (authToken) {
+    redirect('/dashboard');
+  }
+
+  return <GuestLandingServer />;
 }
