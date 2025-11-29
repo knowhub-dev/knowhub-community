@@ -147,7 +147,8 @@
 
 @layer components {
   .kdl-surface {
-    @apply relative overflow-hidden rounded-[var(--radius-lg)] border border-border/70 bg-[hsl(var(--surface-1))]/90 text-foreground shadow-[var(--shadow-soft)] backdrop-blur;
+    @apply relative overflow-hidden rounded-[var(--radius-lg)] border bg-[hsl(var(--surface-1))]/90 text-foreground shadow-[var(--shadow-soft)] backdrop-blur;
+    border-color: hsl(var(--border) / 0.7);
   }
 
   .kdl-card {
@@ -224,12 +225,14 @@
   }
 
   .markdown-article table {
-    @apply w-full border-collapse overflow-hidden rounded-xl border border-border/60 text-sm;
+    @apply w-full border-collapse overflow-hidden rounded-xl border text-sm;
+    border-color: hsl(var(--border) / 0.6);
   }
 
   .markdown-article th,
   .markdown-article td {
-    @apply border border-border/60 px-3 py-2;
+    @apply border px-3 py-2;
+    border-color: hsl(var(--border) / 0.6);
   }
 
   .markdown-article a {
@@ -264,5 +267,4 @@
 
 .token.operator {
   color: #f472b6;
-}
 }

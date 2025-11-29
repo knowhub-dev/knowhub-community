@@ -227,7 +227,7 @@ export default function SearchBar({
 
             <CommandSeparator />
             <div className="px-4 py-2 text-[0.7rem] text-muted-foreground sm:hidden">
-              Mobil qurilmalarda qidiruv oynasi to‘liq ekran shaklida ochiladi.
+              {"Mobil qurilmalarda qidiruv oynasi to‘liq ekran shaklida ochiladi."}
             </div>
           </CommandList>
         </Command>

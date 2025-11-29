@@ -48,7 +48,7 @@ export function FeedShowcase({ feed }: FeedShowcaseProps) {
                   <Sparkle className="h-3.5 w-3.5" />
                   {formatRelative(item.created_at)}
                 </span>
-                <span>{item.user?.name || item.user?.username || 'Jamiyat a'zosi'}</span>
+                <span>{item.user?.name || item.user?.username || "Jamiyat a'zosi"}</span>
               </div>
 
               <h4 className="mt-3 text-lg font-semibold text-foreground group-hover:text-primary">{item.title}</h4>
