@@ -29,7 +29,7 @@ export function SpotlightPost({ spotlight }: SpotlightPostProps) {
             <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
               {spotlight?.summary ??
                 spotlight?.excerpt ??
-                "Nufuzli mualliflar, chuqur tahlillar va jamiyatni ilhomlantiruvchi g'oyalar. Bilim markazidagi eng qimmatli post";
+                "Nufuzli mualliflar, chuqur tahlillar va jamiyatni ilhomlantiruvchi g'oyalar. Bilim markazidagi eng qimmatli post"
               }
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
