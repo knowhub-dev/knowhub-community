@@ -53,6 +53,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        "accent-green": {
+          DEFAULT: "hsl(var(--accent-green))",
+          foreground: "hsl(var(--accent-green-foreground))",
+        },
+        "accent-pink": {
+          DEFAULT: "hsl(var(--accent-pink))",
+          foreground: "hsl(var(--accent-pink-foreground))",
+        },
+        "accent-purple": {
+          DEFAULT: "hsl(var(--accent-purple))",
+          foreground: "hsl(var(--accent-purple-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
