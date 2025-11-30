@@ -231,13 +231,14 @@
 }
 
 @layer components {
-  .kdl-surface {
+  .kdl-surface,
+  .kdl-card {
     @apply relative overflow-hidden rounded-[var(--radius-lg)] border bg-[hsl(var(--surface-1))]/90 text-foreground shadow-[var(--shadow-soft)] backdrop-blur;
     border-color: hsl(var(--border) / 0.7);
   }
 
   .kdl-card {
-    @apply kdl-surface bg-[hsl(var(--card))]/95;
+    @apply bg-[hsl(var(--card))]/95;
   }
 
   .kdl-glow::before {
