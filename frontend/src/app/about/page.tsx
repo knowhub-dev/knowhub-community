@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Target, Heart, Code, Globe, Award } from 'lucide-react';
 import Link from 'next/link';
@@ -56,13 +55,48 @@ export default function AboutPage() {
   const isLoading = statsLoading || contentLoading;
   const hasError = statsError || contentError;
 
-  const featureCards = useMemo(() => {
-    return content?.features ?? [];
-  }, [content?.features]);
+  const defaultFeatures: AboutContentResponse['features'] = [
+    {
+      title: 'Kod Ishga Tushirish',
+      description:
+        "JavaScript, Python, PHP kodlarini to'g'ridan-to'g'ri brauzerda ishga tushiring va natijani real vaqtda ko'ring.",
+      icon: 'code',
+    },
+    {
+      title: 'Hamjamiyat',
+      description: "Minglab dasturchilar bilan bog'laning, tajriba almashing va professional tarmoqingizni kengaytiring.",
+      icon: 'users',
+    },
+    {
+      title: 'Gamifikatsiya',
+      description: "XP to'plang, darajangizni oshiring, badglar qo'lga kiriting va reyting jadvalida yuqoriga chiqing.",
+      icon: 'award',
+    },
+  ];
 
-  const teamMembers = useMemo(() => {
-    return content?.team ?? [];
-  }, [content?.team]);
+  const defaultTeam: AboutContentResponse['team'] = [
+    {
+      title: 'Asos Soluvchi',
+      role: 'CEO & Founder',
+      description: '10+ yillik tajribaga ega senior dasturchi va texnologiya sohasidagi yetakchi.',
+      avatar_url: 'https://ui-avatars.com/api/?name=Founder&background=6366f1&color=fff&size=128',
+    },
+    {
+      title: 'Texnik Rahbar',
+      role: 'CTO & Tech Lead',
+      description: 'Full-stack dasturchi va arxitektor, platformaning texnik tomonini boshqaradi.',
+      avatar_url: 'https://ui-avatars.com/api/?name=Tech+Lead&background=10b981&color=fff&size=128',
+    },
+    {
+      title: 'Hamjamiyat Menejeri',
+      role: 'Community Manager',
+      description: "Hamjamiyat bilan ishlash va foydalanuvchilar tajribasini yaxshilash bo'yicha mutaxassis.",
+      avatar_url: 'https://ui-avatars.com/api/?name=Community&background=f59e0b&color=fff&size=128',
+    },
+  ];
+
+  const featureCards = content?.features?.length ? content.features : defaultFeatures;
+  const teamMembers = content?.team?.length ? content.team : defaultTeam;
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -118,38 +152,19 @@ export default function AboutPage() {
       <div className="mb-16">
         <h2 className="text-3xl font-bold text-[hsl(var(--foreground))] text-center mb-12">Nima Taklif Qilamiz</h2>
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-[hsl(var(--primary))/15] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Code className="w-8 h-8 text-[hsl(var(--primary))]" />
-            </div>
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-3">Kod Ishga Tushirish</h3>
-            <p className="text-muted-foreground">
-              JavaScript, Python, PHP kodlarini to'g'ridan-to'g'ri brauzerda ishga tushiring
-              va natijani real vaqtda ko'ring.
-            </p>
-          </div>
+          {featureCards.map((feature) => {
+            const Icon = featureIconMap[feature.icon];
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-[hsl(var(--accent-green))/15] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-[hsl(var(--accent-green))]" />
-            </div>
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-3">Hamjamiyat</h3>
-            <p className="text-muted-foreground">
-              Minglab dasturchilar bilan bog'laning, tajriba almashing va
-              professional tarmoqingizni kengaytiring.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 bg-[hsl(var(--secondary))/15] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Award className="w-8 h-8 text-[hsl(var(--secondary))]" />
-            </div>
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-3">Gamifikatsiya</h3>
-            <p className="text-muted-foreground">
-              XP to'plang, darajangizni oshiring, badglar qo'lga kiriting va
-              reyting jadvalida yuqoriga chiqing.
-            </p>
-          </div>
+            return (
+              <div key={feature.title} className="text-center">
+                <div className="w-16 h-16 bg-[hsl(var(--primary))/15] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-8 h-8 text-[hsl(var(--primary))]" />
+                </div>
+                <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -183,50 +198,20 @@ export default function AboutPage() {
       <div className="mb-16">
         <h2 className="text-3xl font-bold text-[hsl(var(--foreground))] text-center mb-12">Bizning Jamoa</h2>
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <Image
-              src="https://ui-avatars.com/api/?name=Founder&background=6366f1&color=fff&size=128"
-              alt="Founder"
-              width={128}
-              height={128}
-              className="w-32 h-32 rounded-full mx-auto mb-4"
-            />
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Asos Soluvchi</h3>
-            <p className="text-muted-foreground mb-3">CEO & Founder</p>
-            <p className="text-sm text-muted-foreground">
-              10+ yillik tajribaga ega senior dasturchi va texnologiya sohasidagi yetakchi.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <Image
-              src="https://ui-avatars.com/api/?name=Tech+Lead&background=10b981&color=fff&size=128"
-              alt="Tech Lead"
-              width={128}
-              height={128}
-              className="w-32 h-32 rounded-full mx-auto mb-4"
-            />
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Texnik Rahbar</h3>
-            <p className="text-muted-foreground mb-3">CTO & Tech Lead</p>
-            <p className="text-sm text-muted-foreground">
-              Full-stack dasturchi va arxitektor, platformaning texnik tomonini boshqaradi.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <Image
-              src="https://ui-avatars.com/api/?name=Community&background=f59e0b&color=fff&size=128"
-              alt="Community Manager"
-              width={128}
-              height={128}
-              className="w-32 h-32 rounded-full mx-auto mb-4"
-            />
-            <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">Hamjamiyat Menejeri</h3>
-            <p className="text-muted-foreground mb-3">Community Manager</p>
-            <p className="text-sm text-muted-foreground">
-              Hamjamiyat bilan ishlash va foydalanuvchilar tajribasini yaxshilash bo'yicha mutaxassis.
-            </p>
-          </div>
+          {teamMembers.map((member) => (
+            <div key={member.title} className="text-center">
+              <Image
+                src={member.avatar_url || 'https://ui-avatars.com/api/?name=KnowHub&background=111827&color=fff&size=128'}
+                alt={member.title}
+                width={128}
+                height={128}
+                className="w-32 h-32 rounded-full mx-auto mb-4"
+              />
+              <h3 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">{member.title}</h3>
+              <p className="text-muted-foreground mb-3">{member.role}</p>
+              <p className="text-sm text-muted-foreground">{member.description}</p>
+            </div>
+          ))}
         </div>
       </div>
 
