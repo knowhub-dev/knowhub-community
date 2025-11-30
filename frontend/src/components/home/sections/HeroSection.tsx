@@ -118,7 +118,7 @@ export function HeroSection({ stats, feedHighlights, spotlight }: HeroSectionPro
                       <div className="space-y-1">
                         <p className="text-sm font-semibold leading-5 text-foreground">{item.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {item.user?.name || item.user?.username || 'Jamiyat a'zosi'} • {item.created_at?.slice(0, 10) || 'hozir'}
+                          {item.user?.name || item.user?.username || "Jamiyat a'zosi"} • {item.created_at?.slice(0, 10) || 'hozir'}
                         </p>
                       </div>
                     </div>
