@@ -95,6 +95,12 @@
     --secondary-foreground: 189 45% 96%;
     --accent: 266 76% 64%;
     --accent-foreground: 268 92% 14%;
+    --accent-green: 154 68% 46%;
+    --accent-green-foreground: 156 94% 14%;
+    --accent-pink: 330 80% 68%;
+    --accent-pink-foreground: 335 92% 14%;
+    --accent-purple: 274 74% 62%;
+    --accent-purple-foreground: 275 94% 14%;
     --success: 158 64% 42%;
     --warning: 36 92% 54%;
     --danger: 0 72% 52%;
@@ -139,6 +145,12 @@
     --secondary-foreground: 188 36% 12%;
     --accent: 268 82% 74%;
     --accent-foreground: 265 86% 12%;
+    --accent-green: 151 70% 58%;
+    --accent-green-foreground: 153 36% 12%;
+    --accent-pink: 332 88% 72%;
+    --accent-pink-foreground: 334 40% 14%;
+    --accent-purple: 272 78% 72%;
+    --accent-purple-foreground: 273 38% 14%;
     --success: 151 60% 46%;
     --warning: 36 92% 58%;
     --danger: 0 70% 60%;
