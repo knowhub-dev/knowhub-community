@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const authToken = cookies().get('auth_token')?.value;
 
   if (!authToken) {
-    redirect('/login');
+    redirect('/auth/login');
   }
 
   return <DashboardServer />;
