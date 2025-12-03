@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Kirish jarayonida xatolik yuz berdi');
     } finally {

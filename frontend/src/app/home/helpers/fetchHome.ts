@@ -7,30 +7,28 @@ export type TagSummary = {
 };
 
 export type HomeStatsPayload = {
-  totals?: {
-    members?: number;
-    users?: number;
-    posts?: number;
-    answers?: number;
-    tags?: number;
+  users?: {
+    total?: number;
+    active_today?: number;
+    new_this_week?: number;
+    active_this_month?: number;
   };
-  velocity?: {
-    weekly_posts?: number;
-    weekly_members?: number;
-    response_time_hours?: number;
+  posts?: {
+    total?: number;
+    today?: number;
+    this_week?: number;
+    this_month?: number;
   };
-  health?: {
-    uptime?: number;
-    incidents?: number;
-    satisfaction?: number;
+  comments?: {
+    total?: number;
+    today?: number;
+    this_week?: number;
+  };
+  wiki?: {
+    articles?: number;
+    total_versions?: number;
   };
   trending_tags?: TagSummary[];
-  highlights?: Array<{
-    label?: string;
-    value?: number | string;
-    delta?: number | string;
-  }>;
-  sparkline?: number[];
 };
 
 export type HomeFeedItem = {
@@ -91,6 +89,35 @@ export type HomeLandingData = {
   spotlight: SpotlightContent | null;
 };
 
+type StatsHomepageResponse = {
+  stats?: HomeStatsPayload;
+  trending_posts?: HomeFeedItem[];
+  latest_posts?: HomeFeedItem[];
+  featured_post?: SpotlightContent;
+  trending_tags?: TagSummary[];
+};
+
+type ActivityFeedResponse = {
+  data?: Array<{
+    id?: string | number;
+    type?: string;
+    created_at?: string;
+    verb?: string;
+    user?: {
+      id?: string | number;
+      name?: string;
+      username?: string;
+      avatar_url?: string;
+    } | null;
+    payload?: Record<string, unknown> | null;
+  }>;
+};
+
+type WeeklyHeroesResponse = {
+  xp?: Array<{ user?: CommunityHero | null; total_xp?: number }>;
+  post_authors?: Array<{ user?: CommunityHero | null; total_score?: number; posts_count?: number }>;
+};
+
 function buildUrl(path: string) {
   return `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
@@ -120,26 +147,106 @@ function normalizeArray<T>(value: unknown): T[] {
 }
 
 export async function fetchHomeData(): Promise<HomeLandingData> {
+<<<<<<< HEAD
   const [statsResponse, feedResponse, heroesResponse, spotlightResponse] = await Promise.all([
     fetchEndpoint<HomeStatsPayload>('/stats/homepage'),
     fetchEndpoint<HomeFeedItem[] | { data: HomeFeedItem[] }>('/activity-feed'),
     fetchEndpoint<CommunityHero[] | { heroes?: CommunityHero[] }>('/stats/weekly-heroes'),
     fetchEndpoint<SpotlightContent | { spotlight?: SpotlightContent }>('/home/spotlight'),
+=======
+  const [homepageResponse, activityResponse, heroesResponse] = await Promise.all([
+    fetchEndpoint<StatsHomepageResponse>('/stats/homepage'),
+    fetchEndpoint<ActivityFeedResponse>('/activity-feed'),
+    fetchEndpoint<WeeklyHeroesResponse>('/stats/weekly-heroes'),
+>>>>>>> b1a1616fc164401d1091719d8530f6a6e6c1a4e5
   ]);
 
-  const stats =
-    (statsResponse && 'stats' in (statsResponse as Record<string, unknown>)
-      ? (statsResponse as { stats?: HomeStatsPayload }).stats
-      : statsResponse) ?? null;
+  const stats = homepageResponse?.stats || homepageResponse?.trending_tags
+    ? { ...(homepageResponse?.stats ?? {}), trending_tags: homepageResponse?.trending_tags }
+    : null;
 
-  const feed = normalizeArray<HomeFeedItem>(feedResponse);
-  const heroes = normalizeArray<CommunityHero>((heroesResponse as { heroes?: CommunityHero[] } | null)?.heroes ?? heroesResponse);
-  const spotlight =
-    ((spotlightResponse as { spotlight?: SpotlightContent } | null)?.spotlight ?? spotlightResponse ?? null) as SpotlightContent | null;
+  const postFeed = normalizeArray<HomeFeedItem>(homepageResponse?.trending_posts).concat(
+    normalizeArray<HomeFeedItem>(homepageResponse?.latest_posts),
+  );
+
+  const activityFeed = normalizeArray<ActivityFeedResponse['data'][number]>(activityResponse?.data).map((item, index) => {
+    const payload = (item?.payload ?? {}) as Record<string, unknown>;
+    const payloadTitle = typeof payload.title === 'string' ? payload.title : undefined;
+    const payloadExcerpt = typeof payload.excerpt === 'string' ? payload.excerpt : undefined;
+    const payloadPostTitle = (payload as { post?: { title?: string } })?.post?.title;
+    const payloadBadgeName = (payload as { name?: string })?.name;
+
+    return {
+      id: item?.id ?? `activity-${index}`,
+      title:
+        payloadTitle ??
+        (item?.type === 'comment'
+          ? `Izoh: ${payloadPostTitle ?? 'muhokama'}`
+          : item?.type === 'user-badge'
+            ? `Yangi badge: ${payloadBadgeName ?? 'badge'}`
+            : 'Jamiyat faolligi'),
+      excerpt: payloadExcerpt,
+      created_at: item?.created_at ?? undefined,
+      user: item?.user ?? undefined,
+    } satisfies HomeFeedItem;
+  });
+
+  const combinedFeed: HomeFeedItem[] = [];
+  const dedupe = new Set<string | number>();
+
+  [...postFeed, ...activityFeed].forEach((entry) => {
+    if (!entry) return;
+
+    if (entry.id === undefined || entry.id === null) {
+      combinedFeed.push(entry);
+      return;
+    }
+
+    if (dedupe.has(entry.id)) return;
+    dedupe.add(entry.id);
+    combinedFeed.push(entry);
+  });
+
+  const heroes = (
+    normalizeArray(heroesResponse?.xp).map((hero) => ({
+      id: hero.user?.id,
+      name: hero.user?.name ?? hero.user?.username ?? 'Faol ishtirokchi',
+      avatar_url: hero.user?.avatar_url,
+      contributions: hero.total_xp,
+      highlight: hero.total_xp ? `${hero.total_xp} XP` : undefined,
+      badges: ['XP yetakchisi'],
+    })) as CommunityHero[]
+  ).concat(
+    normalizeArray(heroesResponse?.post_authors).map((author) => ({
+      id: author.user?.id,
+      name: author.user?.name ?? author.user?.username ?? 'Muallif',
+      avatar_url: author.user?.avatar_url,
+      contributions: author.posts_count,
+      highlight: author.total_score ? `${author.total_score} umumiy reyting` : undefined,
+      badges: ['Haftalik muallif'],
+    })) as CommunityHero[],
+  );
+
+  const spotlight: SpotlightContent | null =
+    homepageResponse?.featured_post ??
+    (postFeed?.[0]
+      ? {
+          title: postFeed[0].title,
+          summary: postFeed[0].summary ?? postFeed[0].excerpt,
+          author: postFeed[0].user,
+          tags: postFeed[0].tags,
+        }
+      : activityFeed?.[0]
+        ? {
+            title: activityFeed[0].title,
+            summary: activityFeed[0].excerpt,
+            author: activityFeed[0].user,
+          }
+        : null);
 
   return {
     stats,
-    feed,
+    feed: combinedFeed,
     heroes,
     spotlight,
   };

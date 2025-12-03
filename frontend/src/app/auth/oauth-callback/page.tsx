@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/lib/api";
+import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -70,8 +71,7 @@ function OAuthCallbackContent() {
 
     async function finalize() {
       try {
-        localStorage.setItem("auth_token", token);
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        setAuthCookie(token);
         await checkUser();
         setStatus("success");
         setMessage(`${provider === "github" ? "GitHub" : "Google"} orqali muvaffaqiyatli kirdingiz.`);
@@ -80,6 +80,7 @@ function OAuthCallbackContent() {
         }, 1000);
       } catch (err) {
         console.error("OAuth finalize failed", err);
+        clearAuthCookie();
         localStorage.removeItem("auth_token");
         delete api.defaults.headers.common["Authorization"];
         setStatus("error");
