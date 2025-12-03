@@ -55,7 +55,7 @@ export default function RegisterPage() {
 
     try {
       await register(formData.name, formData.username, formData.email, formData.password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || "Ro'yxatdan o'tish jarayonida xatolik yuz berdi");
     } finally {
