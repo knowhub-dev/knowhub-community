@@ -121,9 +121,9 @@ function normalizeArray<T>(value: unknown): T[] {
 
 export async function fetchHomeData(): Promise<HomeLandingData> {
   const [statsResponse, feedResponse, heroesResponse, spotlightResponse] = await Promise.all([
-    fetchEndpoint<HomeStatsPayload>('/home/stats'),
-    fetchEndpoint<HomeFeedItem[] | { data: HomeFeedItem[] }>('/home/feed'),
-    fetchEndpoint<CommunityHero[] | { heroes?: CommunityHero[] }>('/home/heroes'),
+    fetchEndpoint<HomeStatsPayload>('/stats/homepage'),
+    fetchEndpoint<HomeFeedItem[] | { data: HomeFeedItem[] }>('/activity-feed'),
+    fetchEndpoint<CommunityHero[] | { heroes?: CommunityHero[] }>('/stats/weekly-heroes'),
     fetchEndpoint<SpotlightContent | { spotlight?: SpotlightContent }>('/home/spotlight'),
   ]);
 

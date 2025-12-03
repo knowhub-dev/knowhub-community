@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Suspense, useEffect } from "react";
-import { isRedirectError } from "next/dist/client/components/redirect";
 import { CyberGrid } from "@/components/error/CyberGrid";
 import { GlitchText } from "@/components/error/GlitchText";
 import { MatrixRain } from "@/components/error/MatrixRain";
@@ -15,7 +14,8 @@ type ErrorProps = {
 };
 
 export default function GlobalError({ error, reset }: ErrorProps) {
-  if (isRedirectError(error)) {
+  // 🔥 Next.js 15 redirect detection
+  if (error.digest === "NEXT_REDIRECT") {
     throw error;
   }
 
@@ -31,6 +31,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
       <TerminalPanel title="SYSTEM FAILURE / CORE OVERLOAD" accent="red" className="relative z-10">
         <div className="flex flex-col items-center gap-6 text-center">
           <GlitchText text="500" variant="red" className="glitch-pulse text-6xl sm:text-7xl" />
+
           <div className="max-w-2xl space-y-4 text-[hsl(var(--muted-foreground))]">
             <p className="text-sm uppercase tracking-[0.2em] text-[hsl(var(--terminal-red))]">
               Critical system malfunction detected.
@@ -46,10 +47,12 @@ export default function GlobalError({ error, reset }: ErrorProps) {
               />
             </Suspense>
           </div>
+
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
             <span className="status-pill">DIGEST: {error.digest ?? "PENDING"}</span>
             <span className="status-pill">KERNEL SAFE MODE</span>
           </div>
+
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button type="button" className="terminal-btn" onClick={reset}>
               Reboot Kernel
@@ -63,3 +66,4 @@ export default function GlobalError({ error, reset }: ErrorProps) {
     </div>
   );
 }
+
