@@ -1,6 +1,13 @@
 import { Cloud, Globe2, Server, WifiOff } from 'lucide-react';
 
-import type { DashboardMiniServer } from '@/app/dashboard/helpers/fetchDashboard';
+export type DashboardMiniServer = {
+  id?: string | number;
+  name: string;
+  status?: 'online' | 'offline' | 'maintenance';
+  uptime?: number;
+  latency_ms?: number;
+  region?: string;
+};
 
 type MiniServersProps = {
   servers: DashboardMiniServer[];

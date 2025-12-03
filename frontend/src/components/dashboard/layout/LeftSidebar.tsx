@@ -20,7 +20,7 @@ export function LeftSidebar({ profile, xp, badges, missions, className }: LeftSi
       <div className="absolute inset-0 rounded-3xl border border-white/10" aria-hidden />
       <div className="relative space-y-4">
         <ProfileCard profile={profile} badges={badges} />
-        <XPProgress xp={xp} />
+        {xp && <XPProgress xp={xp} />}
         <DailyMissions missions={missions} />
         <QuickActions />
       </div>

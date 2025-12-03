@@ -51,9 +51,14 @@ export default function DashboardView({ data }: DashboardViewProps) {
         </header>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[250px_1fr_300px]">
-          <LeftSidebar profile={data.profile} xp={data.xp} badges={data.badges} missions={data.activity?.highlights?.map(text => ({ title: text, status: 'in-progress' as const }))} />
+          <LeftSidebar
+            profile={data.profile}
+            xp={data.xp}
+            badges={data.badges}
+            missions={data.activity?.highlights?.map(text => ({ title: text, status: 'in-progress' as const }))}
+          />
           <MainContent activity={data.activity} />
-          <RightSidebar stats={data.stats} servers={data.servers} badges={data.badges} />
+          <RightSidebar stats={data.stats} badges={data.badges} />
         </div>
       </div>
     </div>
