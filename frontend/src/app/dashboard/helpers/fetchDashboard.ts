@@ -124,7 +124,8 @@ async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null>
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
-  const authToken = cookies().get('auth_token')?.value;
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth_token')?.value;
 
   const [profileResponse, activityResponse, statsResponse, badgesResponse, xpResponse, serversResponse] = await Promise.all([
     fetchEndpoint<DashboardProfile>('/users/me', authToken),
