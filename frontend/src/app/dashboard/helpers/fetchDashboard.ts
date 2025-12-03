@@ -2,6 +2,25 @@ import { cookies } from 'next/headers';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000/api/v1';
 
+export type DashboardBadge = {
+  id?: string | number;
+  name: string;
+  level?: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+};
+
+export type DashboardXp = {
+  level?: number;
+  current?: number;
+  next?: number;
+  progress?: number;
+  streak?: number;
+  rank?: string;
+  boosters?: string[];
+};
+
 export type DashboardProfile = {
   id?: string | number;
   name?: string;
@@ -13,6 +32,8 @@ export type DashboardProfile = {
   level?: number;
   streak?: number;
   skills?: string[];
+  badges?: DashboardBadge[];
+  xp?: DashboardXp;
 };
 
 export type DashboardActivityItem = {
@@ -48,41 +69,12 @@ export type DashboardStats = {
   impact_score?: number;
 };
 
-export type DashboardBadge = {
-  id?: string | number;
-  name: string;
-  level?: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-};
-
-export type DashboardXp = {
-  level?: number;
-  current?: number;
-  next?: number;
-  progress?: number;
-  streak?: number;
-  rank?: string;
-  boosters?: string[];
-};
-
-export type DashboardMiniServer = {
-  id?: string | number;
-  name: string;
-  status?: 'online' | 'offline' | 'maintenance';
-  uptime?: number;
-  latency_ms?: number;
-  region?: string;
-};
-
 export type DashboardData = {
   profile: DashboardProfile | null;
   activity: DashboardActivity | null;
   stats: DashboardStats | null;
   badges: DashboardBadge[];
   xp: DashboardXp | null;
-  servers: DashboardMiniServer[];
 };
 
 function buildUrl(path: string) {
@@ -96,6 +88,28 @@ function normalizeArray<T>(value: unknown): T[] {
     if (Array.isArray(data)) return data as T[];
   }
   return [];
+}
+
+function normalizeActivity(value: unknown): Partial<DashboardActivity> {
+  if (!value || typeof value !== 'object') return {};
+
+  const feed = normalizeArray<DashboardActivityItem>((value as { feed?: unknown; items?: unknown }).feed ?? (value as { items?: unknown }).items);
+  const highlights = Array.isArray((value as { highlights?: unknown }).highlights)
+    ? ((value as { highlights?: unknown }).highlights as string[])
+    : [];
+  const contributions = normalizeArray<ContributionPoint>((value as { contributions?: unknown }).contributions);
+
+  return {
+    feed: feed.length ? feed : undefined,
+    highlights: highlights.length ? highlights : undefined,
+    contributions: contributions.length ? contributions : undefined,
+  };
+}
+
+function normalizeStats(value: unknown): Partial<DashboardStats> {
+  if (!value || typeof value !== 'object') return {};
+  const stats = value as DashboardStats;
+  return Object.fromEntries(Object.entries(stats).filter(([, v]) => v !== undefined && v !== null)) as Partial<DashboardStats>;
 }
 
 async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null> {
@@ -113,12 +127,15 @@ async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null>
     });
 
     if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
+      if (response.status !== 404) {
+        console.warn(`[dashboard] ${path} responded with status ${response.status}`);
+      }
+      return null;
     }
 
     return (await response.json()) as T;
   } catch (error) {
-    console.error(`[dashboard] Failed to fetch ${path}:`, error);
+    console.warn(`[dashboard] Failed to fetch ${path}:`, error);
     return null;
   }
 }
@@ -127,29 +144,51 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
-  const [profileResponse, activityResponse, statsResponse, badgesResponse, xpResponse, serversResponse] = await Promise.all([
-    fetchEndpoint<DashboardProfile>('/users/me', authToken),
+  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse] = await Promise.all([
+    fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
     fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
     fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
-    fetchEndpoint<DashboardBadge[] | { badges?: DashboardBadge[] }>('/dashboard/badges', authToken),
-    fetchEndpoint<DashboardXp>('/dashboard/xp', authToken),
-    fetchEndpoint<DashboardMiniServer[] | { servers?: DashboardMiniServer[] }>(
-      '/dashboard/mini-servers',
-      authToken,
-    ),
+    fetchEndpoint<unknown>('/dashboard/trending', authToken),
+    fetchEndpoint<unknown>('/dashboard/analytics', authToken),
   ]);
 
-  const badges = normalizeArray<DashboardBadge>((badgesResponse as { badges?: DashboardBadge[] } | null)?.badges ?? badgesResponse);
-  const servers = normalizeArray<DashboardMiniServer>(
-    (serversResponse as { servers?: DashboardMiniServer[] } | null)?.servers ?? serversResponse,
-  );
+  const profile = (profileResponse as { profile?: DashboardProfile } | null)?.profile ?? (profileResponse as DashboardProfile | null);
+  const badges = normalizeArray<DashboardBadge>(profile?.badges);
+  const xp =
+    profile && (profile.level !== undefined || profile.streak !== undefined || profile.xp)
+      ? {
+          level: profile.level ?? profile.xp?.level,
+          streak: profile.streak ?? profile.xp?.streak,
+          current: profile.xp?.current,
+          next: profile.xp?.next,
+          progress: profile.xp?.progress,
+          rank: profile.xp?.rank,
+          boosters: profile.xp?.boosters,
+        }
+      : null;
+
+  const baseActivity = normalizeActivity(activityResponse);
+  const trendingActivity = normalizeActivity(trendingResponse);
+  const analyticsActivity = normalizeActivity((analyticsResponse as { activity?: unknown } | null)?.activity ?? analyticsResponse);
+
+  const mergedActivity: DashboardActivity = {
+    feed: baseActivity.feed ?? trendingActivity.feed ?? analyticsActivity.feed,
+    highlights: baseActivity.highlights ?? trendingActivity.highlights ?? analyticsActivity.highlights,
+    contributions: baseActivity.contributions ?? trendingActivity.contributions ?? analyticsActivity.contributions,
+  };
+
+  const baseStats = normalizeStats(statsResponse);
+  const analyticsStats = normalizeStats((analyticsResponse as { stats?: unknown } | null)?.stats ?? analyticsResponse);
+
+  const stats: DashboardStats | null = Object.keys({ ...baseStats, ...analyticsStats }).length
+    ? { ...baseStats, ...analyticsStats }
+    : null;
 
   return {
-    profile: profileResponse ?? null,
-    activity: activityResponse ?? null,
-    stats: statsResponse ?? null,
+    profile: profile ?? null,
+    activity: mergedActivity.feed || mergedActivity.highlights || mergedActivity.contributions ? mergedActivity : null,
+    stats,
     badges,
-    xp: xpResponse ?? null,
-    servers,
+    xp,
   };
 }
