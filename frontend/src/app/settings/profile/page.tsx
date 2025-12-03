@@ -12,8 +12,24 @@ async function getProfile() {
 }
 
 async function updateProfile(data: any) {
-  const res = await api.post('/profile/update', data);
-  return res.data;
+  const { resume, ...profileData } = data;
+
+  try {
+    const profileResponse = await api.put('/profile', profileData);
+
+    if (resume !== undefined) {
+      await api.put('/profile/resume', { resume });
+    }
+
+    return profileResponse.data;
+  } catch (error: any) {
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      'Noma\'lum xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.';
+
+    throw new Error(errorMessage);
+  }
 }
 
 export default function ProfileSettingsPage() {
@@ -65,7 +81,12 @@ export default function ProfileSettingsPage() {
     },
     onError: (error: any) => {
       console.error('Error updating profile:', error);
-      alert(`Profilni yangilashda xatolik: ${error.response?.data?.message || error.message}`);
+      const userFriendlyMessage =
+        error?.message ||
+        error?.response?.data?.message ||
+        'Profilni yangilashda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.';
+
+      alert(`Profilni yangilashda xatolik: ${userFriendlyMessage}`);
     },
   });
 
