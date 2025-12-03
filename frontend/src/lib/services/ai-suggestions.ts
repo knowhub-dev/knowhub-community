@@ -1,5 +1,4 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-const AUTH_STORAGE_KEY = 'auth_token';
 
 export type AiSuggestionType = 'finding' | 'style' | 'cta' | 'rewrite' | 'outline' | 'general';
 
@@ -40,16 +39,6 @@ const API_ROOT = normalizeBaseUrl(API_BASE_URL.replace(/\/$/, ''));
 const AI_STREAM_URL = `${API_ROOT}/ai/suggestions/stream`;
 const AI_SOCKET_URL = normalizeBaseUrl(API_ROOT.replace(/^http/, 'ws')) + '/ai/suggestions/socket';
 
-const withAuthToken = (url: string) => {
-  if (typeof window === 'undefined') return url;
-  const token = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!token) return url;
-
-  const urlInstance = new URL(url);
-  urlInstance.searchParams.set('token', token);
-  return urlInstance.toString();
-};
-
 const toSuggestion = (payload: any): AiSuggestion | null => {
   if (!payload) return null;
   if (payload.type === 'progress') return null;
@@ -88,7 +77,7 @@ export function createAiSuggestionStream(options: AiSuggestionStreamOptions) {
   }
 
   if (transport === 'websocket' && typeof WebSocket !== 'undefined') {
-    const socket = new WebSocket(withAuthToken(AI_SOCKET_URL));
+    const socket = new WebSocket(AI_SOCKET_URL);
     onStatusChange?.('connecting');
 
     socket.onopen = () => {
@@ -126,7 +115,7 @@ export function createAiSuggestionStream(options: AiSuggestionStreamOptions) {
     return cleanup;
   }
 
-  const streamUrl = withAuthToken(`${AI_STREAM_URL}?content=${encodeURIComponent(content.slice(0, 4000))}`);
+  const streamUrl = `${AI_STREAM_URL}?content=${encodeURIComponent(content.slice(0, 4000))}`;
   const eventSource = new EventSource(streamUrl, { withCredentials: true });
   onStatusChange?.('connecting');
 
