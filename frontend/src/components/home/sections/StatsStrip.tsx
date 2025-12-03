@@ -16,27 +16,27 @@ type StatsStripProps = {
 export function StatsStrip({ stats }: StatsStripProps) {
   const summary = [
     {
-      label: "O'sish sur'ati",
-      value: stats?.velocity?.weekly_posts ?? stats?.velocity?.weekly_members,
-      helper: "/hafta",
-      icon: BarChart3,
-    },
-    {
-      label: 'Onlayn a\'zolar',
-      value: stats?.health?.satisfaction ?? stats?.totals?.members,
-      helper: 'aktyvlik',
+      label: 'Faol foydalanuvchilar',
+      value: stats?.users?.active_today,
+      helper: 'bugun',
       icon: Activity,
     },
     {
-      label: 'Javob tezligi',
-      value: stats?.velocity?.response_time_hours,
-      helper: 'soat',
+      label: "Yangi a'zolar",
+      value: stats?.users?.new_this_week,
+      helper: 'hafta',
+      icon: BarChart3,
+    },
+    {
+      label: 'Bugungi postlar',
+      value: stats?.posts?.today,
+      helper: 'bugun',
       icon: Clock3,
     },
     {
-      label: 'Uptime',
-      value: stats?.health?.uptime ?? 99.9,
-      helper: '%',
+      label: 'Umumiy izohlar',
+      value: stats?.comments?.total,
+      helper: 'jamlanma',
       icon: Shield,
     },
   ];
