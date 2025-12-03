@@ -19,9 +19,9 @@ function formatNumber(value?: number) {
 
 export function HeroSection({ stats, feedHighlights, spotlight }: HeroSectionProps) {
   const primaryStats = [
-    { label: "Community", value: stats?.totals?.members ?? stats?.totals?.users },
-    { label: "Expert javoblar", value: stats?.totals?.answers ?? stats?.totals?.comments },
-    { label: "Mualliflar", value: stats?.totals?.posts },
+    { label: "Community", value: stats?.users?.total },
+    { label: "Expert javoblar", value: stats?.comments?.total },
+    { label: "Mualliflar", value: stats?.posts?.total },
   ];
 
   return (
