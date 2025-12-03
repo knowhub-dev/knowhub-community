@@ -147,18 +147,10 @@ function normalizeArray<T>(value: unknown): T[] {
 }
 
 export async function fetchHomeData(): Promise<HomeLandingData> {
-<<<<<<< HEAD
-  const [statsResponse, feedResponse, heroesResponse, spotlightResponse] = await Promise.all([
-    fetchEndpoint<HomeStatsPayload>('/stats/homepage'),
-    fetchEndpoint<HomeFeedItem[] | { data: HomeFeedItem[] }>('/activity-feed'),
-    fetchEndpoint<CommunityHero[] | { heroes?: CommunityHero[] }>('/stats/weekly-heroes'),
-    fetchEndpoint<SpotlightContent | { spotlight?: SpotlightContent }>('/home/spotlight'),
-=======
   const [homepageResponse, activityResponse, heroesResponse] = await Promise.all([
     fetchEndpoint<StatsHomepageResponse>('/stats/homepage'),
     fetchEndpoint<ActivityFeedResponse>('/activity-feed'),
     fetchEndpoint<WeeklyHeroesResponse>('/stats/weekly-heroes'),
->>>>>>> b1a1616fc164401d1091719d8530f6a6e6c1a4e5
   ]);
 
   const stats = homepageResponse?.stats || homepageResponse?.trending_tags
