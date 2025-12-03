@@ -1,12 +1,8 @@
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
 import { generateStaticMetadata } from "@/lib/metadata-helpers";
-
-const SolveraChatCard = dynamic(() => import("@/components/SolveraChatCard").then((mod) => mod.SolveraChatCard), {
-  ssr: false,
-});
+import { SolveraChatCard } from "@/components/SolveraChatCard";
 
 export const generateMetadata = generateStaticMetadata({
   title: "SolVera AI beta",
