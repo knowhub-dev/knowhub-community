@@ -52,6 +52,13 @@ export type ContributionPoint = {
   value: number;
 };
 
+export type DashboardMission = {
+  title?: string;
+  status?: 'done' | 'in-progress' | 'pending';
+  completion?: number;
+  reward?: string;
+};
+
 export type DashboardActivity = {
   feed?: DashboardActivityItem[];
   highlights?: string[];
@@ -114,6 +121,27 @@ function normalizeActivity(value: unknown): Partial<DashboardActivity> {
     highlights: highlights.length ? highlights : undefined,
     contributions: contributions.length ? contributions : undefined,
   };
+}
+
+function normalizeMissions(value: unknown): DashboardMission[] {
+  const missions = normalizeArray<DashboardMission>((value as { missions?: unknown })?.missions ?? value);
+
+  return missions
+    .map(mission => {
+      if (!mission.title) return null;
+      const completionValue =
+        mission.completion ??
+        (mission.status === 'done' ? 100 : mission.status === 'in-progress' ? 50 : 0);
+      const completion = Math.max(0, Math.min(100, Math.round(completionValue)));
+
+      return {
+        title: mission.title,
+        status: mission.status ?? 'pending',
+        completion,
+        reward: mission.reward,
+      } satisfies DashboardMission;
+    })
+    .filter((mission): mission is DashboardMission => Boolean(mission?.title));
 }
 
 function normalizeStats(value: unknown): Partial<DashboardStats> {
@@ -216,11 +244,17 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const baseActivity = normalizeActivity(activityResponse);
   const trendingActivity = normalizeActivity(trendingResponse);
   const analyticsActivity = normalizeActivity((analyticsResponse as { activity?: unknown } | null)?.activity ?? analyticsResponse);
+  const contributionHistory = normalizeArray<ContributionPoint>(
+    (contributionResponse as { contributions?: unknown } | null)?.contributions ?? contributionResponse,
+  );
 
   const mergedActivity: DashboardActivity = {
     feed: baseActivity.feed ?? trendingActivity.feed ?? analyticsActivity.feed,
     highlights: baseActivity.highlights ?? trendingActivity.highlights ?? analyticsActivity.highlights,
-    contributions: baseActivity.contributions ?? trendingActivity.contributions ?? analyticsActivity.contributions,
+    contributions:
+      contributionHistory.length > 0
+        ? contributionHistory
+        : baseActivity.contributions ?? trendingActivity.contributions ?? analyticsActivity.contributions,
   };
 
   const baseStats = normalizeStats(statsResponse);
@@ -229,6 +263,13 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const stats: DashboardStats | null = Object.keys({ ...baseStats, ...analyticsStats }).length
     ? { ...baseStats, ...analyticsStats }
     : null;
+
+  const missionsFromApi = normalizeMissions(missionsResponse);
+  const missionHighlights = (mergedActivity.highlights ?? []).map(text => ({
+    title: text,
+    status: 'in-progress' as const,
+  } satisfies DashboardMission));
+  const missions = missionsFromApi.length ? missionsFromApi : missionHighlights;
 
   return {
     profile: profile ?? null,
