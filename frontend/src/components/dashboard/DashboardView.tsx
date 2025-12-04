@@ -12,8 +12,9 @@ type DashboardViewProps = {
 };
 
 export default function DashboardView({ data }: DashboardViewProps) {
-  const name = data.profile?.name ?? 'Aurora builder';
-  const headline = data.profile?.title ?? 'Keep shipping, stay curious.';
+  const name = data.profile?.name ?? '';
+  const headline = data.profile?.title ?? '';
+  const firstName = name.split(' ')[0] ?? '';
 
   return (
     <div className="relative isolate overflow-hidden">
@@ -27,18 +28,18 @@ export default function DashboardView({ data }: DashboardViewProps) {
         <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">KnowHub Aurora</p>
-            <h1 className="text-3xl font-semibold sm:text-4xl">Welcome back, {name.split(' ')[0]}</h1>
-            <p className="text-base text-muted-foreground">{headline}</p>
+            <h1 className="text-3xl font-semibold sm:text-4xl">Yana xush kelibsiz, {firstName}</h1>
+            {headline ? <p className="text-base text-muted-foreground">{headline}</p> : null}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-[hsl(var(--surface-2))]/70 px-3 py-1 font-semibold text-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
-                Server-first dashboard
+                Server-avval boshqaruv paneli
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-[hsl(var(--surface-2))]/70 px-3 py-1 font-semibold text-foreground">
-                Unified fetch layer
+                Yagona ma'lumot olish qavati
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-[hsl(var(--surface-2))]/70 px-3 py-1 font-semibold text-foreground">
-                Aurora UI
+                Aurora foydalanuvchi interfeysi
               </span>
             </div>
           </div>
