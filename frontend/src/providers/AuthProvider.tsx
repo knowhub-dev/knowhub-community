@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const { token, user: userData } = response.data;
     setAuthCookie(token);
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    localStorage.setItem('auth_token', token);
     setUser(userData);
   };
 
@@ -64,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const { token, user: userData } = response.data;
     setAuthCookie(token);
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    localStorage.setItem('auth_token', token);
     setUser(userData);
   };
 
