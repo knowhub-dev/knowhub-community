@@ -144,13 +144,15 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
-  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse] = await Promise.all([
-    fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
-    fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
-    fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
-    fetchEndpoint<unknown>('/dashboard/trending', authToken),
-    fetchEndpoint<unknown>('/dashboard/analytics', authToken),
-  ]);
+  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse, contributionResponse] =
+    await Promise.all([
+      fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
+      fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
+      fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
+      fetchEndpoint<unknown>('/dashboard/trending', authToken),
+      fetchEndpoint<unknown>('/dashboard/analytics', authToken),
+      fetchEndpoint<DashboardActivity | { contributions?: ContributionPoint[] }>('/dashboard/contributions', authToken),
+    ]);
 
   const profile = (profileResponse as { profile?: DashboardProfile } | null)?.profile ?? (profileResponse as DashboardProfile | null);
   const badges = normalizeArray<DashboardBadge>(profile?.badges);
@@ -170,11 +172,17 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const baseActivity = normalizeActivity(activityResponse);
   const trendingActivity = normalizeActivity(trendingResponse);
   const analyticsActivity = normalizeActivity((analyticsResponse as { activity?: unknown } | null)?.activity ?? analyticsResponse);
+  const contributionHistory = normalizeArray<ContributionPoint>(
+    (contributionResponse as { contributions?: unknown } | null)?.contributions ?? contributionResponse,
+  );
 
   const mergedActivity: DashboardActivity = {
     feed: baseActivity.feed ?? trendingActivity.feed ?? analyticsActivity.feed,
     highlights: baseActivity.highlights ?? trendingActivity.highlights ?? analyticsActivity.highlights,
-    contributions: baseActivity.contributions ?? trendingActivity.contributions ?? analyticsActivity.contributions,
+    contributions:
+      contributionHistory.length > 0
+        ? contributionHistory
+        : baseActivity.contributions ?? trendingActivity.contributions ?? analyticsActivity.contributions,
   };
 
   const baseStats = normalizeStats(statsResponse);
