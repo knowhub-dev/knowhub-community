@@ -21,8 +21,10 @@ interface GamificationStatsProps {
 }
 
 export function GamificationStats({ xp, xpTarget, levelLabel, badges }: GamificationStatsProps) {
-  const progress = xpTarget > 0 ? Math.min(100, Math.round((xp / xpTarget) * 100)) : 0;
-  const remaining = Math.max(0, xpTarget - xp);
+  const safeXp = xp ?? 0;
+  const safeXpTarget = xpTarget ?? 0;
+  const progress = safeXpTarget > 0 ? Math.min(100, Math.round((safeXp / safeXpTarget) * 100)) : 0;
+  const remaining = Math.max(0, safeXpTarget - safeXp);
 
   return (
     <aside className="space-y-4 lg:sticky lg:top-4">
@@ -31,7 +33,7 @@ export function GamificationStats({ xp, xpTarget, levelLabel, badges }: Gamifica
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">XP Progress</p>
             <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">{levelLabel}</h3>
-            <p className="text-sm text-muted-foreground">{xp.toLocaleString()} / {xpTarget.toLocaleString()} XP</p>
+            <p className="text-sm text-muted-foreground">{safeXp.toLocaleString()} / {safeXpTarget.toLocaleString()} XP</p>
           </div>
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/80 to-[hsl(var(--accent-pink))]/80 text-white shadow-neon">
             <Zap className="h-5 w-5" />

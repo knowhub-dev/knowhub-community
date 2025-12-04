@@ -42,7 +42,9 @@ const generateGradientFromUsername = (username: string) => {
 
 export function ProfileHeader({ user, xpTarget, xpProgress, isCurrentUser }: ProfileHeaderProps) {
   const levelLabel = user.level?.name ?? `Level ${user.level?.id ?? 1}`;
-  const xpDisplay = `${user.xp.toLocaleString()} / ${xpTarget.toLocaleString()} XP`;
+  const xpValue = user.xp ?? 0;
+  const safeXpTarget = xpTarget ?? 0;
+  const xpDisplay = `${xpValue.toLocaleString()} / ${safeXpTarget.toLocaleString()} XP`;
   const ringGradient = `conic-gradient(from 180deg, var(--ring-start) ${xpProgress}%, rgba(255,255,255,0.14) ${xpProgress}% 100%)`;
   const isPro = isProUser(user);
   const nameGradient = isPro
