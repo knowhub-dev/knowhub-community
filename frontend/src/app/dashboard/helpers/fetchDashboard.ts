@@ -52,6 +52,13 @@ export type ContributionPoint = {
   value: number;
 };
 
+export type DashboardMission = {
+  title?: string;
+  status?: 'done' | 'in-progress' | 'pending';
+  completion?: number;
+  reward?: string;
+};
+
 export type DashboardActivity = {
   feed?: DashboardActivityItem[];
   highlights?: string[];
@@ -75,6 +82,7 @@ export type DashboardData = {
   stats: DashboardStats | null;
   badges: DashboardBadge[];
   xp: DashboardXp | null;
+  missions: DashboardMission[];
 };
 
 function buildUrl(path: string) {
@@ -104,6 +112,27 @@ function normalizeActivity(value: unknown): Partial<DashboardActivity> {
     highlights: highlights.length ? highlights : undefined,
     contributions: contributions.length ? contributions : undefined,
   };
+}
+
+function normalizeMissions(value: unknown): DashboardMission[] {
+  const missions = normalizeArray<DashboardMission>((value as { missions?: unknown })?.missions ?? value);
+
+  return missions
+    .map(mission => {
+      if (!mission.title) return null;
+      const completionValue =
+        mission.completion ??
+        (mission.status === 'done' ? 100 : mission.status === 'in-progress' ? 50 : 0);
+      const completion = Math.max(0, Math.min(100, Math.round(completionValue)));
+
+      return {
+        title: mission.title,
+        status: mission.status ?? 'pending',
+        completion,
+        reward: mission.reward,
+      } satisfies DashboardMission;
+    })
+    .filter((mission): mission is DashboardMission => Boolean(mission?.title));
 }
 
 function normalizeStats(value: unknown): Partial<DashboardStats> {
@@ -192,11 +221,19 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     ? { ...baseStats, ...analyticsStats }
     : null;
 
+  const missionsFromApi = normalizeMissions(missionsResponse);
+  const missionHighlights = (mergedActivity.highlights ?? []).map(text => ({
+    title: text,
+    status: 'in-progress' as const,
+  } satisfies DashboardMission));
+  const missions = missionsFromApi.length ? missionsFromApi : missionHighlights;
+
   return {
     profile: profile ?? null,
     activity: mergedActivity.feed || mergedActivity.highlights || mergedActivity.contributions ? mergedActivity : null,
     stats,
     badges,
     xp,
+    missions,
   };
 }

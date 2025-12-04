@@ -2,13 +2,13 @@ import { DailyMissions } from '../sections/DailyMissions';
 import { ProfileCard } from '../sections/ProfileCard';
 import { QuickActions } from '../sections/QuickActions';
 import { XPProgress } from '../sections/XPProgress';
-import type { DashboardBadge, DashboardProfile, DashboardXp } from '@/app/dashboard/helpers/fetchDashboard';
+import type { DashboardBadge, DashboardMission, DashboardProfile, DashboardXp } from '@/app/dashboard/helpers/fetchDashboard';
 
 export type LeftSidebarProps = {
   profile: DashboardProfile | null;
   xp: DashboardXp | null;
   badges: DashboardBadge[];
-  missions?: Array<{ title: string; status: 'done' | 'in-progress' | 'pending'; reward?: string }>;
+  missions?: DashboardMission[];
   className?: string;
 };
 
