@@ -92,6 +92,7 @@ export type DashboardData = {
   badges: DashboardBadge[];
   xp: DashboardXp | null;
   miniServers: DashboardMiniServer[];
+  missions: DashboardMission[];
 };
 
 function buildUrl(path: string) {
@@ -216,15 +217,25 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
-  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse, miniServersResponse] =
-    await Promise.all([
-      fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
-      fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
-      fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
-      fetchEndpoint<unknown>('/dashboard/trending', authToken),
-      fetchEndpoint<unknown>('/dashboard/analytics', authToken),
-      fetchEndpoint<MiniServerLike[]>('/containers', authToken),
-    ]);
+  const [
+    profileResponse,
+    activityResponse,
+    statsResponse,
+    trendingResponse,
+    analyticsResponse,
+    miniServersResponse,
+    contributionResponse,
+    missionsResponse,
+  ] = await Promise.all([
+    fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
+    fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
+    fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
+    fetchEndpoint<unknown>('/dashboard/trending', authToken),
+    fetchEndpoint<unknown>('/dashboard/analytics', authToken),
+    fetchEndpoint<MiniServerLike[]>('/containers', authToken),
+    fetchEndpoint<DashboardActivity | { contributions?: ContributionPoint[] }>('/dashboard/contributions', authToken),
+    fetchEndpoint<DashboardMission[] | { missions?: DashboardMission[] }>('/dashboard/missions', authToken),
+  ]);
 
   const profile = (profileResponse as { profile?: DashboardProfile } | null)?.profile ?? (profileResponse as DashboardProfile | null);
   const badges = normalizeArray<DashboardBadge>(profile?.badges);
@@ -278,5 +289,6 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     badges,
     xp,
     miniServers: normalizeMiniServers(miniServersResponse),
+    missions,
   };
 }

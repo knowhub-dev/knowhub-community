@@ -8,7 +8,7 @@ export type LeftSidebarProps = {
   profile: DashboardProfile | null;
   xp: DashboardXp | null;
   badges: DashboardBadge[];
-  missions?: DashboardMission[];
+  missions: DashboardMission[];
   className?: string;
 };
 
