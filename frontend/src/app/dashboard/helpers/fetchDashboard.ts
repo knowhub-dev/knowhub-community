@@ -76,13 +76,22 @@ export type DashboardStats = {
   impact_score?: number;
 };
 
+export type DashboardMiniServer = {
+  id?: string | number;
+  name: string;
+  status?: 'online' | 'offline' | 'maintenance';
+  uptime?: number;
+  latency_ms?: number;
+  region?: string;
+};
+
 export type DashboardData = {
   profile: DashboardProfile | null;
   activity: DashboardActivity | null;
   stats: DashboardStats | null;
   badges: DashboardBadge[];
   xp: DashboardXp | null;
-  missions: DashboardMission[];
+  miniServers: DashboardMiniServer[];
 };
 
 function buildUrl(path: string) {
@@ -141,6 +150,40 @@ function normalizeStats(value: unknown): Partial<DashboardStats> {
   return Object.fromEntries(Object.entries(stats).filter(([, v]) => v !== undefined && v !== null)) as Partial<DashboardStats>;
 }
 
+type MiniServerLike = {
+  id?: string | number;
+  container_id?: string | number | null;
+  uuid?: string | number;
+  name?: string;
+  subdomain?: string | null;
+  status?: string;
+  type?: string;
+  region?: string;
+  uptime?: number;
+  latency_ms?: number;
+};
+
+function normalizeMiniServers(value: unknown): DashboardMiniServer[] {
+  const items = normalizeArray<MiniServerLike>(value);
+
+  const mapStatus = (status?: string): DashboardMiniServer['status'] => {
+    if (status === 'running') return 'online';
+    if (status === 'created') return 'maintenance';
+    return 'offline';
+  };
+
+  return items
+    .map(item => ({
+      id: item.id ?? item.container_id ?? item.uuid ?? undefined,
+      name: item.name ?? item.subdomain ?? 'Mini server',
+      status: mapStatus(item.status),
+      uptime: typeof item.uptime === 'number' ? Math.round(item.uptime) : undefined,
+      latency_ms: typeof item.latency_ms === 'number' ? Math.round(item.latency_ms) : undefined,
+      region: item.region ?? item.type ?? 'edge',
+    }))
+    .filter(server => Boolean(server.name));
+}
+
 async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null> {
   const headers: HeadersInit = token
     ? {
@@ -173,14 +216,14 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
-  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse, contributionResponse] =
+  const [profileResponse, activityResponse, statsResponse, trendingResponse, analyticsResponse, miniServersResponse] =
     await Promise.all([
       fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
       fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
       fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
       fetchEndpoint<unknown>('/dashboard/trending', authToken),
       fetchEndpoint<unknown>('/dashboard/analytics', authToken),
-      fetchEndpoint<DashboardActivity | { contributions?: ContributionPoint[] }>('/dashboard/contributions', authToken),
+      fetchEndpoint<MiniServerLike[]>('/containers', authToken),
     ]);
 
   const profile = (profileResponse as { profile?: DashboardProfile } | null)?.profile ?? (profileResponse as DashboardProfile | null);
@@ -234,6 +277,6 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     stats,
     badges,
     xp,
-    missions,
+    miniServers: normalizeMiniServers(miniServersResponse),
   };
 }
