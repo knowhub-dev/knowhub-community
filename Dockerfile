@@ -10,7 +10,12 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
-    supervisor
+    supervisor \
+    gnupg
+
+# Install Node.js for building and running the frontend
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get update && apt-get install -y nodejs
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -35,6 +40,13 @@ COPY --chown=www-data:www-data . /var/www/html
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Build the Next.js frontend
+WORKDIR /var/www/html/frontend
+RUN npm ci --omit=dev && npm run build
+
+# Restore working directory for PHP commands
+WORKDIR /var/www/html
 
 # Generate application key
 RUN php artisan key:generate
@@ -62,8 +74,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy nginx configuration
 COPY nginx-site.conf /etc/nginx/sites-available/default
 
-# Expose port 8000
-EXPOSE 8000
+# Expose PHP-FPM and Next.js ports
+EXPOSE 8000 3000
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
