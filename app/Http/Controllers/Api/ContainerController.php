@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
+use App\Rules\ReservedSubdomain;
 use App\Services\Docker\ContainerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ use Illuminate\Support\Str;
 use App\Support\Settings;
 use RuntimeException;
 use Throwable;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContainerController extends Controller
@@ -72,6 +74,8 @@ class ContainerController extends Controller
 
         $payload['subdomain'] = $this->sanitizeSubdomain($payload['subdomain'] ?? '')
             ?: $this->generateSubdomainFromName($payload['name']);
+
+        $this->validateSubdomain($payload['subdomain']);
 
         $container = new Container($payload);
         $container->user_id = $user->id;
@@ -322,10 +326,16 @@ class ContainerController extends Controller
             return null;
         }
 
+        $minLength = (int) config('containers.subdomain_min_length', 3);
+
+        if (strlen($base) < $minLength) {
+            $base .= Str::lower(Str::random($minLength - strlen($base)));
+        }
+
         $candidate = $base;
         $suffix = 1;
 
-        while (Container::where('subdomain', $candidate)->exists()) {
+        while (!$this->isValidSubdomain($candidate) || Container::where('subdomain', $candidate)->exists()) {
             $candidate = $base . '-' . (++$suffix);
         }
 
@@ -378,5 +388,37 @@ class ContainerController extends Controller
         $normalized = trim($normalized, '-');
 
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function validateSubdomain(?string $subdomain): void
+    {
+        Validator::make(
+            ['subdomain' => $subdomain],
+            ['subdomain' => $this->subdomainRules()],
+        )->validate();
+    }
+
+    private function isValidSubdomain(?string $subdomain): bool
+    {
+        return Validator::make(
+            ['subdomain' => $subdomain],
+            ['subdomain' => $this->subdomainRules()],
+        )->passes();
+    }
+
+    private function subdomainRules(): array
+    {
+        $minSubdomainLength = (int) config('containers.subdomain_min_length', 3);
+        $maxSubdomainLength = (int) config('containers.subdomain_max_length', 30);
+
+        return array_filter([
+            'required',
+            'string',
+            'min:' . $minSubdomainLength,
+            'max:' . $maxSubdomainLength,
+            'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+            new ReservedSubdomain(),
+            Rule::unique('containers', 'subdomain'),
+        ]);
     }
 }

@@ -4,7 +4,7 @@ import { DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ExternalLink, GitBranch, RefreshCw, Settings, Trash2, UploadCloud, Play, Square } from 'lucide-react';
+import { ArrowLeft, ExternalLink, GitBranch, RefreshCw, Settings, UploadCloud, Play, Square } from 'lucide-react';
 
 import { containerFileService } from '@/lib/services/containerFiles';
 import { containerService, getContainerStats } from '@/lib/services/containers';
@@ -66,17 +66,18 @@ export default function ContainerDashboardPage() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (files: File[]) => containerFileService.uploadStaticFiles(containerId, files),
+    mutationFn: async (files: File[]) => {
+      await Promise.all(
+        files.map(async (file) => {
+          const content = await file.text();
+          await containerFileService.saveFile(containerId, file.name, content, 'write');
+        }),
+      );
+    },
     onSuccess: () => {
       setUploadMessage('Fayllar muvaffaqiyatli yuklandi.');
     },
     onError: () => setUploadMessage('Fayllarni yuklashda muammo yuz berdi.'),
-  });
-
-  const resetFilesMutation = useMutation({
-    mutationFn: () => containerFileService.resetFiles(containerId),
-    onSuccess: () => setUploadMessage('Yuklangan fayllar tozalandi.'),
-    onError: () => setUploadMessage('Fayllarni o‘chirishda xatolik yuz berdi.'),
   });
 
   const stopMutation = useMutation({
@@ -263,14 +264,6 @@ export default function ContainerDashboardPage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <UploadCloud className="mr-2 h-4 w-4" /> Fayl tanlang
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => resetFilesMutation.mutate()}
-                    isLoading={resetFilesMutation.isLoading}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Reset files
                   </Button>
                 </div>
                 {uploadMessage && <p className="text-xs text-foreground">{uploadMessage}</p>}
