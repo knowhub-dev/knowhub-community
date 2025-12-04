@@ -5,56 +5,30 @@ const BASE_URL = '/api/v1/containers';
 
 export const listFiles = async (containerId: number, path = ''): Promise<ContainerFileEntry[]> => {
   const response = await api.get(`${BASE_URL}/${containerId}/files`, { params: { path } });
-  return response.data;
+  return response.data?.data ?? [];
 };
 
-export const getFileContent = async (containerId: number, path: string): Promise<{ path: string; content: string }> => {
-  const response = await api.get(`${BASE_URL}/${containerId}/files/show`, { params: { path } });
-  return response.data;
+export const getFileContent = async (containerId: number, path: string): Promise<{ path: string; content: string | null }> => {
+  const response = await api.get(`${BASE_URL}/${containerId}/files/content`, { params: { path } });
+  return { path, content: response.data?.data?.content ?? null };
 };
 
-export const uploadFile = async (containerId: number, path: string, file: File): Promise<void> => {
-  const formData = new FormData();
-  formData.append('path', path);
-  formData.append('file', file);
-  await api.post(`${BASE_URL}/${containerId}/files`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const saveFile = async (
+  containerId: number,
+  path: string,
+  content: string,
+  operation: 'write' | 'append' = 'write',
+): Promise<void> => {
+  await api.patch(`${BASE_URL}/${containerId}/files/content`, { path, content, operation });
 };
 
-export const uploadStaticFiles = async (containerId: number, files: File[]): Promise<void> => {
-  const formData = new FormData();
-
-  files.forEach((file) => {
-    formData.append('files[]', file);
-  });
-
-  await api.post(`${BASE_URL}/${containerId}/files/upload`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-};
-
-export const resetFiles = async (containerId: number): Promise<void> => {
-  await api.delete(`${BASE_URL}/${containerId}/files/reset`);
-};
-
-export const createFolder = async (containerId: number, path: string, folderName: string): Promise<void> => {
-  const formData = new FormData();
-  formData.append('path', path);
-  formData.append('folder', folderName);
-  await api.post(`${BASE_URL}/${containerId}/files`, formData);
-};
-
-export const saveFile = async (containerId: number, path: string, content: string): Promise<void> => {
-  await api.put(`${BASE_URL}/${containerId}/files`, { path, content });
+export const deleteFile = async (containerId: number, path: string): Promise<void> => {
+  await api.delete(`${BASE_URL}/${containerId}/files`, { params: { path } });
 };
 
 export const containerFileService = {
   listFiles,
   getFileContent,
-  uploadFile,
-  createFolder,
   saveFile,
-  uploadStaticFiles,
-  resetFiles,
+  deleteFile,
 };
