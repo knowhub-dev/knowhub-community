@@ -122,7 +122,7 @@ function resolveNextPage(meta: PaginationMeta, posts: DashboardPost[]): number |
 }
 
 async function fetchDashboardPosts(pageParam = 1): Promise<PostPage> {
-  const response = await api.get('/dashboard/posts', { params: { page: pageParam } });
+  const response = await api.get('/posts', { params: { page: pageParam } });
   const payload = (response.data ?? {}) as PaginatedPostsResponse | DashboardPost[];
   const posts = extractPosts(payload);
   const meta = normalizeMeta(payload, pageParam);
