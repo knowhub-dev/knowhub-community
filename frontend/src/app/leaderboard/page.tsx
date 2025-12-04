@@ -12,9 +12,13 @@ async function getLeaderboard(params: { period?: string; type?: string }) {
   const searchParams = new URLSearchParams();
   if (params.period) searchParams.append('period', params.period);
   if (params.type) searchParams.append('type', params.type);
-  
-  const res = await api.get(`/users/leaderboard?${searchParams.toString()}`);
-  return res.data;
+
+  try {
+    const res = await api.get(`/users/leaderboard?${searchParams.toString()}`);
+    return Array.isArray(res.data) ? (res.data as User[]) : [];
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Leaderboardni yuklab bo\'lmadi');
+  }
 }
 
 export default function LeaderboardPage() {
@@ -23,9 +27,10 @@ export default function LeaderboardPage() {
     type: 'xp'
   });
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery<User[], Error>({
     queryKey: ['leaderboard', filters],
     queryFn: () => getLeaderboard(filters),
+    retry: false,
   });
 
   const handleFilterChange = (key: string, value: string) => {
@@ -72,6 +77,18 @@ export default function LeaderboardPage() {
   };
 
   if (isLoading) return <LoadingSpinner />;
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Reytingni yuklashda xatolik</h3>
+          <p className="text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -124,7 +141,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Top 3 Podium */}
-      {users && users.length >= 3 && (
+      {users.length >= 3 && (
         <div className="mb-8">
           <div className="flex items-end justify-center space-x-4">
             {/* 2nd Place */}
