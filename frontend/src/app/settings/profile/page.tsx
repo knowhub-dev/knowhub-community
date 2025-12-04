@@ -105,33 +105,40 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Profilni tahrirlash</h1>
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <h1 className="mb-8 text-3xl font-bold text-foreground">Profilni tahrirlash</h1>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-8 rounded-2xl border border-border bg-[hsl(var(--card))] p-8 shadow-sm"
+      >
         {/* Asosiy ma'lumotlar */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Asosiy ma'lumotlar</h2>
+          <h2 className="mb-4 text-xl font-semibold text-foreground">Asosiy ma'lumotlar</h2>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Ism</label>
+              <label htmlFor="name" className="block text-sm font-medium text-foreground">
+                Ism
+              </label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
               />
             </div>
             <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700">Bio</label>
+              <label htmlFor="bio" className="block text-sm font-medium text-foreground">
+                Bio
+              </label>
               <textarea
                 id="bio"
                 name="bio"
                 rows={4}
                 value={formData.bio}
                 onChange={handleChange}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
                 placeholder="O'zingiz haqingizda qisqacha..."
               />
             </div>
@@ -140,12 +147,14 @@ export default function ProfileSettingsPage() {
 
         {/* Ijtimoiy havolalar */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Ijtimoiy havolalar</h2>
+          <h2 className="mb-4 text-xl font-semibold text-foreground">Ijtimoiy havolalar</h2>
           <div className="space-y-4">
             <div className="relative">
-              <label htmlFor="website_url" className="block text-sm font-medium text-gray-700">Veb-sayt</label>
+              <label htmlFor="website_url" className="block text-sm font-medium text-foreground">
+                Veb-sayt
+              </label>
               <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
-                <Globe className="h-5 w-5 text-gray-400" />
+                <Globe className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 type="url"
@@ -153,14 +162,16 @@ export default function ProfileSettingsPage() {
                 name="website_url"
                 value={formData.website_url}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 pl-10 text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
                 placeholder="https://example.com"
               />
             </div>
             <div className="relative">
-              <label htmlFor="github_url" className="block text-sm font-medium text-gray-700">GitHub</label>
-               <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
-                <Github className="h-5 w-5 text-gray-400" />
+              <label htmlFor="github_url" className="block text-sm font-medium text-foreground">
+                GitHub
+              </label>
+              <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
+                <Github className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 type="url"
@@ -168,14 +179,16 @@ export default function ProfileSettingsPage() {
                 name="github_url"
                 value={formData.github_url}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 pl-10 text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
                 placeholder="https://github.com/username"
               />
             </div>
             <div className="relative">
-              <label htmlFor="linkedin_url" className="block text-sm font-medium text-gray-700">LinkedIn</label>
+              <label htmlFor="linkedin_url" className="block text-sm font-medium text-foreground">
+                LinkedIn
+              </label>
               <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
-                <Linkedin className="h-5 w-5 text-gray-400" />
+                <Linkedin className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 type="url"
@@ -183,7 +196,7 @@ export default function ProfileSettingsPage() {
                 name="linkedin_url"
                 value={formData.linkedin_url}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 pl-10 text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
                 placeholder="https://linkedin.com/in/username"
               />
             </div>
@@ -192,8 +205,8 @@ export default function ProfileSettingsPage() {
 
         {/* Rezyume */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Rezyume</h2>
-          <p className="text-sm text-gray-600 mb-2">
+          <h2 className="mb-4 text-xl font-semibold text-foreground">Rezyume</h2>
+          <p className="mb-2 text-sm text-muted-foreground">
             Bu yerga rezyumeingizni Markdown formatida joylashtirishingiz mumkin. Profilingizda u chiroyli formatda ko'rinadi va PDF shaklida yuklab olish mumkin bo'ladi.
           </p>
           <textarea
@@ -202,21 +215,21 @@ export default function ProfileSettingsPage() {
             rows={15}
             value={formData.resume}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+            className="mt-1 block w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 font-mono text-sm text-[hsl(var(--foreground))] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
             placeholder="## Ish tajribasi..."
           />
         </div>
 
         {/* Saqlash tugmasi */}
-        <div className="flex justify-end pt-4 border-t border-gray-200">
+        <div className="flex justify-end border-t border-border pt-4">
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center rounded-lg bg-[hsl(var(--primary))] px-6 py-3 text-[hsl(var(--primary-foreground))] transition-colors hover:bg-[hsl(var(--primary))/90] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {mutation.isPending ? (
               <>
-                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[hsl(var(--primary-foreground))] border-t-transparent" />
                 Saqlanmoqda...
               </>
             ) : (
