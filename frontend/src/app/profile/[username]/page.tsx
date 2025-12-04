@@ -57,10 +57,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     }
 
     if (!res.ok) {
-      return buildMetadata({ title: 'Profil topilmadi', description: 'Profil mavjud emas.' });
+      return buildMetadata({ title: username, description: 'Profil mavjud emas.' });
     }
 
-    const user: UserProfile = await res.json();
+    const user: UserProfile | null = await res.json().catch(() => null);
+    if (!user) {
+      return buildMetadata({ title: username, description: 'Profilni ko‘rsatib bo‘lmadi.' });
+    }
     const description = user.bio || `${user.name} — KnowHub hamjamiyatining a'zosi.`;
 
     return buildMetadata({
@@ -74,6 +77,23 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     return buildMetadata({ title: username, description: 'Profilni ko‘rsatib bo‘lmadi.' });
   }
 }
+
+const buildFallbackUser = (username: string): UserProfile => ({
+  id: 0,
+  name: username,
+  username,
+  xp: 0,
+  bio: '',
+  badges: [],
+  posts: [],
+  containers: [],
+  socials: {},
+  tech_stack: [],
+  level: { id: 1, name: 'Level 1', min_xp: 0, max_xp: 5000, current: 0 },
+  plan_type: null,
+  is_pro: false,
+  is_current_user: false,
+});
 
 export default async function ProfilePage({ params }: { params: Promise<Params> }) {
   const { username } = await params;
@@ -92,51 +112,52 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     if (!res.ok) {
       errorMessage = "Profilni yuklab bo'lmadi. Birozdan so'ng urinib ko'ring.";
     } else {
-      user = await res.json();
+      try {
+        user = await res.json();
+      } catch (parseError) {
+        console.error('Profil JSON ni o\'qishda xato:', parseError);
+        errorMessage = "Profil ma'lumotlarini olishda xatolik yuz berdi.";
+      }
     }
   } catch (error) {
     console.error('Profilni olishda xato:', error);
     errorMessage = "Profilni yuklashda xizmat bilan bog'lanib bo'lmadi.";
   }
 
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-[hsl(var(--foreground))]">{username} profili vaqtincha mavjud emas</p>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {errorMessage ?? "Noma'lum xatolik yuz berdi. Keyinroq qayta urinib ko'ring."}
-        </p>
-        <a
-          href="/"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] hover:brightness-110"
-        >
-          Bosh sahifaga qaytish
-        </a>
-      </div>
-    );
-  }
+  const fallbackUser = buildFallbackUser(username);
+  const safeUser = user ?? fallbackUser;
+  const showErrorState = !user;
 
   const xpTarget = Math.max(
-    user.level?.max_xp ?? (user.level?.min_xp ?? 0) + 5000,
-    user.xp,
+    safeUser.level?.max_xp ?? (safeUser.level?.min_xp ?? 0) + 5000,
+    safeUser.xp,
   );
-  const xpProgress = xpTarget > 0 ? Math.min(100, (user.xp / xpTarget) * 100) : 0;
-  const levelLabel = user.level?.name ?? `Level ${user.level?.id ?? 1}`;
-  const isCurrentUser = Boolean(user.is_current_user);
-  const isPro = isProUser(user);
+  const xpProgress = xpTarget > 0 ? Math.min(100, (safeUser.xp / xpTarget) * 100) : 0;
+  const levelLabel = safeUser.level?.name ?? `Level ${safeUser.level?.id ?? 1}`;
+  const isCurrentUser = Boolean(safeUser.is_current_user);
+  const isPro = isProUser(safeUser);
 
   const profileJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: user.name,
-    url: buildCanonicalUrl(`/profile/${user.username}`),
-    description: user.bio,
+    name: safeUser.name,
+    url: buildCanonicalUrl(`/profile/${safeUser.username}`),
+    description: safeUser.bio,
   };
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
+      {showErrorState && (
+        <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 text-sm text-amber-900 shadow-sm">
+          <p className="font-semibold">{username} profili vaqtincha mavjud emas</p>
+          <p className="mt-1 text-amber-900/80">
+            {errorMessage ?? "Noma'lum xatolik yuz berdi. Keyinroq qayta urinib ko'ring."}
+          </p>
+        </div>
+      )}
+
       <ProfileHeader
-        user={user}
+        user={safeUser}
         xpTarget={xpTarget}
         xpProgress={xpProgress}
         isCurrentUser={isCurrentUser}
@@ -187,11 +208,11 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
         >
           <ProfileOverview
-            xp={user.xp}
+            xp={safeUser.xp}
             xpTarget={xpTarget}
             levelLabel={levelLabel}
-            badges={user.badges}
-            username={user.username}
+            badges={safeUser.badges}
+            username={safeUser.username}
           />
         </TabsContent>
 
@@ -199,14 +220,14 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           value="projects"
           className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
         >
-          <ProfileProjects containers={user.containers} />
+          <ProfileProjects containers={safeUser.containers} />
         </TabsContent>
 
         <TabsContent
           value="posts"
           className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
         >
-          <ProfilePosts posts={user.posts} username={user.username} />
+          <ProfilePosts posts={safeUser.posts} username={safeUser.username} />
         </TabsContent>
 
         <TabsContent
@@ -214,10 +235,10 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
         >
           <ProfileAbout
-            bio={user.bio}
-            socials={user.socials}
-            techStack={user.tech_stack}
-            username={user.username}
+            bio={safeUser.bio}
+            socials={safeUser.socials}
+            techStack={safeUser.tech_stack}
+            username={safeUser.username}
           />
         </TabsContent>
 
@@ -271,14 +292,14 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         </div>
         <div className="mt-4">
           <SolveraChatCard
-            context={{ surface: 'profile', username: user.username }}
+            context={{ surface: 'profile', username: safeUser.username }}
             title="Yordam so'rang"
             subtitle="Bio va postlaringizni SolVera tavsiyalari bilan jilolang"
           />
         </div>
       </div>
 
-      <Script id={`profile-jsonld-${user.id}`} type="application/ld+json">
+      <Script id={`profile-jsonld-${safeUser.id}`} type="application/ld+json">
         {JSON.stringify(profileJsonLd)}
       </Script>
     </div>
