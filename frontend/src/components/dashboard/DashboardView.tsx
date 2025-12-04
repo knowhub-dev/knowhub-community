@@ -58,7 +58,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
             missions={data.activity?.highlights?.map(text => ({ title: text, status: 'in-progress' as const }))}
           />
           <MainContent activity={data.activity} />
-          <RightSidebar stats={data.stats} badges={data.badges} />
+          <RightSidebar stats={data.stats} badges={data.badges} miniServers={data.miniServers} />
         </div>
       </div>
     </div>
