@@ -25,11 +25,17 @@ class Container extends Model
         'user_id',
         'name',
         'slug',
+        'uuid',
+        'container_id',
+        'subdomain',
         'image',
         'type',
         'status',
         'cpu_limit',
-        'ram_limit_mb',
+        'memory_limit',
+        'disk_limit',
+        'port',
+        'env_vars',
         'restart_policy',
         'internal_port',
         'public_port',
@@ -37,9 +43,12 @@ class Container extends Model
 
     protected $casts = [
         'cpu_limit' => 'integer',
-        'ram_limit_mb' => 'integer',
+        'memory_limit' => 'integer',
+        'disk_limit' => 'integer',
+        'port' => 'integer',
         'internal_port' => 'integer',
         'public_port' => 'integer',
+        'env_vars' => 'array',
     ];
 
     protected static function booted(): void

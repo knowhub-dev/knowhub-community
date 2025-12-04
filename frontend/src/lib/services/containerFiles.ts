@@ -22,6 +22,22 @@ export const uploadFile = async (containerId: number, path: string, file: File):
   });
 };
 
+export const uploadStaticFiles = async (containerId: number, files: File[]): Promise<void> => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append('files[]', file);
+  });
+
+  await api.post(`${BASE_URL}/${containerId}/files/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+export const resetFiles = async (containerId: number): Promise<void> => {
+  await api.delete(`${BASE_URL}/${containerId}/files/reset`);
+};
+
 export const createFolder = async (containerId: number, path: string, folderName: string): Promise<void> => {
   const formData = new FormData();
   formData.append('path', path);
@@ -39,4 +55,6 @@ export const containerFileService = {
   uploadFile,
   createFolder,
   saveFile,
+  uploadStaticFiles,
+  resetFiles,
 };

@@ -16,6 +16,12 @@ class StoreContainerRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->has('name') && $this->input('name') !== null) {
+            $this->merge([
+                'name' => $this->sanitizeName($this->input('name')),
+            ]);
+        }
+
         if ($this->has('subdomain') && $this->input('subdomain') !== null) {
             $this->merge([
                 'subdomain' => $this->sanitizeSubdomain($this->input('subdomain')),
@@ -31,8 +37,10 @@ class StoreContainerRequest extends FormRequest
         $minSubdomainLength = (int) config('containers.subdomain_min_length', 3);
         $maxSubdomainLength = (int) config('containers.subdomain_max_length', 30);
 
+        $allowedImages = array_values($templateImages ?: config('containers.allowed_images', []));
+
         return [
-            'name' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9][A-Za-z0-9-_]*$/'],
+            'name' => ['required', 'string', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'subdomain' => array_filter([
                 'nullable',
                 'string',
@@ -42,10 +50,11 @@ class StoreContainerRequest extends FormRequest
                 new ReservedSubdomain(),
                 Rule::unique('containers', 'subdomain'),
             ]),
-            'type' => ['required', 'string', Rule::in(array_keys($templateImages))],
-            'cpu_limit' => ['required', 'integer', 'min:1', 'max:4'],
-            'memory_limit' => ['required', 'integer', 'min:128', 'max:2048'],
-            'disk_limit' => ['required', 'integer', 'min:1024', 'max:10240'],
+            'type' => ['nullable', 'string', Rule::in(array_keys($templateImages))],
+            'image' => ['nullable', 'string', Rule::in($allowedImages)],
+            'cpu_limit' => ['nullable', 'integer', 'min:1', 'max:4'],
+            'memory_limit' => ['nullable', 'integer', 'min:128', 'max:2048'],
+            'disk_limit' => ['nullable', 'integer', 'min:256', 'max:10240'],
             'env_vars' => ['nullable', 'array', 'max:' . $maxEnvVars],
             'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
         ];
@@ -87,6 +96,15 @@ class StoreContainerRequest extends FormRequest
     }
 
     private function sanitizeSubdomain(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/[^a-z0-9-]/', '-', $value);
+        $value = preg_replace('/-{2,}/', '-', $value);
+
+        return trim($value, '-');
+    }
+
+    private function sanitizeName(string $value): string
     {
         $value = strtolower(trim($value));
         $value = preg_replace('/[^a-z0-9-]/', '-', $value);

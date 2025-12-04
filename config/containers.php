@@ -5,6 +5,7 @@ return [
         'node' => 'node:18-alpine',
         'python' => 'python:3.12-alpine',
         'html' => 'nginx:alpine',
+        'static' => 'nginx:alpine-slim',
         'php' => 'php:8.2-apache',
     ],
 
@@ -12,6 +13,7 @@ return [
         'node:18-alpine',
         'python:3.12-alpine',
         'nginx:alpine',
+        'nginx:alpine-slim',
         'php:8.2-apache',
     ],
 
