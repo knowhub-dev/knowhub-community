@@ -20,6 +20,14 @@ export const revalidate = 0;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+const DEFAULT_LEVEL: NonNullable<UserProfile['level']> = {
+  id: 1,
+  name: 'Level 1',
+  min_xp: 0,
+  max_xp: 5000,
+  current: 0,
+};
+
 interface Params {
   username: string;
 }
@@ -89,7 +97,7 @@ const buildFallbackUser = (username: string): UserProfile => ({
   containers: [],
   socials: {},
   tech_stack: [],
-  level: { id: 1, name: 'Level 1', min_xp: 0, max_xp: 5000, current: 0 },
+  level: DEFAULT_LEVEL,
   plan_type: null,
   is_pro: false,
   is_current_user: false,
@@ -125,7 +133,23 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   }
 
   const fallbackUser = buildFallbackUser(username);
-  const safeUser = user ?? fallbackUser;
+  const levelDefaults = fallbackUser.level ?? DEFAULT_LEVEL;
+  const safeUser: UserProfile = user
+    ? {
+        ...fallbackUser,
+        ...user,
+        xp: Number.isFinite(Number(user.xp)) ? Number(user.xp) : 0,
+        level: user.level
+          ? {
+              id: user.level.id ?? levelDefaults.id,
+              name: user.level.name ?? levelDefaults.name,
+              min_xp: typeof user.level.min_xp === 'number' ? user.level.min_xp : levelDefaults.min_xp,
+              max_xp: typeof user.level.max_xp === 'number' ? user.level.max_xp : levelDefaults.max_xp,
+              current: typeof user.level.current === 'number' ? user.level.current : levelDefaults.current,
+            }
+          : levelDefaults,
+      }
+    : fallbackUser;
   const showErrorState = !user;
 
   const xpTarget = Math.max(
