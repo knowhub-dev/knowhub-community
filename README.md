@@ -173,7 +173,14 @@ cd frontend
 cp .env.example .env
 npm install
 npm run dev
+# Production build
+npm run build
+# Start built app (binds to port 3000 for Nginx proxy)
+npm run start
 ```
+
+- `npm run build` and `npm run start` **must be executed from the `frontend/` directory** so the Next.js server is listening on port `3000` for Nginx (`proxy_pass http://127.0.0.1:3000;`).
+- You can also start the frontend from the repository root with `npm start`, which shells into `frontend/` and uses the same start script.
 
 ---
 
