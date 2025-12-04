@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Support\Settings;
 use RuntimeException;
@@ -58,16 +59,19 @@ class ContainerController extends Controller
         $validated = $request->validated();
 
         $payload = collect($validated)
-            ->only(['name', 'subdomain', 'type', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars'])
+            ->only(['name', 'subdomain', 'type', 'cpu_limit', 'memory_limit', 'disk_limit', 'env_vars', 'image'])
             ->toArray();
 
         $payload['env_vars'] = $this->normalizeEnvVars($request->input('env_vars', []));
         $payload['uuid'] = (string) Str::uuid();
-        $payload['image'] = $this->resolveTemplateImage($payload['type']);
+        $payload['type'] = $payload['type'] ?? 'static';
+        $payload['image'] = $this->resolveTemplateImage($payload['type'], $payload['image'] ?? null);
+        $payload['cpu_limit'] = $payload['cpu_limit'] ?? 1;
+        $payload['memory_limit'] = $this->normalizeMemoryLimit($payload['memory_limit'] ?? null);
+        $payload['disk_limit'] = $payload['disk_limit'] ?? 1024;
 
-        if (!empty($payload['subdomain'])) {
-            $payload['subdomain'] = $this->sanitizeSubdomain($payload['subdomain']);
-        }
+        $payload['subdomain'] = $this->sanitizeSubdomain($payload['subdomain'] ?? '')
+            ?: $this->generateSubdomainFromName($payload['name']);
 
         $container = new Container($payload);
         $container->user_id = $user->id;
@@ -280,15 +284,52 @@ class ContainerController extends Controller
         ]);
     }
 
-    private function resolveTemplateImage(string $type): string
+    private function resolveTemplateImage(?string $type, ?string $overrideImage = null): string
     {
-        $templates = config('containers.templates', []);
-
-        if (!array_key_exists($type, $templates)) {
-            throw new RuntimeException('Unsupported container template.');
+        if ($overrideImage) {
+            return $overrideImage;
         }
 
-        return (string) $templates[$type];
+        $templates = config('containers.templates', []);
+
+        if ($type && array_key_exists($type, $templates)) {
+            return (string) $templates[$type];
+        }
+
+        return 'nginx:alpine-slim';
+    }
+
+    private function normalizeMemoryLimit($memoryLimit): int
+    {
+        if (is_string($memoryLimit)) {
+            if (preg_match('/(\d+)/', $memoryLimit, $matches)) {
+                $memoryLimit = (int) ($matches[1] ?? 0);
+            }
+        }
+
+        if (is_numeric($memoryLimit)) {
+            return max(128, (int) $memoryLimit);
+        }
+
+        return 128;
+    }
+
+    private function generateSubdomainFromName(string $name): ?string
+    {
+        $base = $this->sanitizeSubdomain($name);
+
+        if ($base === null) {
+            return null;
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+
+        while (Container::where('subdomain', $candidate)->exists()) {
+            $candidate = $base . '-' . (++$suffix);
+        }
+
+        return $candidate;
     }
 
     private function normalizeEnvVars($envVars): array

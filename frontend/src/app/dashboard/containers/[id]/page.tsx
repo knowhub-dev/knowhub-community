@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ExternalLink, RefreshCw, Settings, TerminalSquare } from 'lucide-react';
+import { ArrowLeft, ExternalLink, GitBranch, RefreshCw, Settings, Trash2, UploadCloud, Play, Square } from 'lucide-react';
 
-import { containerService, getContainerLogs, getContainerStats } from '@/lib/services/containers';
+import { containerFileService } from '@/lib/services/containerFiles';
+import { containerService, getContainerStats } from '@/lib/services/containers';
 import { Container, ContainerStats } from '@/types/container';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogViewer } from '@/components/containers/LogViewer';
-import ResourceChart, { ResourcePoint } from '@/components/containers/ResourceChart';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -27,6 +26,7 @@ const initialEnvEntries = (envVars?: Record<string, string> | null): EnvEntry[] 
 };
 
 export default function ContainerDashboardPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const containerId = Number(params?.id);
   const queryClient = useQueryClient();
@@ -37,34 +37,22 @@ export default function ContainerDashboardPage() {
     enabled: Number.isFinite(containerId),
   });
 
-  const { data: stats } = useQuery<ContainerStats>({
+  const { data: stats, isFetching: isFetchingStats } = useQuery<ContainerStats>({
     queryKey: ['container', containerId, 'stats'],
     queryFn: () => getContainerStats(containerId),
     refetchInterval: 5000,
     enabled: Number.isFinite(containerId),
   });
 
-  const { data: logs, refetch: refetchLogs } = useQuery<{ lines: string[] }>({
-    queryKey: ['container', containerId, 'logs'],
-    queryFn: () => getContainerLogs(containerId),
-    refetchInterval: 4000,
-    enabled: Number.isFinite(containerId),
-  });
-
   const [envEntries, setEnvEntries] = useState<EnvEntry[]>(initialEnvEntries(container?.env_vars));
-  const [metrics, setMetrics] = useState<ResourcePoint[]>([]);
+  const [gitUrl, setGitUrl] = useState('');
+  const [gitMessage, setGitMessage] = useState<string | null>(null);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setEnvEntries(initialEnvEntries(container?.env_vars));
   }, [container?.env_vars]);
-
-  useEffect(() => {
-    if (!stats) return;
-    setMetrics((prev) => {
-      const next = [...prev, { timestamp: new Date().toISOString(), value: stats.cpu_usage }];
-      return next.slice(-20);
-    });
-  }, [stats]);
 
   const updateEnvMutation = useMutation({
     mutationFn: () =>
@@ -75,6 +63,38 @@ export default function ContainerDashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries(['container', containerId]);
     },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: (files: File[]) => containerFileService.uploadStaticFiles(containerId, files),
+    onSuccess: () => {
+      setUploadMessage('Fayllar muvaffaqiyatli yuklandi.');
+    },
+    onError: () => setUploadMessage('Fayllarni yuklashda muammo yuz berdi.'),
+  });
+
+  const resetFilesMutation = useMutation({
+    mutationFn: () => containerFileService.resetFiles(containerId),
+    onSuccess: () => setUploadMessage('Yuklangan fayllar tozalandi.'),
+    onError: () => setUploadMessage('Fayllarni o‘chirishda xatolik yuz berdi.'),
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: () => containerService.stopContainer(containerId),
+    onSuccess: () => queryClient.invalidateQueries(['container', containerId]),
+  });
+
+  const restartMutation = useMutation({
+    mutationFn: async () => {
+      await containerService.stopContainer(containerId);
+      return containerService.startContainer(containerId);
+    },
+    onSuccess: () => queryClient.invalidateQueries(['container', containerId]),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => containerService.deleteContainer(containerId),
+    onSuccess: () => router.push('/dashboard'),
   });
 
   const statusBadge = useMemo(() => {
@@ -92,11 +112,25 @@ export default function ContainerDashboardPage() {
     );
   }, [container?.status]);
 
+  const publicDomain = process.env.NEXT_PUBLIC_DOMAIN_SUFFIX ?? process.env.NEXT_PUBLIC_DOMAIN ?? 'knowhub.uz';
+  const domainSuffix = container?.subdomain ? `${container.subdomain}.${publicDomain}` : null;
+
   const handleAddRow = () => setEnvEntries((prev) => [...prev, { key: '', value: '' }]);
   const handleChangeEntry = (index: number, field: keyof EnvEntry, value: string) => {
     setEnvEntries((prev) => prev.map((entry, idx) => (idx === index ? { ...entry, [field]: value } : entry)));
   };
   const handleRemoveEntry = (index: number) => setEnvEntries((prev) => prev.filter((_, idx) => idx !== index));
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploadMessage(null);
+    uploadMutation.mutate(Array.from(files));
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    handleFiles(event.dataTransfer.files);
+  };
 
   if (isLoading || !container) {
     return (
@@ -112,10 +146,6 @@ export default function ContainerDashboardPage() {
     );
   }
 
-  const domainSuffix = container.subdomain
-    ? `${container.subdomain}.${process.env.NEXT_PUBLIC_DOMAIN ?? 'example.com'}`
-    : null;
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -130,13 +160,21 @@ export default function ContainerDashboardPage() {
           <div>
             <p className="text-sm text-muted-foreground">Mini Service</p>
             <h1 className="text-3xl font-bold">{container.name}</h1>
-            {container.subdomain && <p className="text-sm text-muted-foreground">{domainSuffix}</p>}
+            {domainSuffix && (
+              <Link href={`https://${domainSuffix}`} target="_blank" rel="noreferrer" className="text-sm text-primary">
+                https://{domainSuffix}
+              </Link>
+            )}
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={() => queryClient.invalidateQueries(['container', containerId, 'stats'])}>
+            <Button
+              variant="secondary"
+              onClick={() => queryClient.invalidateQueries(['container', containerId, 'stats'])}
+              isLoading={isFetchingStats}
+            >
               <RefreshCw className="h-4 w-4" /> Refresh stats
             </Button>
-            {container.subdomain && (
+            {domainSuffix && (
               <Link href={`https://${domainSuffix}`} target="_blank" rel="noreferrer">
                 <Button variant="default">
                   <ExternalLink className="h-4 w-4" /> Visit site
@@ -150,13 +188,10 @@ export default function ContainerDashboardPage() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-white/10 backdrop-blur border border-white/10">
           <TabsTrigger value="overview" className="gap-2">
-            <Settings className="h-4 w-4" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="terminal" className="gap-2">
-            <TerminalSquare className="h-4 w-4" /> Terminal
+            <Settings className="h-4 w-4" /> Overview (Boshqaruv)
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
-            <Settings className="h-4 w-4" /> Settings
+            <Settings className="h-4 w-4" /> Sozlamalar
           </TabsTrigger>
         </TabsList>
 
@@ -164,7 +199,7 @@ export default function ContainerDashboardPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg backdrop-blur">
               <p className="text-sm text-muted-foreground">Status</p>
-              <div className="mt-2 text-lg font-semibold">{container.status}</div>
+              <div className="mt-2 text-lg font-semibold capitalize">{container.status}</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg backdrop-blur">
               <p className="text-sm text-muted-foreground">CPU</p>
@@ -176,27 +211,103 @@ export default function ContainerDashboardPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <ResourceChart title="CPU Usage" data={metrics} unit="%" color="#a855f7" />
-            <ResourceChart
-              title="Memory Usage"
-              data={metrics.map((entry) => ({ ...entry, value: stats?.memory_usage ?? entry.value }))}
-              unit="MB"
-              color="#22c55e"
-            />
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur space-y-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Jamoaga ko‘rinadigan havola</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {domainSuffix ? `https://${domainSuffix}` : 'URL tayyorlanmoqda'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => restartMutation.mutate()}
+                  isLoading={restartMutation.isLoading}
+                >
+                  <Play className="h-4 w-4" /> Restart
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => stopMutation.mutate()}
+                  isLoading={stopMutation.isLoading}
+                  disabled={stopMutation.isLoading}
+                >
+                  <Square className="h-4 w-4" /> Stop
+                </Button>
+              </div>
+            </div>
+
+            <div
+              className="mt-4 rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center"
+              onDrop={handleDrop}
+              onDragOver={(event) => event.preventDefault()}
+            >
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <UploadCloud className="h-8 w-8 text-primary" />
+                <p className="text-sm font-medium text-foreground">FileManager — index.html va CSS yuklang</p>
+                <p className="text-xs">Drag &amp; drop orqali yuklang yoki kompyuteringizdan tanlang.</p>
+                <Input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  onChange={(event) => handleFiles(event.target.files)}
+                  accept=".html,.css,.js,.txt"
+                  className="mt-3 max-w-xs cursor-pointer text-sm"
+                />
+                <div className="flex gap-3">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <UploadCloud className="mr-2 h-4 w-4" /> Fayl tanlang
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => resetFilesMutation.mutate()}
+                    isLoading={resetFilesMutation.isLoading}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Reset files
+                  </Button>
+                </div>
+                {uploadMessage && <p className="text-xs text-foreground">{uploadMessage}</p>}
+              </div>
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="terminal">
-          <LogViewer lines={logs?.lines ?? []} onRefresh={() => refetchLogs()} />
-        </TabsContent>
-
         <TabsContent value="settings" className="space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Git Integration</h3>
+                <p className="text-sm text-muted-foreground">Repo URL ni kiriting, keyingi bosqichda avtomatik klonlash.</p>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setGitMessage('Git manzili saqlandi.');
+                }}
+              >
+                <GitBranch className="mr-2 h-4 w-4" /> Saqlash
+              </Button>
+            </div>
+            <Input
+              value={gitUrl}
+              onChange={(event) => setGitUrl(event.target.value)}
+              placeholder="https://github.com/user/repo.git"
+            />
+            {gitMessage && <p className="text-xs text-foreground">{gitMessage}</p>}
+          </div>
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Environment Variables</h3>
-                <p className="text-sm text-muted-foreground">Update the runtime configuration for your mini-service.</p>
+                <p className="text-sm text-muted-foreground">Ishga tushirish uchun sozlamalarni shu yerda saqlang.</p>
               </div>
               <Button variant="secondary" onClick={handleAddRow}>
                 Add variable
@@ -236,6 +347,22 @@ export default function ContainerDashboardPage() {
             <div className="mt-6 flex justify-end">
               <Button variant="default" isLoading={updateEnvMutation.isLoading} onClick={() => updateEnvMutation.mutate()}>
                 Save changes
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-6 shadow-lg backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-destructive">Dangerous Zone</h3>
+                <p className="text-sm text-muted-foreground">Serverni butunlay o‘chirish.</p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => deleteMutation.mutate()}
+                isLoading={deleteMutation.isLoading}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Server
               </Button>
             </div>
           </div>

@@ -8,9 +8,9 @@ export interface Container {
     type?: 'node' | 'python' | 'html' | 'php' | string;
     image: string;
     status: 'created' | 'running' | 'stopped' | 'failed';
-    cpu_limit: number;
-    memory_limit: number;
-    disk_limit: number;
+    cpu_limit?: number;
+    memory_limit?: number;
+    disk_limit?: number;
     port: number | null;
     env_vars: Record<string, string> | null;
     created_at: string;
@@ -35,11 +35,12 @@ export interface ContainerLogResponse {
 
 export interface CreateContainerDto {
     name: string;
-    subdomain?: string;
-    type: string;
-    cpu_limit: number;
-    memory_limit: number;
-    disk_limit: number;
+    subdomain?: string | null;
+    type?: string;
+    image?: string;
+    cpu_limit?: number;
+    memory_limit?: number;
+    disk_limit?: number;
     env_vars?: Record<string, string>;
 }
 
