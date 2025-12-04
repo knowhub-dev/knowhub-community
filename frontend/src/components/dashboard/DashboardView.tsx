@@ -56,7 +56,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
             profile={data.profile}
             xp={data.xp}
             badges={data.badges}
-            missions={data.activity?.highlights?.map(text => ({ title: text, status: 'in-progress' as const }))}
+            missions={data.missions}
           />
           <MainContent activity={data.activity} />
           <RightSidebar stats={data.stats} badges={data.badges} />
