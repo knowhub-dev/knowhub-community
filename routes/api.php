@@ -116,6 +116,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/activity', [DashboardController::class, 'activity']);
         Route::get('/dashboard/trending', [DashboardController::class, 'trending']);
         Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
+        Route::get('/dashboard/posts', [DashboardController::class, 'posts']);
     });
 });
 
