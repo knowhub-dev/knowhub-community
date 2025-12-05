@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return response()->json(["status"=>"OK", "app"=>"KnowHub API running"]);
+    return [
+        'app' => 'KnowHub Community API',
+        'version' => app()->version(),
+        'status' => 'ok'
+    ];
 });
-

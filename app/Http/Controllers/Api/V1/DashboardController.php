@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Comment;
@@ -17,7 +18,7 @@ class DashboardController extends Controller
     public function stats()
     {
         $cacheKey = 'dashboard:stats';
-        
+
         $stats = Cache::remember($cacheKey, 300, function () {
             return [
                 'users' => [
@@ -81,6 +82,29 @@ class DashboardController extends Controller
         });
 
         return response()->json($trending);
+    }
+
+    public function posts(Request $request)
+    {
+        $perPage = (int) $request->input('per_page', 10);
+
+        $query = Post::query()
+            ->with(['user.level', 'tags', 'category'])
+            ->where('status', 'published')
+            ->latest();
+
+        $pagination = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => PostResource::collection($pagination->items()),
+            'meta' => [
+                'current_page' => $pagination->currentPage(),
+                'last_page' => $pagination->lastPage(),
+                'per_page' => $pagination->perPage(),
+                'total' => $pagination->total(),
+                'next_page_url' => $pagination->nextPageUrl(),
+            ],
+        ]);
     }
 
     public function activity(Request $request)
