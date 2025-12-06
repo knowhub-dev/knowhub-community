@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ContainerController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\BookmarkController;
+use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Controllers\Auth\OAuthController;
 
@@ -124,6 +126,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/leaderboard', [UserController::class, 'leaderboard']);
     Route::get('/users/{username}', [UserController::class, 'show']);
+
+    /* ---- Categories & Tags ---- */
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/tags', [TagController::class, 'index']);
+    Route::get('/tags/trending', [TagController::class, 'trending']);
 
     /* ---- Activity Feed ---- */
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']); // 500 muammo shu controllerda bo‘lishi mumkin
