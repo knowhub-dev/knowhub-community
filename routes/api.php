@@ -81,11 +81,11 @@ Route::prefix('v1')->group(function () {
 
         /* ---- Posts ---- */
         Route::post('/posts', [PostController::class, 'store']);
-        Route::put('/posts/{id}', [PostController::class, 'update']);
-        Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+        Route::put('/posts/{post:slug}', [PostController::class, 'update']);
+        Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);
 
         /* ---- Comments ---- */
-        Route::post('/posts/{id}/comment', [CommentController::class, 'store']);
+        Route::post('/posts/{post:slug}/comment', [CommentController::class, 'store']);
         Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
 
         /* ---- Votes ---- */

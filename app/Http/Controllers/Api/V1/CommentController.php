@@ -14,9 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
-    public function store(CommentStoreRequest $req, string $slug)
+    public function store(CommentStoreRequest $req, Post $post)
     {
-        $post = Post::where('slug',$slug)->firstOrFail();
         $data = $req->validated();
 
         $comment = DB::transaction(function () use ($post, $req, $data) {
@@ -84,16 +83,10 @@ class CommentController extends Controller
         return new CommentResource($comment);
     }
 
-    public function index(Request $request, string $slug)
+    public function index(Request $request, Post $post)
     {
-        $postId = Post::where('slug', $slug)->value('id');
-
-        if (!$postId) {
-            abort(404, 'Post not found');
-        }
-
         $comments = Comment::query()
-            ->where('post_id', $postId)
+            ->where('post_id', $post->id)
             ->whereNull('parent_id')
             ->with([
                 'user:id,name,username,avatar_url,level',

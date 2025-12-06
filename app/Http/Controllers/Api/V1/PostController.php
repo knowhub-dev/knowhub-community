@@ -197,9 +197,8 @@ class PostController extends Controller
         return new PostResource($post);
     }
 
-    public function update(PostUpdateRequest $req, string $slug)
+    public function update(PostUpdateRequest $req, Post $post)
     {
-        $post = Post::where('slug',$slug)->firstOrFail();
         $this->authorize('update', $post);
         $data = $req->validated();
 
@@ -215,18 +214,17 @@ class PostController extends Controller
         });
 
         // Clear cache
-        $this->clearPostCaches($slug);
+        $this->clearPostCaches($post->slug);
 
         return new PostResource($post->fresh(['user.level','tags','category']));
     }
 
-    public function destroy(Request $req, string $slug)
+    public function destroy(Request $req, Post $post)
     {
-        $post = Post::where('slug',$slug)->firstOrFail();
         $this->authorize('delete', $post);
-        
+
         // Clear cache
-        $this->clearPostCaches($slug);
+        $this->clearPostCaches($post->slug);
         
         $post->delete();
         return response()->json(['ok'=>true]);
