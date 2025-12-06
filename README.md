@@ -208,11 +208,14 @@ docker-compose exec app php artisan migrate --seed
 |-------------|---------|--------|
 | APP_URL | Backend | API bazaviy URL |
 | FRONTEND_URL | Front/Back | CORS |
+| CORS_ALLOWED_ORIGINS | Backend | Virgullar bilan ajratilgan qo'shimcha ruxsat etilgan domenlar (masalan, prod domenlari) |
 | DB_HOST, DB_PASSWORD | Backend | Ma’lumotlar bazasi |
 | REDIS_HOST | Backend | Cache/Queue |
 | QUEUE_CONNECTION | Backend | Horizon/Supervisor |
 | PISTON_HOST | Backend | Sandbox |
 | OPENAI_API_KEY | Backend | AI funksiyalar |
+
+> `CORS_ALLOWED_ORIGINS` bo'sh qoldirilsa, tizim `localhost`/`127.0.0.1` (`http` va `https`, port `3000` bilan) va mavjud `space.knowhub.uz` domenlariga default ruxsat beradi.
 
 ---
 
