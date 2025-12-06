@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -26,7 +25,10 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
-        return response()->json(['message' => 'Notification marked as read']);
+        return response()->json([
+            'message' => 'Notification marked as read',
+            'unread_count' => $request->user()->unreadNotifications()->count(),
+        ]);
     }
 
     public function markAllAsRead(Request $request)
@@ -35,7 +37,10 @@ class NotificationController extends Controller
             ->unreadNotifications
             ->markAsRead();
 
-        return response()->json(['message' => 'All notifications marked as read']);
+        return response()->json([
+            'message' => 'All notifications marked as read',
+            'unread_count' => 0,
+        ]);
     }
 
     public function unreadCount(Request $request)
