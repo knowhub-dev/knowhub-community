@@ -22,6 +22,13 @@ const buildCookieOptions = (maxAge: number) => {
   return `; ${options.join('; ')}`;
 };
 
+const getAuthCookie = () => {
+  if (typeof document === 'undefined') return null;
+
+  const match = document.cookie.match(new RegExp(`(?:^|; )${AUTH_COOKIE_NAME}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
 export const setAuthCookie = (token: string) => {
   if (typeof document === 'undefined') return;
 
@@ -36,4 +43,4 @@ export const clearAuthCookie = () => {
   document.cookie = `${AUTH_COOKIE_NAME}=${cookieOptions}`;
 };
 
-export { AUTH_COOKIE_NAME };
+export { AUTH_COOKIE_NAME, getAuthCookie };
