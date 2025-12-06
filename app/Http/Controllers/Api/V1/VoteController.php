@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Models\Vote;
 use App\Models\Notification;
 use App\Models\XpTransaction;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class VoteController extends Controller
@@ -27,73 +28,81 @@ class VoteController extends Controller
                 'votable_type' => $model
             ])->first();
 
-            $vote = Vote::updateOrCreate(
-                ['user_id'=>$req->user()->id, 'votable_id'=>$votable->id, 'votable_type'=>$model],
-                ['value'=>$data['value']]
-            );
+            $xpChange = 0;
+            $vote = null;
 
-            // Recalculate score
-            $sum = Vote::where('votable_id',$votable->id)->where('votable_type',$model)->sum('value');
-            $votable->score = $sum;
-            $votable->save();
-            
-            // Award XP for receiving votes
-            if (!$previousVote || $previousVote->value !== $data['value']) {
-                $xpChange = 0;
-                
+            if ($data['value'] === 0) {
                 if ($previousVote) {
-                    // Remove previous XP
                     $xpChange -= $previousVote->value * ($model === Post::class ? 5 : 2);
+                    $previousVote->delete();
                 }
-                
-                // Add new XP
-                $xpChange += $data['value'] * ($model === Post::class ? 5 : 2);
-                
-                if ($xpChange !== 0 && $votable->user_id !== $req->user()->id) {
-                    XpTransaction::create([
-                        'user_id' => $votable->user_id,
-                        'amount' => $xpChange,
-                        'reason' => $data['value'] > 0 ? 'vote_received' : 'vote_removed',
-                        'subject_id' => $votable->id,
-                        'subject_type' => $model,
-                    ]);
-                    
-                    $votable->user->increment('xp', $xpChange);
-                    
-                    // Create notification for upvotes
-                    if ($data['value'] > 0 && $votable->user_id !== $req->user()->id) {
-                        Notification::create([
+            } else {
+                $vote = Vote::updateOrCreate(
+                    ['user_id' => $req->user()->id, 'votable_id' => $votable->id, 'votable_type' => $model],
+                    ['value' => $data['value']]
+                );
+
+                // Award XP for receiving votes
+                if (!$previousVote || $previousVote->value !== $data['value']) {
+                    if ($previousVote) {
+                        // Remove previous XP
+                        $xpChange -= $previousVote->value * ($model === Post::class ? 5 : 2);
+                    }
+
+                    // Add new XP
+                    $xpChange += $data['value'] * ($model === Post::class ? 5 : 2);
+
+                    if ($xpChange !== 0 && $votable->user_id !== $req->user()->id) {
+                        XpTransaction::create([
                             'user_id' => $votable->user_id,
-                            'type' => 'vote',
-                            'title' => 'Ovoz olindi',
-                            'message' => "{$req->user()->name} sizning " . ($model === Post::class ? 'postingiz' : 'kommentingiz') . "ga ijobiy ovoz berdi",
-                            'data' => [
-                                'voter_name' => $req->user()->name,
-                                'vote_value' => $data['value'],
-                                'votable_type' => $data['votable_type'],
-                                'votable_id' => $votable->id,
-                            ],
-                            'notifiable_id' => $votable->id,
-                            'notifiable_type' => $model
+                            'amount' => $xpChange,
+                            'reason' => $data['value'] > 0 ? 'vote_received' : 'vote_removed',
+                            'subject_id' => $votable->id,
+                            'subject_type' => $model,
                         ]);
+
+                        $votable->user->increment('xp', $xpChange);
+
+                        // Create notification for upvotes
+                        if ($data['value'] > 0 && $votable->user_id !== $req->user()->id) {
+                            Notification::create([
+                                'user_id' => $votable->user_id,
+                                'type' => 'vote',
+                                'title' => 'Ovoz olindi',
+                                'message' => "{$req->user()->name} sizning " . ($model === Post::class ? 'postingiz' : 'kommentingiz') . "ga ijobiy ovoz berdi",
+                                'data' => [
+                                    'voter_name' => $req->user()->name,
+                                    'vote_value' => $data['value'],
+                                    'votable_type' => $data['votable_type'],
+                                    'votable_id' => $votable->id,
+                                ],
+                                'notifiable_id' => $votable->id,
+                                'notifiable_type' => $model
+                            ]);
+                        }
                     }
                 }
             }
 
-            return response()->json(['ok'=>true, 'score'=>$sum, 'vote'=>$vote->value]);
+            // Recalculate score
+            $sum = Vote::where('votable_id', $votable->id)->where('votable_type', $model)->sum('value');
+            $votable->score = $sum;
+            $votable->save();
+
+            return response()->json(['ok' => true, 'score' => $sum, 'vote' => $vote ? $vote->value : 0]);
         });
     }
 
     public function getVote(Request $req, string $type, int $id)
     {
         $model = $type === 'post' ? Post::class : Comment::class;
-        
+
         $vote = Vote::where([
             'user_id' => $req->user()->id,
             'votable_id' => $id,
             'votable_type' => $model
         ])->first();
-        
+
         return response()->json([
             'vote' => $vote ? $vote->value : 0
         ]);
