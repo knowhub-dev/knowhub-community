@@ -1,11 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { buildCanonicalUrl } from '@/lib/seo';
-
-const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000/api/v1';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 async function fetchUsers() {
   try {
-    const response = await fetch(`${apiBase}/users`, {
+    const response = await fetch(buildApiUrl('/users'), {
       next: { revalidate: 3600 },
     });
 

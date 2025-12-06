@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000/api/v1';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 export type DashboardBadge = {
   id?: string | number;
@@ -94,10 +94,6 @@ export type DashboardData = {
   miniServers: DashboardMiniServer[];
   missions: DashboardMission[];
 };
-
-function buildUrl(path: string) {
-  return `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
-}
 
 function normalizeArray<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -193,7 +189,7 @@ async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null>
     : {};
 
   try {
-    const response = await fetch(buildUrl(path), {
+    const response = await fetch(buildApiUrl(path), {
       cache: 'no-store',
       credentials: 'include',
       headers,

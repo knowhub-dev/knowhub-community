@@ -11,14 +11,13 @@ import { SolveraChatCard } from '@/components/SolveraChatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { buildCanonicalUrl, buildMetadata } from '@/lib/seo';
 import { isProUser } from '@/lib/user';
+import { buildApiUrl } from '@/lib/api-base-url';
 import { Crown, Lock, NotebookPen } from 'lucide-react';
 import type { Post, User as BaseUser } from '@/types';
 import type { Container } from '@/types/container';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const DEFAULT_LEVEL: NonNullable<UserProfile['level']> = {
   id: 1,
@@ -56,7 +55,7 @@ interface UserProfile extends BaseUser {
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
   try {
-    const res = await fetch(`${API_URL}/users/${username}`, {
+    const res = await fetch(buildApiUrl(`/users/${username}`), {
       cache: 'no-store',
     });
 
@@ -109,7 +108,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   let errorMessage: string | null = null;
 
   try {
-    const res = await fetch(`${API_URL}/users/${username}`, {
+    const res = await fetch(buildApiUrl(`/users/${username}`), {
       cache: "no-store",
     });
 
