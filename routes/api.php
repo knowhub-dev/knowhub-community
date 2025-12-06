@@ -12,7 +12,12 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ActivityFeedController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\ContainerController as LegacyContainerController;
 use App\Http\Controllers\Api\V1\ContainerController;
+use App\Http\Controllers\Api\V1\ContainerEnvController;
+use App\Http\Controllers\Api\V1\ContainerLifecycleController;
+use App\Http\Controllers\Api\V1\ContainerLogsController;
+use App\Http\Controllers\Api\V1\ContainerStatsController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Middleware\RateLimitMiddleware;
@@ -77,7 +82,26 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/missions', [DashboardController::class, 'missions']);
 
         /* ---- Containers ---- */
-        Route::get('/containers', [ContainerController::class, 'index']);
+        Route::prefix('containers')->group(function () {
+            Route::get('/', [ContainerController::class, 'index']);
+            Route::get('/options', [LegacyContainerController::class, 'options']);
+            Route::post('/', [ContainerController::class, 'store']);
+            Route::get('/{container}', [ContainerController::class, 'show']);
+            Route::put('/{container}', [ContainerController::class, 'update']);
+            Route::delete('/{container}', [ContainerController::class, 'destroy']);
+
+            Route::post('/{container}/start', [ContainerLifecycleController::class, 'start']);
+            Route::post('/{container}/stop', [ContainerLifecycleController::class, 'stop']);
+            Route::post('/{container}/restart', [ContainerLifecycleController::class, 'restart']);
+
+            Route::get('/{container}/stats', [ContainerStatsController::class, 'show']);
+            Route::get('/{container}/logs', [ContainerLogsController::class, 'stream']);
+
+            Route::get('/{container}/env', [ContainerEnvController::class, 'index']);
+            Route::post('/{container}/env', [ContainerEnvController::class, 'store']);
+            Route::put('/{container}/env/{env}', [ContainerEnvController::class, 'update']);
+            Route::delete('/{container}/env/{env}', [ContainerEnvController::class, 'destroy']);
+        });
 
         /* ---- Posts ---- */
         Route::post('/posts', [PostController::class, 'store']);
