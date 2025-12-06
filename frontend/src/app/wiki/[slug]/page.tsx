@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import { WikiDiffExplorer } from '@/components/wiki/WikiDiffExplorer';
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/lib/seo';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 interface WikiArticle {
   id: number;
@@ -33,12 +34,10 @@ interface WikiListItem {
   slug: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 // Static params for SSG/export. If the API is down at build time, return [] so the build doesn't fail.
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   try {
-    const res = await fetch(`${API_URL}/wiki`, { cache: 'no-store' });
+    const res = await fetch(buildApiUrl('/wiki'), { cache: 'no-store' });
     if (!res.ok) {
       console.error('generateStaticParams: failed to fetch wiki list', res.status);
       return [];

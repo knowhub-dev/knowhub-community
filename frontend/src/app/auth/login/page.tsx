@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/providers/AuthProvider';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 const GoogleGlyph = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -143,13 +144,13 @@ export default function LoginPage() {
           <p className="text-xs uppercase tracking-[0.3em]">Yoki</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
-              <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`}>
+              <a href={buildApiUrl('/auth/google/redirect')}>
                 <GoogleGlyph className="h-5 w-5" />
                 Google
               </a>
             </Button>
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
-              <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/github/redirect`}>
+              <a href={buildApiUrl('/auth/github/redirect')}>
                 <GithubGlyph className="h-5 w-5" />
                 GitHub
               </a>

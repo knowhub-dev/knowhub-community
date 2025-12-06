@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { buildApiUrl } from '@/lib/api-base-url';
 import { buildCanonicalUrl, getSiteName } from '@/lib/seo';
 
 export const size = {
@@ -16,10 +17,8 @@ interface PostPreview {
   };
 }
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 async function getPostPreview(slug: string): Promise<PostPreview> {
-  const res = await fetch(`${apiBaseUrl}/posts/${slug}`, {
+  const res = await fetch(buildApiUrl(`/posts/${slug}`), {
     next: { revalidate: 300 },
   });
 

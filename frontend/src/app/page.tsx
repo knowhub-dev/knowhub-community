@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { generateStaticMetadata } from '@/lib/metadata-helpers';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 import GuestLandingServer from './home/GuestLandingServer';
 
@@ -16,10 +17,8 @@ export default async function HomePage() {
   const authToken = cookieStore.get('auth_token')?.value;
 
   if (authToken) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000/api/v1';
-
     try {
-      const response = await fetch(`${apiUrl}/profile/me`, {
+      const response = await fetch(buildApiUrl('/profile/me'), {
         method: 'GET',
         headers: {
           Accept: 'application/json',

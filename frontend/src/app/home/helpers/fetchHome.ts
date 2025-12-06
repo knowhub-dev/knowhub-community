@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000/api/v1';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 export type TagSummary = {
   name: string;
@@ -118,13 +118,9 @@ type WeeklyHeroesResponse = {
   post_authors?: Array<{ user?: CommunityHero | null; total_score?: number; posts_count?: number }>;
 };
 
-function buildUrl(path: string) {
-  return `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
 async function fetchEndpoint<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(buildUrl(path), { cache: 'no-store' });
+    const response = await fetch(buildApiUrl(path), { cache: 'no-store' });
 
     if (!response.ok) {
       throw new Error(`Request failed with status ${response.status}`);
