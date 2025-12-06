@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\ContainerController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Middleware\RateLimitMiddleware;
+use App\Http\Controllers\Auth\OAuthController;
 
 
 /*
@@ -34,10 +35,25 @@ Route::prefix('v1')->group(function () {
     /* ============================
      |  Authentication & Tokens
      ============================ */
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
-    Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::post('/auth/refresh', [AuthController::class, 'refreshToken'])->middleware('auth:sanctum');
+    Route::prefix('auth')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+        Route::post('/refresh', [AuthController::class, 'refreshToken'])->middleware('auth:sanctum');
+
+        // Email auth aliases
+        Route::prefix('email')->group(function () {
+            Route::post('/register', [AuthController::class, 'register']);
+            Route::post('/login', [AuthController::class, 'login']);
+            Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+        });
+    });
+
+    /* ---- OAuth ---- */
+    Route::get('/auth/google/redirect', [OAuthController::class, 'redirectGoogle']);
+    Route::get('/auth/google/callback', [OAuthController::class, 'handleGoogleCallback']);
+    Route::get('/auth/github/redirect', [OAuthController::class, 'redirectGithub']);
+    Route::get('/auth/github/callback', [OAuthController::class, 'handleGithubCallback']);
 
 
 
