@@ -38,6 +38,29 @@ class AuthControllerTest extends TestCase
         $this->assertNotEmpty($response->json('token'));
     }
 
+    public function test_user_can_register_via_email_alias(): void
+    {
+        $payload = [
+            'name' => 'Alias User',
+            'username' => 'aliasuser',
+            'email' => 'alias@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ];
+
+        $this->postJson('/api/v1/auth/email/register', $payload)
+            ->assertCreated()
+            ->assertJsonStructure([
+                'token',
+                'user' => ['id', 'username', 'avatar_url', 'xp', 'level', 'badges'],
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'alias@example.com',
+            'username' => 'aliasuser',
+        ]);
+    }
+
     public function test_register_validation_errors(): void
     {
         $this->postJson('/api/v1/auth/register', [])->assertStatus(422);
@@ -52,6 +75,21 @@ class AuthControllerTest extends TestCase
 
         $response = $this->postJson('/api/v1/auth/login', [
             'email' => 'login@example.com',
+            'password' => 'Password123!',
+        ])->assertOk();
+
+        $this->assertNotEmpty($response->json('token'));
+    }
+
+    public function test_user_can_login_via_email_alias(): void
+    {
+        User::factory()->create([
+            'email' => 'alias@example.com',
+            'password' => Hash::make('Password123!'),
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/email/login', [
+            'email' => 'alias@example.com',
             'password' => 'Password123!',
         ])->assertOk();
 
@@ -86,6 +124,21 @@ class AuthControllerTest extends TestCase
         ]);
     }
 
+    public function test_email_logout_alias_revokes_token_and_session(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('api')->plainTextToken;
+        [$tokenId] = explode('|', $token);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/auth/email/logout')
+            ->assertOk();
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'id' => $tokenId,
+        ]);
+    }
+
     public function test_refresh_token_rotates_current_token(): void
     {
         $user = User::factory()->create();
@@ -106,5 +159,6 @@ class AuthControllerTest extends TestCase
     {
         $this->postJson('/api/v1/auth/logout')->assertStatus(401);
         $this->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        $this->postJson('/api/v1/auth/email/logout')->assertStatus(401);
     }
 }
