@@ -96,10 +96,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/posts/{id}/vote', [VoteController::class, 'vote']);
 
         /* ---- Follow ---- */
-        Route::post('/follow/{username}', [FollowController::class, 'toggleFollow']);
+        Route::post('/follow/toggle', [FollowController::class, 'toggle']);
+        Route::get('/follow/check/{user}', [FollowController::class, 'check']);
 
         /* ---- Bookmarks ---- */
-        Route::post('/bookmark/{post}', [BookmarkController::class, 'toggle']);
+        Route::get('/bookmarks', [BookmarkController::class, 'index']);
+        Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle']);
+        Route::get('/bookmarks/check/{post}', [BookmarkController::class, 'check']);
 
         /* ---- Notifications ---- */
         Route::get('/notifications', [NotificationController::class, 'index']);
