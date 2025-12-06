@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ActivityFeedController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\ContainerController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Middleware\RateLimitMiddleware;
@@ -52,6 +53,15 @@ Route::prefix('v1')->group(function () {
 
         /* ---- Dashboard ---- */
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+        Route::get('/dashboard/activity', [DashboardController::class, 'activity']);
+        Route::get('/dashboard/trending', [DashboardController::class, 'trending']);
+        Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
+        Route::get('/dashboard/contributions', [DashboardController::class, 'contributions']);
+        Route::get('/dashboard/missions', [DashboardController::class, 'missions']);
+
+        /* ---- Containers ---- */
+        Route::get('/containers', [ContainerController::class, 'index']);
 
         /* ---- Posts ---- */
         Route::post('/posts', [PostController::class, 'store']);
@@ -222,11 +232,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
 
-        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
-        Route::get('/dashboard/activity', [DashboardController::class, 'activity']);
-        Route::get('/dashboard/trending', [DashboardController::class, 'trending']);
-        Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
-        Route::get('/dashboard/posts', [DashboardController::class, 'posts']);
     });
 });*/
 

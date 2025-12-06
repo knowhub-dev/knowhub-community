@@ -4,56 +4,49 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Models\CodeRun;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
-use App\Models\Comment;
-use App\Models\WikiArticle;
-use App\Models\CodeRun;
+use App\Models\XpTransaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function stats()
+    public function stats(Request $request): JsonResponse
     {
-        $cacheKey = 'dashboard:stats';
+        $user = $request->user();
 
-        $stats = Cache::remember($cacheKey, 300, function () {
+        $stats = Cache::remember("dashboard:stats:user:{$user->id}", 300, function () use ($user) {
+            $publishedPosts = $user->posts()->where('status', 'published');
+            $recentComments = $user->comments();
+
+            $postsCount = (int) $publishedPosts->count();
+            $lastWeekPosts = (int) $publishedPosts->where('created_at', '>=', now()->subDays(7))->count();
+
             return [
-                'users' => [
-                    'total' => User::count(),
-                    'active_today' => User::whereDate('updated_at', today())->count(),
-                    'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
-                ],
-                'posts' => [
-                    'total' => Post::where('status', 'published')->count(),
-                    'today' => Post::where('status', 'published')->whereDate('created_at', today())->count(),
-                    'this_week' => Post::where('status', 'published')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-                ],
-                'comments' => [
-                    'total' => Comment::count(),
-                    'today' => Comment::whereDate('created_at', today())->count(),
-                ],
-                'wiki' => [
-                    'articles' => WikiArticle::where('status', 'published')->count(),
-                    'proposals' => WikiArticle::has('proposals')->count(),
-                ],
-                'code_runs' => [
-                    'total' => CodeRun::count(),
-                    'successful' => CodeRun::where('status', 'success')->count(),
-                    'today' => CodeRun::whereDate('created_at', today())->count(),
-                ],
+                'posts' => $postsCount,
+                'comments' => (int) $recentComments->count(),
+                'answers' => (int) $user->posts()->sum('answers_count'),
+                'followers' => (int) $user->followers()->count(),
+                'velocity' => $lastWeekPosts,
+                'response_time_hours' => null,
+                'impact_score' => (int) $user->posts()->sum('score'),
+                'reputation' => (int) $user->xpTransactions()->sum('amount'),
             ];
         });
 
         return response()->json($stats);
     }
 
-    public function trending()
+    public function trending(): JsonResponse
     {
         $cacheKey = 'dashboard:trending';
-        
+
         $trending = Cache::remember($cacheKey, 600, function () {
             return [
                 'posts' => Post::with(['user', 'tags', 'category'])
@@ -81,57 +74,99 @@ class DashboardController extends Controller
             ];
         });
 
-        return response()->json($trending);
-    }
+        $highlights = collect($trending['posts'])
+            ->take(3)
+            ->map(fn (Post $post) => sprintf('%s is trending', $post->title))
+            ->values()
+            ->toArray();
 
-    public function posts(Request $request)
-    {
-        $perPage = (int) $request->input('per_page', 10);
-
-        $query = Post::query()
-            ->with(['user.level', 'tags', 'category'])
-            ->where('status', 'published')
-            ->latest();
-
-        $pagination = $query->paginate($perPage);
+        $feed = collect($trending['posts'])
+            ->take(5)
+            ->map(function (Post $post) {
+                return [
+                    'id' => "trending-post-{$post->id}",
+                    'type' => 'achievement',
+                    'title' => $post->title,
+                    'description' => 'Community highlight',
+                    'created_at' => (string) $post->created_at,
+                    'href' => url("/api/v1/posts/{$post->slug}"),
+                ];
+            })
+            ->values();
 
         return response()->json([
-            'data' => PostResource::collection($pagination->items()),
-            'meta' => [
-                'current_page' => $pagination->currentPage(),
-                'last_page' => $pagination->lastPage(),
-                'per_page' => $pagination->perPage(),
-                'total' => $pagination->total(),
-                'next_page_url' => $pagination->nextPageUrl(),
-            ],
+            'feed' => $feed,
+            'highlights' => $highlights,
+            'posts' => $trending['posts'],
+            'tags' => $trending['tags'],
+            'users' => $trending['users'],
         ]);
     }
 
-    public function activity(Request $request)
+    public function activity(Request $request): JsonResponse
     {
         $user = $request->user();
         $cacheKey = "dashboard:activity:{$user->id}";
-        
+
         $activity = Cache::remember($cacheKey, 300, function () use ($user) {
+            $feed = collect();
+
+            $user->posts()
+                ->with(['tags', 'category'])
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->each(function (Post $post) use ($feed) {
+                    $feed->push([
+                        'id' => "post-{$post->id}",
+                        'type' => 'achievement',
+                        'title' => $post->title,
+                        'description' => 'Published a new post',
+                        'created_at' => (string) $post->created_at,
+                        'href' => url("/api/v1/posts/{$post->slug}"),
+                        'meta' => [
+                            'score' => $post->score,
+                            'answers' => $post->answers_count,
+                        ],
+                    ]);
+                });
+
+            $user->comments()
+                ->with('post:id,title,slug')
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->each(function (Comment $comment) use ($feed) {
+                    $feed->push([
+                        'id' => "comment-{$comment->id}",
+                        'type' => 'comment',
+                        'title' => optional($comment->post)->title ? 'Replied to a post' : 'Commented',
+                        'description' => $comment->content ?? $comment->body,
+                        'created_at' => (string) $comment->created_at,
+                        'href' => $comment->post?->slug ? url("/api/v1/posts/{$comment->post->slug}") : null,
+                    ]);
+                });
+
+            $this->getFollowingActivity($user)
+                ->each(function (Post $post) use ($feed) {
+                    $feed->push([
+                        'id' => "follow-{$post->id}",
+                        'type' => 'achievement',
+                        'title' => "{$post->user->name} shipped {$post->title}",
+                        'description' => 'From your network',
+                        'created_at' => (string) $post->created_at,
+                    ]);
+                });
+
+            $highlights = [
+                sprintf('%d posts published', $user->posts()->count()),
+                sprintf('%d contributions this week', $user->comments()->where('created_at', '>=', now()->subDays(7))->count()),
+            ];
+
             return [
-                'recent_posts' => $user->posts()
-                    ->with(['tags', 'category'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                'recent_comments' => $user->comments()
-                    ->with('post:id,title,slug')
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                'bookmarked_posts' => $user->bookmarks()
-                    ->with(['post.user', 'post.tags'])
-                    ->latest()
-                    ->limit(5)
-                    ->get()
-                    ->pluck('post'),
-                'following_activity' => $this->getFollowingActivity($user),
-                'notifications_count' => $user->notifications()->unread()->count(),
+                'feed' => $feed->sortByDesc('created_at')->values(),
+                'highlights' => array_filter($highlights),
+                'contributions' => $this->contributionHistory($user),
             ];
         });
 
@@ -141,9 +176,9 @@ class DashboardController extends Controller
     private function getFollowingActivity(User $user)
     {
         $followingIds = $user->following()->pluck('users.id');
-        
+
         if ($followingIds->isEmpty()) {
-            return [];
+            return collect();
         }
 
         return Post::with(['user', 'tags'])
@@ -155,15 +190,31 @@ class DashboardController extends Controller
             ->get();
     }
 
-    public function analytics(Request $request)
+    public function analytics(Request $request): JsonResponse
     {
         $period = $request->get('period', '30'); // days
         $startDate = now()->subDays((int)$period);
         
         $cacheKey = "dashboard:analytics:{$period}";
         
-        $analytics = Cache::remember($cacheKey, 1800, function () use ($startDate) {
+        $analytics = Cache::remember($cacheKey, 1800, function () use ($startDate, $request) {
+            $user = $request->user();
+
             return [
+                'activity' => [
+                    'highlights' => [
+                        'Engagement is rising',
+                        'XP earned from coding sessions',
+                    ],
+                    'contributions' => $this->contributionHistory($user),
+                ],
+                'stats' => [
+                    'velocity' => Post::where('user_id', $user->id)
+                        ->where('status', 'published')
+                        ->where('created_at', '>=', $startDate)
+                        ->count(),
+                    'impact_score' => (int) Post::where('user_id', $user->id)->sum('score'),
+                ],
                 'posts_over_time' => $this->getPostsOverTime($startDate),
                 'users_over_time' => $this->getUsersOverTime($startDate),
                 'engagement_metrics' => $this->getEngagementMetrics($startDate),
@@ -242,5 +293,74 @@ class DashboardController extends Controller
                 ->where('status', 'success')
                 ->avg('runtime_ms'),
         ];
+    }
+
+    public function contributions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'contributions' => $this->contributionHistory($user),
+        ]);
+    }
+
+    public function missions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $postCount = (int) $user->posts()->count();
+        $commentCount = (int) $user->comments()->count();
+
+        $missions = [
+            [
+                'title' => 'Ship your first post',
+                'status' => $postCount > 0 ? 'done' : 'in-progress',
+                'completion' => min(100, $postCount > 0 ? 100 : 40),
+                'reward' => '+50 XP',
+            ],
+            [
+                'title' => 'Join the conversation',
+                'status' => $commentCount >= 3 ? 'done' : 'in-progress',
+                'completion' => min(100, $commentCount * 30),
+                'reward' => '+30 XP',
+            ],
+            [
+                'title' => 'Weekly streak',
+                'status' => $postCount >= 3 ? 'in-progress' : 'pending',
+                'completion' => min(100, $postCount * 20),
+                'reward' => 'Streak booster',
+            ],
+        ];
+
+        return response()->json(['missions' => $missions]);
+    }
+
+    /**
+     * @return array<int,array{day:string,value:int}>
+     */
+    private function contributionHistory(User $user): array
+    {
+        $history = $user->xpTransactions()
+            ->selectRaw('DATE(created_at) as day, SUM(amount) as value')
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get();
+
+        if ($history->isEmpty()) {
+            return collect(range(0, 6))
+                ->map(function (int $offset) {
+                    $day = Carbon::today()->subDays($offset)->toDateString();
+
+                    return ['day' => $day, 'value' => 0];
+                })
+                ->values()
+                ->toArray();
+        }
+
+        return $history
+            ->map(fn (XpTransaction $transaction) => [
+                'day' => $transaction->day,
+                'value' => (int) $transaction->value,
+            ])
+            ->toArray();
     }
 }
