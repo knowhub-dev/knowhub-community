@@ -89,6 +89,8 @@ Route::prefix('v1')->group(function () {
         Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
 
         /* ---- Votes ---- */
+        Route::post('/vote', [VoteController::class, 'vote']);
+        Route::get('/vote/{type}/{id}', [VoteController::class, 'getVote']);
         Route::post('/posts/{id}/vote', [VoteController::class, 'vote']);
 
         /* ---- Follow ---- */

@@ -13,7 +13,7 @@ class VoteRequest extends FormRequest
         return [
             'votable_type' => ['required','in:post,comment'],
             'votable_id' => ['required','integer'],
-            'value' => ['required','integer','in:-1,1'],
+            'value' => ['required','integer','in:-1,0,1'],
         ];
     }
 }
