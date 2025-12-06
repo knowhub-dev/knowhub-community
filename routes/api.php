@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\V1\ContainerController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Middleware\RateLimitMiddleware;
+use App\Http\Controllers\Api\V1\StatsController;
+use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Auth\OAuthController;
 
 
@@ -130,6 +132,12 @@ Route::prefix('v1')->group(function () {
 
     /* ---- Search ---- */
     Route::get('/search', [SearchController::class, 'search']);
+
+    /* ---- Public Stats & Content ---- */
+    Route::get('/stats/public', [StatsController::class, 'public']);
+    Route::get('/stats/homepage', [StatsController::class, 'homepage']);
+    Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
+    Route::get('/content/about', [ContentController::class, 'about']);
 
     /* ---- Profile Public ---- */
     Route::get('/profile/{username}', [ProfileController::class, 'show'])
