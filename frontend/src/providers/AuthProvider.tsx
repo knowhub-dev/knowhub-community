@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { clearAuthCookie, setAuthCookie } from '@/lib/auth-cookie';
+import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth-cookie';
 import type { User as BaseUser } from '@/types';
 
 interface AuthUser extends BaseUser {
@@ -21,6 +21,15 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const resolveStoredToken = () => {
+  if (typeof window === 'undefined') return null;
+
+  const storedToken = localStorage.getItem('auth_token');
+  if (storedToken) return storedToken;
+
+  return getAuthCookie();
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -42,6 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const token = resolveStoredToken();
+    if (token) {
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    }
+
     checkUser();
   }, []);
 
