@@ -9,6 +9,7 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { buildCanonicalUrl, getSiteName } from "@/lib/seo";
+import { fetchServerAuthenticatedUser } from "@/lib/server-auth";
 
 const siteName = getSiteName();
 const siteDescription =
@@ -45,19 +46,20 @@ const organizationJsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const { user } = await fetchServerAuthenticatedUser();
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
           <QueryProvider>
-            <AuthProvider>
+            <AuthProvider initialUser={user}>
               <div className="relative flex min-h-screen flex-col">
                 <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-primary/20 via-accent/10 to-transparent" />
                 <Navbar />

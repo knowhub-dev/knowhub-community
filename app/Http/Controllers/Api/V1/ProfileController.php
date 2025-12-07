@@ -27,7 +27,13 @@ class ProfileController extends Controller
 
     public function me(Request $req)
     {
-        $user = $req->user()
+        $user = $req->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $user = $user
             ->loadMissing(['level', 'badges', 'featuredContainers'])
             ->loadCount([
                 'posts as posts_count' => fn($q) => $q->where('status', 'published'),

@@ -15,6 +15,8 @@ use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Cache\Repository;
+use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +40,7 @@ class PostController extends Controller
         $cacheKey = $filter->cacheKey($validated, $request->user()?->id);
 
         if ($cacheKey !== null) {
-            return Cache::tags(['posts'])->remember($cacheKey, 300, static fn () =>
+            return $this->postsCacheStore()->remember($cacheKey, 300, static fn () =>
                 PostResource::collection($query->paginate($perPage))
             );
         }
@@ -233,7 +235,11 @@ class PostController extends Controller
     private function clearPostCaches(?string $slug = null): void
     {
         // Clear general post caches
-        Cache::tags(['posts'])->flush();
+        if (Cache::supportsTags()) {
+            Cache::tags(['posts'])->flush();
+        } else {
+            Cache::flush();
+        }
         
         if ($slug) {
             Cache::forget("post:{$slug}");
@@ -243,6 +249,13 @@ class PostController extends Controller
         // Clear trending and featured caches
         Cache::forget('posts:trending:weekly');
         Cache::forget('posts:featured');
+    }
+
+    private function postsCacheStore(): TaggedCache|Repository
+    {
+        return Cache::supportsTags()
+            ? Cache::tags(['posts'])
+            : Cache::store();
     }
 
     private function notifyFollowers(Post $post): void
