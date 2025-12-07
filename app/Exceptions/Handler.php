@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use Illuminate\Auth\AuthenticationException; // <-- BU ENG MUHIM IMPORT
 
@@ -44,7 +45,22 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+            $request = request();
+
+            if ($request && $request->is('api/*')) {
+                $user = $request->user();
+
+                Log::channel('api_debug')->error('API exception reported', [
+                    'method' => $request->getMethod(),
+                    'path' => $request->path(),
+                    'user' => array_filter([
+                        'id' => $user->id ?? null,
+                        'email' => $user->email ?? null,
+                    ]),
+                    'exception' => $e::class,
+                    'message' => $e->getMessage(),
+                ]);
+            }
         });
 
         $this->renderable(function (ContainerRuntimeException $exception, $request) {

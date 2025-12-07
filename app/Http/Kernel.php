@@ -36,6 +36,7 @@ class Kernel extends HttpKernel
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'api.logger',
         ],
     ];
 
@@ -58,5 +59,6 @@ class Kernel extends HttpKernel
         'cache' => \App\Http\Middleware\CacheMiddleware::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
+        'api.logger' => \App\Http\Middleware\ApiRequestLogger::class,
     ];
 }
