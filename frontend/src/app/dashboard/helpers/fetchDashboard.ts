@@ -210,7 +210,7 @@ async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null>
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
   const [
