@@ -52,6 +52,11 @@ interface UserProfile extends BaseUser {
   is_current_user?: boolean;
 }
 
+interface PaginatedPostsResponse {
+  data?: Post[];
+  meta?: { current_page?: number; last_page?: number; total?: number };
+}
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
   try {
@@ -106,6 +111,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   const { username } = await params;
   let user: UserProfile | null = null;
   let errorMessage: string | null = null;
+  let userPosts: PaginatedPostsResponse | null = null;
 
   try {
     const res = await fetch(buildApiUrl(`/users/${username}`), {
@@ -129,6 +135,18 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   } catch (error) {
     console.error('Profilni olishda xato:', error);
     errorMessage = "Profilni yuklashda xizmat bilan bog'lanib bo'lmadi.";
+  }
+
+  try {
+    const postsRes = await fetch(buildApiUrl(`/users/${username}/posts?limit=20&page=1`), {
+      cache: 'no-store',
+    });
+
+    if (postsRes.ok) {
+      userPosts = await postsRes.json();
+    }
+  } catch (error) {
+    console.error('Foydalanuvchi postlarini olishda xato:', error);
   }
 
   const fallbackUser = buildFallbackUser(username);
@@ -250,7 +268,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           value="posts"
           className="data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:zoom-in-95"
         >
-          <ProfilePosts posts={safeUser.posts} username={safeUser.username} />
+          <ProfilePosts initialPosts={userPosts ?? null} username={safeUser.username} />
         </TabsContent>
 
         <TabsContent
