@@ -10,6 +10,7 @@ use App\Models\Container;
 use App\Models\ContainerEnvVar;
 use App\Services\Containers\ContainerEnvService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ContainerEnvController extends Controller
@@ -65,5 +66,21 @@ class ContainerEnvController extends Controller
         $this->envService->destroy($env);
 
         return response()->json(['data' => null, 'meta' => null], 204);
+    }
+
+    public function sync(Container $container, Request $request): JsonResponse
+    {
+        Gate::authorize('update', $container);
+
+        $payload = $request->validate([
+            'env_vars' => ['array'],
+            'env_vars.*' => ['nullable', 'string'],
+        ]);
+
+        $this->envService->syncFromArray($container, $payload['env_vars'] ?? []);
+
+        return ContainerEnvResource::collection($container->envVars)
+            ->additional(['meta' => null])
+            ->response();
     }
 }

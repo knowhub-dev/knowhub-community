@@ -135,6 +135,36 @@ class ContainerFileController extends Controller
         return response()->json(['message' => 'File saved.']);
     }
 
+    public function uploadStaticFiles(Request $request, Container $container)
+    {
+        $this->authorize('update', $container);
+
+        $validated = $request->validate([
+            'files' => ['required', 'array'],
+            'files.*' => ['file'],
+        ]);
+
+        $targetDirectory = $this->workspacePath($container, 'static');
+        Storage::disk('local')->makeDirectory($targetDirectory);
+
+        foreach ($validated['files'] as $file) {
+            $filename = $file->getClientOriginalName();
+            Storage::disk('local')->putFileAs($targetDirectory, $file, $filename);
+        }
+
+        return response()->json(['message' => 'Static files uploaded.']);
+    }
+
+    public function resetUploads(Container $container)
+    {
+        $this->authorize('update', $container);
+
+        $targetDirectory = $this->workspacePath($container, 'static');
+        Storage::disk('local')->deleteDirectory($targetDirectory);
+
+        return response()->json(['message' => 'Uploaded files reset.']);
+    }
+
     private function workspacePrefix(Container $container): string
     {
         if (!$container->uuid) {

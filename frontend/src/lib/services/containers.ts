@@ -7,7 +7,7 @@ import type {
   CreateContainerDto,
 } from '@/types/container';
 
-const BASE_URL = '/api/v1/containers';
+const BASE_URL = '/containers';
 
 const containerPath = (id: number | string, suffix = '') => `${BASE_URL}/${id}${suffix}`;
 

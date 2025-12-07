@@ -34,6 +34,25 @@ class ContainerEnvService
         $envVar->delete();
     }
 
+    /**
+     * @param array<string,string|null> $envVars
+     */
+    public function syncFromArray(Container $container, array $envVars): void
+    {
+        $keys = array_keys($envVars);
+
+        if (!empty($keys)) {
+            $container->envVars()->whereNotIn('key', $keys)->delete();
+        }
+
+        foreach ($envVars as $key => $value) {
+            $container->envVars()->updateOrCreate(
+                ['key' => $key],
+                ['value' => $value ?? '']
+            );
+        }
+    }
+
     /** @return array<string,string> */
     public function compile(Container $container): array
     {

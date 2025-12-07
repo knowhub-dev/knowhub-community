@@ -1,7 +1,7 @@
 import { api } from '../api';
 import { ContainerFileEntry } from '@/types/containerFiles';
 
-const BASE_URL = '/api/v1/containers';
+const BASE_URL = '/containers';
 
 export const listFiles = async (containerId: number, path = ''): Promise<ContainerFileEntry[]> => {
   const response = await api.get(`${BASE_URL}/${containerId}/files`, { params: { path } });

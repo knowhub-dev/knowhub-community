@@ -17,6 +17,17 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'profile' => $user,
+            'stats' => json_decode($this->stats($request)->getContent(), true),
+            'activity' => json_decode($this->activity($request)->getContent(), true),
+        ]);
+    }
+
     public function stats(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -332,6 +343,20 @@ class DashboardController extends Controller
         ];
 
         return response()->json(['missions' => $missions]);
+    }
+
+    public function posts(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $posts = $user->posts()
+            ->with(['tags', 'category'])
+            ->latest()
+            ->paginate($request->integer('per_page', 10));
+
+        return PostResource::collection($posts)
+            ->additional(['meta' => ['total' => $posts->total()]])
+            ->response();
     }
 
     /**
