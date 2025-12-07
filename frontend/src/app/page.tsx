@@ -16,13 +16,18 @@ export default async function HomePage() {
   const cookieStore = cookies();
   const authToken = cookieStore.get('auth_token')?.value;
 
+  const cookieHeader = cookieStore
+    .getAll()
+    .map(cookie => `${cookie.name}=${cookie.value}`)
+    .join('; ');
+
   if (authToken) {
     try {
       const response = await fetch(buildApiUrl('/profile/me'), {
         method: 'GET',
         headers: {
           Accept: 'application/json',
-          Cookie: cookieStore.toString(),
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
         },
         credentials: 'include',
         cache: 'no-store',

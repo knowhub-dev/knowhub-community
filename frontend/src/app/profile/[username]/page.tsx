@@ -57,8 +57,8 @@ interface PaginatedPostsResponse {
   meta?: { current_page?: number; last_page?: number; total?: number };
 }
 
-export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  const { username } = await params;
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { username } = params;
   try {
     const res = await fetch(buildApiUrl(`/users/${username}`), {
       cache: 'no-store',
@@ -107,8 +107,8 @@ const buildFallbackUser = (username: string): UserProfile => ({
   is_current_user: false,
 });
 
-export default async function ProfilePage({ params }: { params: Promise<Params> }) {
-  const { username } = await params;
+export default async function ProfilePage({ params }: { params: Params }) {
+  const { username } = params;
   let user: UserProfile | null = null;
   let errorMessage: string | null = null;
   let userPosts: PaginatedPostsResponse | null = null;

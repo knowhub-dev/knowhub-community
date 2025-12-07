@@ -3,6 +3,7 @@
 use Laravel\Sanctum\Sanctum;
 
 $baseHost = env('APP_URL_BASE', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost');
+$frontendHost = parse_url(env('FRONTEND_URL', ''), PHP_URL_HOST) ?: null;
 $defaultStateful = [
     'localhost',
     'localhost:3000',
@@ -17,6 +18,14 @@ if ($baseHost && !in_array($baseHost, $defaultStateful, true)) {
 
 if ($baseHost && !in_array('api.' . $baseHost, $defaultStateful, true)) {
     $defaultStateful[] = 'api.' . $baseHost;
+}
+
+if ($frontendHost && !in_array($frontendHost, $defaultStateful, true)) {
+    $defaultStateful[] = $frontendHost;
+}
+
+if ($frontendHost && !in_array('api.' . $frontendHost, $defaultStateful, true)) {
+    $defaultStateful[] = 'api.' . $frontendHost;
 }
 
 return [

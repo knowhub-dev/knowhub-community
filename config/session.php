@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Str;
 
+$appHost = parse_url(env('APP_URL', ''), PHP_URL_HOST) ?: 'localhost';
+$sessionDomain = env('SESSION_DOMAIN', '.' . ltrim(env('APP_URL_BASE', $appHost), '.'));
+
 return [
 
     /*
@@ -156,7 +159,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => $sessionDomain,
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +172,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', true),
 
     /*
     |--------------------------------------------------------------------------

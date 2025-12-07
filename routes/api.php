@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Middleware\RateLimitMiddleware;
+use App\Http\Controllers\Api\V1\BrandingController;
 use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\ContentController;
 use App\Http\Controllers\Auth\OAuthController;
