@@ -83,19 +83,26 @@ class UserController extends Controller
         $cacheKey = "leaderboard:{$type}:{$period}";
 
         $users = Cache::remember($cacheKey, 300, function () use ($type, $period) {
-            $query = User::with('level');
+            $query = User::with('level')
+                ->withCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ]);
 
             if ($period !== 'all') {
                 $date = $period === 'week' ? now()->subWeek() : now()->subMonth();
 
                 if ($type === 'posts') {
-                    $query->withCount(['posts' => fn($q) => $q->where('status', 'published')->where('created_at', '>=', $date)]);
+                    $query->withCount([
+                        'posts as posts_count' => fn($q) => $q->where('status', 'published')->where('created_at', '>=', $date)
+                    ]);
                 } elseif ($type === 'xp') {
                     $query->whereHas('xpTransactions', fn($q) => $q->where('created_at', '>=', $date));
                 }
             } else {
                 if ($type === 'posts') {
-                    $query->withCount(['posts' => fn($q) => $q->where('status', 'published')]);
+                    $query->withCount(['posts as posts_count' => fn($q) => $q->where('status', 'published')]);
                 } elseif ($type === 'followers') {
                     $query->withCount('followers');
                 }
@@ -158,7 +165,14 @@ class UserController extends Controller
         $user->avatar_url = $path;
         $user->save();
 
-        return new UserResource($user->fresh(['level', 'badges']));
+        return new UserResource(
+            $user->fresh(['level', 'badges'])
+                ->loadCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ])
+        );
     }
 
     private function getMonthlyStats(User $user)
