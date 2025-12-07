@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -80,6 +81,12 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
+
+        if (!$user) {
+            Log::warning('Logout attempted without authenticated user context');
+
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
 
         if ($token = $user->currentAccessToken()) {
             $token->delete();

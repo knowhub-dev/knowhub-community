@@ -19,6 +19,9 @@ use Illuminate\Cache\Repository;
 use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Throwable;
 
 class PostController extends Controller
 {
@@ -51,17 +54,33 @@ class PostController extends Controller
     public function show(string $slug)
     {
         $cacheKey = 'post:' . $slug;
-        
-        $post = Cache::remember($cacheKey, 600, function () use ($slug) {
-            return Post::with([
-                'author:id,name,username,avatar_url,level_id',
-                'author.level:id,name,min_xp,icon',
-                'tags:id,name,slug',
-                'category:id,name,slug',
-            ])->withCount(['comments', 'votes'])->where('slug', $slug)->firstOrFail();
-        });
-        
-        return new PostResource($post);
+
+        try {
+            $post = Cache::remember($cacheKey, 600, function () use ($slug) {
+                return Post::with([
+                    'author:id,name,username,avatar_url,level_id',
+                    'author.level:id,name,min_xp,icon',
+                    'tags:id,name,slug',
+                    'category:id,name,slug',
+                ])->withCount(['comments', 'votes'])->where('slug', $slug)->firstOrFail();
+            });
+
+            return new PostResource($post);
+        } catch (ModelNotFoundException $exception) {
+            Log::warning('Requested post slug not found', [
+                'slug' => $slug,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Unexpected error while loading post', [
+                'slug' => $slug,
+                'exception' => $exception,
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function related(string $slug)
@@ -149,6 +168,12 @@ class PostController extends Controller
     public function store(PostStoreRequest $req)
     {
         $user = $req->user();
+
+        if (!$user) {
+            Log::error('Post store attempted without authenticated user');
+
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
         
         // XP tekshirish
         if ($req->input('required_xp', 0) > 0 && $user->xp < $req->input('required_xp')) {

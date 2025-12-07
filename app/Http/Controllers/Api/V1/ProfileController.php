@@ -8,21 +8,40 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use App\Models\Container;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Throwable;
 
 class ProfileController extends Controller
 {
     public function show(string $username)
     {
-        $user = User::where('username', $username)
-            ->with(['badges', 'level', 'featuredContainers'])
-            ->withCount([
-                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
-                'followers',
-                'following'
-            ])
-            ->firstOrFail();
+        try {
+            $user = User::where('username', $username)
+                ->with(['badges', 'level', 'featuredContainers'])
+                ->withCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ])
+                ->firstOrFail();
 
-        return new UserResource($user);
+            return new UserResource($user);
+        } catch (ModelNotFoundException $exception) {
+            Log::warning('Profile not found', [
+                'username' => $username,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Unexpected error while resolving profile', [
+                'username' => $username,
+                'exception' => $exception,
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function me(Request $req)
@@ -30,6 +49,7 @@ class ProfileController extends Controller
         $user = $req->user();
 
         if (!$user) {
+            Log::error('Profile /me endpoint called without authenticated user');
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
