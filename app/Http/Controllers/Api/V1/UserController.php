@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -63,16 +64,29 @@ class UserController extends Controller
         return new UserResource($user);
     }
 
-    public function posts(string $username)
+    public function posts(Request $request, string $username)
     {
+        $validated = $request->validate([
+            'page' => ['integer', 'min:1'],
+            'limit' => ['integer', 'min:1', 'max:100'],
+        ]);
+
         $user = User::where('username', $username)->firstOrFail();
+
+        $perPage = $validated['limit'] ?? 20;
+        $page = $validated['page'] ?? 1;
 
         $posts = $user->posts()
             ->where('status', 'published')
+            ->with([
+                'tags:id,name,slug',
+                'category:id,name,slug',
+                'author.level:id,name,min_xp',
+            ])
             ->latest()
-            ->get(['id', 'title', 'slug', 'created_at']);
+            ->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json($posts);
+        return PostResource::collection($posts);
     }
 
     public function leaderboard(Request $request)
