@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\ContainerController as LegacyContainerController;
 use App\Http\Controllers\Api\V1\ContainerController;
+use App\Http\Controllers\Api\V1\ContainerFileController;
 use App\Http\Controllers\Api\V1\ContainerEnvController;
 use App\Http\Controllers\Api\V1\ContainerLifecycleController;
 use App\Http\Controllers\Api\V1\ContainerLogsController;
@@ -84,6 +85,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
         Route::get('/dashboard/contributions', [DashboardController::class, 'contributions']);
         Route::get('/dashboard/missions', [DashboardController::class, 'missions']);
+        Route::get('/dashboard/posts', [DashboardController::class, 'posts']);
 
         /* ---- Containers ---- */
         Route::prefix('containers')->group(function () {
@@ -103,8 +105,16 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/{container}/env', [ContainerEnvController::class, 'index']);
             Route::post('/{container}/env', [ContainerEnvController::class, 'store']);
+            Route::put('/{container}/env', [ContainerEnvController::class, 'sync']);
             Route::put('/{container}/env/{env}', [ContainerEnvController::class, 'update']);
             Route::delete('/{container}/env/{env}', [ContainerEnvController::class, 'destroy']);
+
+            Route::get('/{container}/files', [ContainerFileController::class, 'index']);
+            Route::get('/{container}/files/show', [ContainerFileController::class, 'show']);
+            Route::post('/{container}/files', [ContainerFileController::class, 'store']);
+            Route::put('/{container}/files', [ContainerFileController::class, 'update']);
+            Route::post('/{container}/files/upload', [ContainerFileController::class, 'uploadStaticFiles']);
+            Route::delete('/{container}/files/reset', [ContainerFileController::class, 'resetUploads']);
         });
 
         /* ---- Posts ---- */
