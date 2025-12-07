@@ -32,6 +32,13 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        $user->loadMissing(['level', 'badges'])
+            ->loadCount([
+                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'followers',
+                'following'
+            ]);
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
@@ -54,6 +61,13 @@ class AuthController extends Controller
         }
 
         Auth::login($user);
+
+        $user->loadMissing(['level', 'badges'])
+            ->loadCount([
+                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'followers',
+                'following'
+            ]);
 
         $token = $user->createToken('api')->plainTextToken;
 
@@ -91,7 +105,14 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $newToken,
-            'user' => new UserResource($user),
+            'user' => new UserResource(
+                $user->loadMissing(['level', 'badges'])
+                    ->loadCount([
+                        'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                        'followers',
+                        'following'
+                    ])
+            ),
         ]);
     }
 }

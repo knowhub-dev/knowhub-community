@@ -15,7 +15,11 @@ class ProfileController extends Controller
     {
         $user = User::where('username', $username)
             ->with(['badges', 'level', 'featuredContainers'])
-            ->withCount(['posts', 'followers', 'following'])
+            ->withCount([
+                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'followers',
+                'following'
+            ])
             ->firstOrFail();
 
         return new UserResource($user);
@@ -23,13 +27,15 @@ class ProfileController extends Controller
 
     public function me(Request $req)
     {
-        // XATO KODNI O'CHIRDIK:
-        // return $req->user()->only(['id','name','username','avatar_url','xp','bio']);
-        
-        // ===========================================
-        // TO'G'RI KODNI YOZDIK:
-        // ===========================================
-        return new UserResource($req->user());
+        $user = $req->user()
+            ->loadMissing(['level', 'badges', 'featuredContainers'])
+            ->loadCount([
+                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'followers',
+                'following'
+            ]);
+
+        return new UserResource($user);
     }
 
     public function update(Request $req)
@@ -47,7 +53,14 @@ class ProfileController extends Controller
         $user->fill($data)->save();
 
         // Bu yerda to'g'ri edi, UserResource'ni to'liq namespace bilan chaqirsa ham bo'ladi
-        return new \App\Http\Resources\UserResource($user);
+        return new \App\Http\Resources\UserResource(
+            $user->loadMissing(['level', 'badges', 'featuredContainers'])
+                ->loadCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ])
+        );
     }
 
     public function updateResume(Request $req)
@@ -72,7 +85,14 @@ class ProfileController extends Controller
         $user->resume_data = $data['resume_data'];
         $user->save();
 
-        return new UserResource($user->fresh('featuredContainers'));
+        return new UserResource(
+            $user->fresh(['level', 'badges', 'featuredContainers'])
+                ->loadCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ])
+        );
     }
 
     public function toggleProjectFeature(Request $req, int $container)
