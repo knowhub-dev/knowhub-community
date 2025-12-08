@@ -10,6 +10,7 @@ use App\Models\Container;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str;
 use Throwable;
 
 class ProfileController extends Controller
@@ -53,15 +54,30 @@ class ProfileController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $user = $user
-            ->loadMissing(['level', 'badges', 'featuredContainers'])
-            ->loadCount([
-                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
-                'followers',
-                'following'
+        try {
+            $user = $user
+                ->loadMissing(['level', 'badges', 'featuredContainers'])
+                ->loadCount([
+                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'followers',
+                    'following'
+                ]);
+
+            return new UserResource($user);
+        } catch (Throwable $exception) {
+            $traceId = (string) Str::uuid();
+
+            Log::error('Failed to resolve authenticated profile', [
+                'user_id' => $user->id,
+                'trace_id' => $traceId,
+                'error' => $exception,
             ]);
 
-        return new UserResource($user);
+            return response()->json([
+                'message' => 'Service unavailable. Please try again later.',
+                'trace_id' => $traceId,
+            ], 503);
+        }
     }
 
     public function update(Request $req)

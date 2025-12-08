@@ -8,42 +8,65 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with(['level', 'badges'])
-            ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
-            ->withCount(['followers', 'following']);
+        $filters = [
+            'search' => $request->get('search'),
+            'level' => $request->get('level'),
+            'sort' => $request->get('sort', 'xp'),
+        ];
 
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('username', 'LIKE', "%{$search}%");
-            });
-        }
+        try {
+            $query = User::with(['level', 'badges'])
+                ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                ->withCount(['followers', 'following']);
 
-        if ($level = $request->get('level')) {
-            if (is_numeric($level)) {
-                $query->where('level_id', (int)$level);
-            } else {
-                $query->whereHas('level', function ($q) use ($level) {
-                    $q->whereRaw('LOWER(name) = ?', [Str::of($level)->replace('-', ' ')->lower()]);
+            if ($search = $filters['search']) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('username', 'LIKE', "%{$search}%");
                 });
             }
-        }
 
-        switch ($request->get('sort', 'xp')) {
-            case 'xp': $query->orderByDesc('xp'); break;
-            case 'posts': $query->orderByDesc('posts_count'); break;
-            case 'followers': $query->orderByDesc('followers_count'); break;
-            case 'recent': $query->latest(); break;
-        }
+            if ($level = $filters['level']) {
+                if (is_numeric($level)) {
+                    $query->where('level_id', (int)$level);
+                } else {
+                    $query->whereHas('level', function ($q) use ($level) {
+                        $q->whereRaw('LOWER(name) = ?', [Str::of($level)->replace('-', ' ')->lower()]);
+                    });
+                }
+            }
 
-        return UserResource::collection($query->paginate(20));
+            switch ($filters['sort']) {
+                case 'xp': $query->orderByDesc('xp'); break;
+                case 'posts': $query->orderByDesc('posts_count'); break;
+                case 'followers': $query->orderByDesc('followers_count'); break;
+                case 'recent': $query->latest(); break;
+            }
+
+            return UserResource::collection($query->paginate(20));
+        } catch (Throwable $exception) {
+            $traceId = (string) Str::uuid();
+
+            Log::error('Failed to list users', [
+                'filters' => $filters,
+                'trace_id' => $traceId,
+                'error' => $exception,
+            ]);
+
+            return response()->json([
+                'message' => 'Service unavailable. Please try again later.',
+                'trace_id' => $traceId,
+            ], 503);
+        }
     }
 
     public function show(string $username)
