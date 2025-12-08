@@ -20,6 +20,7 @@ use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Throwable;
 
@@ -197,6 +198,7 @@ class PostController extends Controller
                 'user_id' => $req->user()->id,
                 'category_id' => $data['category_id'] ?? null,
                 'title' => $data['title'],
+                'slug' => Str::slug($data['title']) . '-' . Str::random(6),
                 'content_markdown' => $data['content_markdown'],
                 'status' => 'published',
                 'required_xp' => $data['required_xp'] ?? 0,
