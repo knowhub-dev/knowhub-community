@@ -1,5 +1,8 @@
 const AUTH_COOKIE_NAME = 'auth_token';
 const COOKIE_DOMAIN = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
+const isProduction =
+  process.env.NEXT_PUBLIC_APP_ENV === 'production' ||
+  process.env.NODE_ENV === 'production';
 
 const isSecureContext = () =>
   typeof window !== 'undefined' && window.location.protocol === 'https:';
@@ -9,11 +12,17 @@ const buildCookieOptions = (maxAge: number) => {
 
   if (COOKIE_DOMAIN) {
     options.push(`Domain=${COOKIE_DOMAIN}`);
+  } else if (isProduction) {
+    console.warn(
+      'Missing NEXT_PUBLIC_COOKIE_DOMAIN in production. Ensure it matches backend SESSION_DOMAIN.'
+    );
   }
 
   options.push(`Max-Age=${maxAge}`);
 
-  if (isSecureContext()) {
+  if (isProduction) {
+    options.push('SameSite=None', 'Secure');
+  } else if (isSecureContext()) {
     options.push('SameSite=None', 'Secure');
   } else {
     options.push('SameSite=Lax');
