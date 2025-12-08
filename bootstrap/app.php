@@ -3,10 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,36 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-
-        // LARAVEL 11 — endi shouldReturnJson() yo‘q
-        // API uchun JSON javobni shu render orqali boshqaramiz
-
-        $exceptions->render(function (Throwable $e, $request) {
-            if (! $request->is('api/*')) {
-                return null; // API bo‘lmasa Laravel default ishlaydi
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*') || $request->wantsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
             }
-
-            $status = 500;
-            $errors = [];
-            $message = 'Server Error';
-
-            if ($e instanceof AuthenticationException) {
-                $status = 401;
-                $message = 'Unauthenticated';
-            } elseif ($e instanceof ValidationException) {
-                $status = $e->status;
-                $errors = $e->errors();
-                $message = $e->getMessage();
-            } elseif ($e instanceof HttpExceptionInterface) {
-                $status = $e->getStatusCode();
-                $message = $e->getMessage() ?: (Response::$statusTexts[$status] ?? 'Error');
-            }
-
-            return response()->json([
-                'message' => $message,
-                'errors'   => $errors,
-                'status'   => $status,
-            ], $status);
         });
     })
     ->create();
