@@ -1,5 +1,7 @@
 <?php
 
+$primaryDomain = ltrim(env('SESSION_DOMAIN', '.space.knowhub.uz'), '.');
+
 return [
 
     'paths' => [
@@ -36,9 +38,11 @@ return [
         )
     )))),
 
-    'allowed_origin_patterns' => [
-        'https://*.space.knowhub.uz',
-    ],
+    'allowed_origin_patterns' => array_values(array_filter([
+        'https://*.' . $primaryDomain,
+        'http://*.' . $primaryDomain,
+        env('CORS_ALLOWED_ORIGIN_PATTERN'),
+    ])),
 
     'allowed_headers' => ['*'],
 

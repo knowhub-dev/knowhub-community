@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use App\Models\Comment;
 use App\Models\Container;
 use App\Models\Post;
@@ -43,6 +45,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->environment('production') || $this->app->environment('local')) {
+            URL::forceScheme('https');
+            $this->app['request']->server->set('HTTPS', 'on');
+        }
+
+        Schema::defaultStringLength(191);
+
         Relation::morphMap([
             'post' => Post::class,
             'comment' => Comment::class,
