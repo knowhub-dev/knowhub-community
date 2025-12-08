@@ -13,6 +13,22 @@ export const api = axios.create({
   },
 });
 
+let csrfCookiePromise: Promise<void> | null = null;
+
+export const ensureCsrfCookie = () => {
+  if (!csrfCookiePromise) {
+    csrfCookiePromise = api
+      .get('/sanctum/csrf-cookie')
+      .then(() => undefined)
+      .catch(error => {
+        csrfCookiePromise = null;
+        throw error;
+      });
+  }
+
+  return csrfCookiePromise;
+};
+
 // Xatolarni global tutish
 api.interceptors.response.use(
   response => response,
