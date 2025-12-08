@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -33,7 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             $errors = [];
             $message = 'Server Error';
 
-            if ($e instanceof ValidationException) {
+            if ($e instanceof AuthenticationException) {
+                $status = 401;
+                $message = 'Unauthenticated';
+            } elseif ($e instanceof ValidationException) {
                 $status = $e->status;
                 $errors = $e->errors();
                 $message = $e->getMessage();
