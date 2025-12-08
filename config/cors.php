@@ -1,6 +1,9 @@
 <?php
 
-$primaryDomain = ltrim(env('SESSION_DOMAIN', '.space.knowhub.uz'), '.');
+$sessionDomain = env('SESSION_DOMAIN', '.knowhub.uz');
+$primaryDomain = ltrim($sessionDomain, '.');
+$frontendUrl = rtrim(env('FRONTEND_URL', 'https://' . $primaryDomain), '/');
+$appUrl = rtrim(env('APP_URL', 'https://api.' . $primaryDomain), '/');
 
 return [
 
@@ -20,17 +23,17 @@ return [
 
     'allowed_origins' => array_values(array_filter(array_unique(array_merge(
         [
-            'https://space.knowhub.uz',
-            'https://www.space.knowhub.uz',
-            'https://api.space.knowhub.uz',
+            'https://' . $primaryDomain,
+            'https://www.' . $primaryDomain,
+            'https://api.' . $primaryDomain,
             'http://localhost',
             'http://localhost:3000',
             'http://127.0.0.1',
             'http://127.0.0.1:3000',
         ],
         [
-            rtrim(env('FRONTEND_URL', ''), '/'),
-            rtrim(env('APP_URL', ''), '/'),
+            $frontendUrl,
+            $appUrl,
         ],
         array_map(
             'trim',
