@@ -6,9 +6,9 @@ import { fetchServerAuthenticatedUser } from '@/lib/server-auth';
 import CreatePostPageClient from './CreatePostPageClient';
 
 export default async function CreatePostPage() {
-  const { user, hasToken } = await fetchServerAuthenticatedUser();
+  const { user, hasSession } = await fetchServerAuthenticatedUser();
 
-  if (!hasToken || !user) {
+  if (!hasSession || !user) {
     redirect('/auth/login');
   }
 
