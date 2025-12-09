@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-import { clearAuthCookie } from './auth-cookie';
 import { getApiBaseUrl } from './api-base-url';
 
 export const api = axios.create({
@@ -43,12 +42,7 @@ api.interceptors.response.use(
       });
 
       if (error.response.status === 401) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          delete api.defaults.headers.common['Authorization'];
-        }
-
-        clearAuthCookie();
+        // Unauthorized responses are handled by the calling code.
       }
 
       if ([404, 500].includes(error.response.status)) {

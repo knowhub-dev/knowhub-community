@@ -181,12 +181,8 @@ function normalizeMiniServers(value: unknown): DashboardMiniServer[] {
     .filter(server => Boolean(server.name));
 }
 
-async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null> {
-  const headers: HeadersInit = token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
+async function fetchEndpoint<T>(path: string, cookieHeader?: string): Promise<T | null> {
+  const headers: HeadersInit = cookieHeader ? { Cookie: cookieHeader } : {};
 
   try {
     const response = await fetch(buildApiUrl(path), {
@@ -211,7 +207,7 @@ async function fetchEndpoint<T>(path: string, token?: string): Promise<T | null>
 
 export async function fetchDashboardData(): Promise<DashboardData> {
   const cookieStore = cookies();
-  const authToken = cookieStore.get('auth_token')?.value;
+  const cookieHeader = cookieStore.toString();
 
   const [
     profileResponse,
@@ -223,14 +219,14 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     contributionResponse,
     missionsResponse,
   ] = await Promise.all([
-    fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', authToken),
-    fetchEndpoint<DashboardActivity>('/dashboard/activity', authToken),
-    fetchEndpoint<DashboardStats>('/dashboard/stats', authToken),
-    fetchEndpoint<unknown>('/dashboard/trending', authToken),
-    fetchEndpoint<unknown>('/dashboard/analytics', authToken),
-    fetchEndpoint<MiniServerLike[]>('/containers', authToken),
-    fetchEndpoint<DashboardActivity | { contributions?: ContributionPoint[] }>('/dashboard/contributions', authToken),
-    fetchEndpoint<DashboardMission[] | { missions?: DashboardMission[] }>('/dashboard/missions', authToken),
+    fetchEndpoint<DashboardProfile | { profile?: DashboardProfile }>('/profile/me', cookieHeader),
+    fetchEndpoint<DashboardActivity>('/dashboard/activity', cookieHeader),
+    fetchEndpoint<DashboardStats>('/dashboard/stats', cookieHeader),
+    fetchEndpoint<unknown>('/dashboard/trending', cookieHeader),
+    fetchEndpoint<unknown>('/dashboard/analytics', cookieHeader),
+    fetchEndpoint<MiniServerLike[]>('/containers', cookieHeader),
+    fetchEndpoint<DashboardActivity | { contributions?: ContributionPoint[] }>('/dashboard/contributions', cookieHeader),
+    fetchEndpoint<DashboardMission[] | { missions?: DashboardMission[] }>('/dashboard/missions', cookieHeader),
   ]);
 
   const profile = (profileResponse as { profile?: DashboardProfile } | null)?.profile ?? (profileResponse as DashboardProfile | null);

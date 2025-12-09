@@ -14,31 +14,24 @@ export const generateMetadata = generateStaticMetadata({
 
 export default async function HomePage() {
   const cookieStore = cookies();
-  const authToken = cookieStore.get('auth_token')?.value;
+  const cookieHeader = cookieStore.toString();
 
-  const cookieHeader = cookieStore
-    .getAll()
-    .map(cookie => `${cookie.name}=${cookie.value}`)
-    .join('; ');
+  try {
+    const response = await fetch(buildApiUrl('/profile/me'), {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      },
+      credentials: 'include',
+      cache: 'no-store',
+    });
 
-  if (authToken) {
-    try {
-      const response = await fetch(buildApiUrl('/profile/me'), {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-        },
-        credentials: 'include',
-        cache: 'no-store',
-      });
-
-      if (response.ok) {
-        redirect('/dashboard');
-      }
-    } catch (error) {
-      console.error('Failed to validate session on HomePage:', error);
+    if (response.ok) {
+      redirect('/dashboard');
     }
+  } catch (error) {
+    console.error('Failed to validate session on HomePage:', error);
   }
 
   return <GuestLandingServer />;

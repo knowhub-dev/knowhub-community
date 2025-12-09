@@ -5,9 +5,9 @@ import DashboardServer from './DashboardServer';
 
 export default function DashboardPage() {
   const cookieStore = cookies();
-  const authToken = cookieStore.get('auth_token')?.value;
+  const hasSessionCookies = cookieStore.getAll().length > 0;
 
-  if (!authToken) {
+  if (!hasSessionCookies) {
     redirect('/auth/login');
   }
 

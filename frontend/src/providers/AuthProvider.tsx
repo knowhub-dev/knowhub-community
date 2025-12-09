@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth-cookie';
 import type { User as BaseUser } from '@/types';
 
 interface AuthUser extends BaseUser {
@@ -21,15 +20,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const resolveStoredToken = () => {
-  if (typeof window === 'undefined') return null;
-
-  const storedToken = localStorage.getItem('auth_token');
-  if (storedToken) return storedToken;
-
-  return getAuthCookie();
-};
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -56,37 +46,26 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   };
 
   useEffect(() => {
-    const token = resolveStoredToken();
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    }
-
     checkUser();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await api.post<{ token: string; user: AuthUser }>('/auth/login', {
+    const response = await api.post<{ token?: string; user: AuthUser }>('/auth/login', {
       email,
       password,
     });
-    const { token, user: userData } = response.data;
-    setAuthCookie(token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    localStorage.setItem('auth_token', token);
+    const { user: userData } = response.data;
     setUser(userData);
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    const response = await api.post<{ token: string; user: AuthUser }>('/auth/register', {
+    const response = await api.post<{ token?: string; user: AuthUser }>('/auth/register', {
       name,
       username,
       email,
       password,
     });
-    const { token, user: userData } = response.data;
-    setAuthCookie(token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    localStorage.setItem('auth_token', token);
+    const { user: userData } = response.data;
     setUser(userData);
   };
 
@@ -96,9 +75,6 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     } catch {
       // Ignore
     } finally {
-      clearAuthCookie();
-      localStorage.removeItem('auth_token');
-      delete api.defaults.headers.common['Authorization'];
       setUser(null);
     }
   };
