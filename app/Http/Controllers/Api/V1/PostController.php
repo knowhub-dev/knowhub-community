@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 // file: app/Http/Controllers/Api/V1/PostController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Filters\PostFilter;
@@ -14,14 +15,14 @@ use App\Jobs\GeneratePostAiDraft;
 use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Tag;
-use Illuminate\Http\Request;
 use Illuminate\Cache\Repository;
 use Illuminate\Cache\TaggedCache;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Throwable;
 
 class PostController extends Controller
@@ -44,8 +45,7 @@ class PostController extends Controller
         $cacheKey = $filter->cacheKey($validated, $request->user()?->id);
 
         if ($cacheKey !== null) {
-            return $this->postsCacheStore()->remember($cacheKey, 300, static fn () =>
-                PostResource::collection($query->paginate($perPage))
+            return $this->postsCacheStore()->remember($cacheKey, 300, static fn () => PostResource::collection($query->paginate($perPage))
             );
         }
 
@@ -54,7 +54,7 @@ class PostController extends Controller
 
     public function show(string $slug)
     {
-        $cacheKey = 'post:' . $slug;
+        $cacheKey = 'post:'.$slug;
 
         try {
             $post = Cache::remember($cacheKey, 600, function () use ($slug) {
@@ -87,12 +87,12 @@ class PostController extends Controller
     public function related(string $slug)
     {
         $post = Post::where('slug', $slug)->firstOrFail();
-        
+
         $cacheKey = "post:related:{$slug}";
-        
+
         $relatedPosts = Cache::remember($cacheKey, 1800, function () use ($post) {
             $tagIds = $post->tags->pluck('id');
-            
+
             return Post::with([
                 'author:id,name,username,avatar_url,level_id',
                 'author.level:id,name,min_xp,icon',
@@ -109,21 +109,21 @@ class PostController extends Controller
                     }
                     // Or shared tags
                     if ($tagIds->isNotEmpty()) {
-                        $q->orWhereHas('tags', fn($t) => $t->whereIn('tags.id', $tagIds));
+                        $q->orWhereHas('tags', fn ($t) => $t->whereIn('tags.id', $tagIds));
                     }
                 })
                 ->orderByDesc('score')
                 ->limit(5)
                 ->get();
         });
-        
+
         return PostResource::collection($relatedPosts);
     }
 
     public function trending()
     {
         $cacheKey = 'posts:trending:weekly';
-        
+
         $trendingPosts = Cache::remember($cacheKey, 600, function () {
             return Post::with([
                 'author:id,name,username,avatar_url,level_id',
@@ -139,14 +139,14 @@ class PostController extends Controller
                 ->limit(10)
                 ->get();
         });
-        
+
         return PostResource::collection($trendingPosts);
     }
 
     public function featured()
     {
         $cacheKey = 'posts:featured';
-        
+
         $featuredPosts = Cache::remember($cacheKey, 3600, function () {
             return Post::with([
                 'author:id,name,username,avatar_url,level_id',
@@ -162,7 +162,7 @@ class PostController extends Controller
                 ->limit(5)
                 ->get();
         });
-        
+
         return PostResource::collection($featuredPosts);
     }
 
@@ -170,25 +170,25 @@ class PostController extends Controller
     {
         $user = $req->user();
 
-        if (!$user) {
+        if (! $user) {
             Log::error('Post store attempted without authenticated user');
 
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
-        
+
         // XP tekshirish
         if ($req->input('required_xp', 0) > 0 && $user->xp < $req->input('required_xp')) {
             return response()->json([
                 'message' => 'Bu postni yaratish uchun yetarli XP ballingiz yo\'q',
                 'required_xp' => $req->input('required_xp'),
-                'your_xp' => $user->xp
+                'your_xp' => $user->xp,
             ], 403);
         }
 
         // Verifikatsiya tekshirish
-        if ($req->input('requires_verification', false) && !$user->is_verified) {
+        if ($req->input('requires_verification', false) && ! $user->is_verified) {
             return response()->json([
-                'message' => 'Bu postni yaratish uchun verificatsiyadan o\'tishingiz kerak'
+                'message' => 'Bu postni yaratish uchun verificatsiyadan o\'tishingiz kerak',
             ], 403);
         }
 
@@ -198,26 +198,28 @@ class PostController extends Controller
                 'user_id' => $req->user()->id,
                 'category_id' => $data['category_id'] ?? null,
                 'title' => $data['title'],
-                'slug' => Str::slug($data['title']) . '-' . Str::random(6),
+                'slug' => Str::slug($data['title']).'-'.Str::random(6),
                 'content_markdown' => $data['content_markdown'],
                 'status' => 'published',
                 'required_xp' => $data['required_xp'] ?? 0,
                 'requires_verification' => $data['requires_verification'] ?? false,
             ]);
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $tagIds = collect($data['tags'])->map(function ($name) {
                     $name = trim($name);
-                    $tag = Tag::firstOrCreate(['name'=>$name], ['slug'=>\Str::slug($name)]);
+                    $tag = Tag::firstOrCreate(['name' => $name], ['slug' => \Str::slug($name)]);
+
                     return $tag->id;
                 });
                 $post->tags()->sync($tagIds);
             }
-            return $post->fresh(['user.level','tags','category']);
+
+            return $post->fresh(['user.level', 'tags', 'category']);
         });
 
         // Clear cache
         $this->clearPostCaches();
-        
+
         // Notify followers
         $this->notifyFollowers($post);
 
@@ -235,7 +237,8 @@ class PostController extends Controller
             $post->fill($data)->save();
             if (isset($data['tags'])) {
                 $tagIds = collect($data['tags'])->map(function ($name) {
-                    $tag = Tag::firstOrCreate(['name'=>$name], ['slug'=>\Str::slug($name)]);
+                    $tag = Tag::firstOrCreate(['name' => $name], ['slug' => \Str::slug($name)]);
+
                     return $tag->id;
                 });
                 $post->tags()->sync($tagIds);
@@ -245,7 +248,7 @@ class PostController extends Controller
         // Clear cache
         $this->clearPostCaches($post->slug);
 
-        return new PostResource($post->fresh(['user.level','tags','category']));
+        return new PostResource($post->fresh(['user.level', 'tags', 'category']));
     }
 
     public function destroy(Request $req, Post $post)
@@ -254,9 +257,10 @@ class PostController extends Controller
 
         // Clear cache
         $this->clearPostCaches($post->slug);
-        
+
         $post->delete();
-        return response()->json(['ok'=>true]);
+
+        return response()->json(['ok' => true]);
     }
 
     private function clearPostCaches(?string $slug = null): void
@@ -267,12 +271,12 @@ class PostController extends Controller
         } else {
             Cache::flush();
         }
-        
+
         if ($slug) {
             Cache::forget("post:{$slug}");
             Cache::forget("post:related:{$slug}");
         }
-        
+
         // Clear trending and featured caches
         Cache::forget('posts:trending:weekly');
         Cache::forget('posts:featured');
@@ -288,7 +292,7 @@ class PostController extends Controller
     private function notifyFollowers(Post $post): void
     {
         $followers = $post->user->followers()->get();
-        
+
         foreach ($followers as $follower) {
             Notification::create([
                 'user_id' => $follower->id,
@@ -298,12 +302,11 @@ class PostController extends Controller
                 'data' => [
                     'post_id' => $post->id,
                     'post_slug' => $post->slug,
-                    'author_name' => $post->user->name
+                    'author_name' => $post->user->name,
                 ],
                 'notifiable_id' => $post->id,
-                'notifiable_type' => Post::class
+                'notifiable_type' => Post::class,
             ]);
         }
     }
 }
-

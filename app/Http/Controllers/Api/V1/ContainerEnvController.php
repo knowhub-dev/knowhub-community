@@ -15,9 +15,7 @@ use Illuminate\Support\Facades\Gate;
 
 class ContainerEnvController extends Controller
 {
-    public function __construct(private readonly ContainerEnvService $envService)
-    {
-    }
+    public function __construct(private readonly ContainerEnvService $envService) {}
 
     public function index(Container $container): JsonResponse
     {

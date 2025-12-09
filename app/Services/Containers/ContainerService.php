@@ -13,9 +13,7 @@ class ContainerService
     public function __construct(
         private readonly ContainerLifecycleService $lifecycleService,
         private readonly ContainerEnvService $envService,
-    )
-    {
-    }
+    ) {}
 
     /** @return Collection<int, Container> */
     public function listForUser(User $user, array $filters = []): Collection

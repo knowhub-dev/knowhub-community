@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
 use App\Models\Category;
-use App\Models\Tag;
-use App\Models\User;
 use App\Models\Comment;
+use App\Models\Post;
+use App\Models\User;
 use App\Models\WikiArticle;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,17 +19,18 @@ class HomeController extends Controller
     {
         try {
             // Try to get data from API first
-            $response = Http::timeout(5)->get(config('app.url') . '/api/v1/stats/homepage');
-            
+            $response = Http::timeout(5)->get(config('app.url').'/api/v1/stats/homepage');
+
             if ($response->successful()) {
                 $apiData = $response->json();
+
                 return view('welcome', $apiData);
             }
         } catch (\Exception $e) {
             // Fallback to direct database queries
-            Log::warning('API call failed, using fallback data: ' . $e->getMessage());
+            Log::warning('API call failed, using fallback data: '.$e->getMessage());
         }
-        
+
         // Fallback data
         $cacheKey = 'homepage:fallback:data';
         $data = Cache::remember($cacheKey, 300, function () {
@@ -96,7 +96,7 @@ class HomeController extends Controller
         return Category::select('id', 'name', 'slug', 'description')
             ->withCount(['posts' => function ($q) {
                 $q->where('status', 'published')
-                  ->where('created_at', '>=', now()->subDays(30));
+                    ->where('created_at', '>=', now()->subDays(30));
             }])
             ->having('posts_count', '>', 0)
             ->orderByDesc('posts_count')
@@ -104,6 +104,7 @@ class HomeController extends Controller
             ->get()
             ->map(function ($category) {
                 $category->icon = $this->getCategoryIcon($category->slug);
+
                 return $category;
             });
     }
@@ -126,7 +127,7 @@ class HomeController extends Controller
     {
         return User::with('level')
             ->where('xp', '>', 50)
-            ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
+            ->withCount(['posts' => fn ($q) => $q->where('status', 'published')])
             ->orderByDesc('xp')
             ->limit(5)
             ->get();

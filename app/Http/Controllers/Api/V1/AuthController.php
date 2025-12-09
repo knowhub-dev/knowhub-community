@@ -10,8 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -31,21 +31,18 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        Auth::login($user);
-
         $user->loadMissing(['level', 'badges'])
             ->loadCount([
-                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                 'followers',
-                'following'
+                'following',
             ]);
 
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
             'user' => new UserResource($user),
-        ], 201);
+        ], 201)->withCookie(cookie('auth_token', $token, 60 * 24 * 30, null, null, true, true));
     }
 
     public function login(Request $request)
@@ -61,28 +58,25 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 422);
         }
 
-        Auth::login($user);
-
         $user->loadMissing(['level', 'badges'])
             ->loadCount([
-                'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                 'followers',
-                'following'
+                'following',
             ]);
 
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
             'user' => new UserResource($user),
-        ]);
+        ])->withCookie(cookie('auth_token', $token, 60 * 24 * 30, null, null, true, true));
     }
 
     public function logout(Request $request)
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             Log::warning('Logout attempted without authenticated user context');
 
             return response()->json(['message' => 'Unauthenticated.'], 401);
@@ -92,12 +86,7 @@ class AuthController extends Controller
             $token->delete();
         }
 
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json(['message' => 'Logged out']);
+        return response()->json(['message' => 'Logged out'])->withCookie(cookie()->forget('auth_token'));
     }
 
     public function refreshToken(Request $request)
@@ -111,15 +100,14 @@ class AuthController extends Controller
         $newToken = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'token' => $newToken,
             'user' => new UserResource(
                 $user->loadMissing(['level', 'badges'])
                     ->loadCount([
-                        'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                        'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                         'followers',
-                        'following'
+                        'following',
                     ])
             ),
-        ]);
+        ])->withCookie(cookie('auth_token', $newToken, 60 * 24 * 30, null, null, true, true));
     }
 }

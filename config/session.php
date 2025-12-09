@@ -3,7 +3,7 @@
 use Illuminate\Support\Str;
 
 $appHost = parse_url(env('APP_URL', ''), PHP_URL_HOST) ?: 'localhost';
-$sessionDomain = env('SESSION_DOMAIN', '.' . ltrim(env('APP_URL_BASE', $appHost), '.'));
+$sessionDomain = env('SESSION_DOMAIN', '.'.ltrim(env('APP_URL_BASE', $appHost), '.'));
 $defaultSameSite = env('APP_ENV') === 'production' ? 'none' : 'lax';
 
 return [

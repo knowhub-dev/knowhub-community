@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('containers', function (Blueprint $table) {
@@ -22,7 +23,7 @@ return new class extends Migration {
             // combined status system
             // agar enumni afzal ko'rsang pastdagini uncomment qilasan
             $table->enum('status', ['creating', 'running', 'stopped', 'error', 'created'])
-                  ->default('creating');
+                ->default('creating');
 
             // resource limits (merge)
             $table->integer('cpu_limit')->default(1);          // new file default
@@ -39,7 +40,7 @@ return new class extends Migration {
 
             // restart policy if needed
             $table->enum('restart_policy', ['none', 'on-failure', 'always'])
-                  ->default('none');
+                ->default('none');
 
             $table->timestamps();
             $table->softDeletes();

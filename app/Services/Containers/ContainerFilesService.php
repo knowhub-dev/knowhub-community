@@ -9,9 +9,7 @@ use Illuminate\Support\Str;
 
 class ContainerFilesService
 {
-    public function __construct(private readonly Filesystem $filesystem)
-    {
-    }
+    public function __construct(private readonly Filesystem $filesystem) {}
 
     /** @return array<int,string> */
     public function list(Container $container): array
@@ -38,6 +36,7 @@ class ContainerFilesService
 
         if ($operation === 'append') {
             $disk->append($fullPath, $content ?? '');
+
             return;
         }
 
@@ -53,12 +52,13 @@ class ContainerFilesService
 
     private function basePath(Container $container): string
     {
-        return 'containers/' . $container->id;
+        return 'containers/'.$container->id;
     }
 
     private function normalizePath(Container $container, string $path): string
     {
         $path = Str::of($path)->ltrim('/')->toString();
-        return $this->basePath($container) . '/' . $path;
+
+        return $this->basePath($container).'/'.$path;
     }
 }

@@ -8,16 +8,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContainerRequest;
 use App\Models\Container;
 use App\Services\Docker\ContainerService;
+use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use App\Support\Settings;
 use RuntimeException;
-use Throwable;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class ContainerController extends Controller
 {
@@ -38,6 +38,7 @@ class ContainerController extends Controller
             ->with('stats')
             ->latest()
             ->get();
+
         return response()->json($containers);
     }
 
@@ -50,7 +51,7 @@ class ContainerController extends Controller
 
         $user = $request->user();
 
-        if (!$user->canCreateContainer()) {
+        if (! $user->canCreateContainer()) {
             return response()->json([
                 'message' => 'Pro versiyaga o‘ting!',
             ], Response::HTTP_FORBIDDEN);
@@ -81,7 +82,7 @@ class ContainerController extends Controller
             DB::transaction(function () use (&$container) {
                 $container->save();
 
-                if (!$this->containerService->create($container)) {
+                if (! $this->containerService->create($container)) {
                     throw new RuntimeException('Docker container provisioning failed.');
                 }
             });
@@ -107,6 +108,7 @@ class ContainerController extends Controller
     public function show(Container $container)
     {
         $this->authorize('view', $container);
+
         return response()->json($container->load('stats'));
     }
 
@@ -207,8 +209,8 @@ class ContainerController extends Controller
         $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
 
         $validator = Validator::make($request->all(), [
-            'env_vars' => ['required', 'array', 'max:' . $maxEnvVars],
-            'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
+            'env_vars' => ['required', 'array', 'max:'.$maxEnvVars],
+            'env_vars.*' => ['nullable', 'string', 'max:'.$envValueMaxLength],
         ]);
 
         $validator->after(function ($validator) use ($request, $keyPattern) {
@@ -217,12 +219,12 @@ class ContainerController extends Controller
                 $normalizedKey = strtoupper(trim((string) $key));
                 $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
 
-                if (!preg_match($keyPattern, $normalizedKey ?? '')) {
-                    $validator->errors()->add('env_vars.' . $key, 'Invalid environment variable key.');
+                if (! preg_match($keyPattern, $normalizedKey ?? '')) {
+                    $validator->errors()->add('env_vars.'.$key, 'Invalid environment variable key.');
                 }
 
-                if (!is_null($value) && !is_scalar($value)) {
-                    $validator->errors()->add('env_vars.' . $key, 'Environment values must be simple strings or numbers.');
+                if (! is_null($value) && ! is_scalar($value)) {
+                    $validator->errors()->add('env_vars.'.$key, 'Environment values must be simple strings or numbers.');
                 }
             }
         });
@@ -233,7 +235,7 @@ class ContainerController extends Controller
 
         $normalizedEnv = $this->normalizeEnvVars($request->input('env_vars', []));
 
-        if (!$this->containerService->updateEnv($container, $normalizedEnv)) {
+        if (! $this->containerService->updateEnv($container, $normalizedEnv)) {
             return response()->json(['message' => 'Failed to update environment variables'], 500);
         }
 
@@ -326,7 +328,7 @@ class ContainerController extends Controller
         $suffix = 1;
 
         while (Container::where('subdomain', $candidate)->exists()) {
-            $candidate = $base . '-' . (++$suffix);
+            $candidate = $base.'-'.(++$suffix);
         }
 
         return $candidate;
@@ -334,13 +336,13 @@ class ContainerController extends Controller
 
     private function normalizeEnvVars($envVars): array
     {
-        if (!is_array($envVars)) {
+        if (! is_array($envVars)) {
             return [];
         }
 
         $normalized = [];
         foreach ($envVars as $key => $value) {
-            if (!is_string($key) || trim($key) === '') {
+            if (! is_string($key) || trim($key) === '') {
                 continue;
             }
 
@@ -356,7 +358,7 @@ class ContainerController extends Controller
                 continue;
             }
 
-            if (!is_scalar($value)) {
+            if (! is_scalar($value)) {
                 continue;
             }
 

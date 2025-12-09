@@ -10,8 +10,7 @@ class PaymeService implements PaymentGatewayInterface
     public function __construct(
         private readonly ?string $merchantId,
         private readonly ?string $secretKey,
-    ) {
-    }
+    ) {}
 
     public function provider(): string
     {
@@ -22,13 +21,13 @@ class PaymeService implements PaymentGatewayInterface
     {
         $authHeader = $request->header('Authorization');
 
-        if (!$authHeader || !str_starts_with($authHeader, 'Basic ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Basic ')) {
             return false;
         }
 
         $credentials = base64_decode(substr($authHeader, 6), true);
 
-        if (!$credentials || !str_contains($credentials, ':')) {
+        if (! $credentials || ! str_contains($credentials, ':')) {
             return false;
         }
 
@@ -41,7 +40,7 @@ class PaymeService implements PaymentGatewayInterface
 
     public function handleCallback(Request $request): JsonResponse
     {
-        if (!$this->validateSignature($request)) {
+        if (! $this->validateSignature($request)) {
             return response()->json([
                 'jsonrpc' => $request->input('jsonrpc', '2.0'),
                 'error' => [

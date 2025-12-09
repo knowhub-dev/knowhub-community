@@ -10,8 +10,7 @@ class ClickService implements PaymentGatewayInterface
     public function __construct(
         private readonly ?string $serviceId,
         private readonly ?string $secretKey,
-    ) {
-    }
+    ) {}
 
     public function provider(): string
     {
@@ -26,11 +25,11 @@ class ClickService implements PaymentGatewayInterface
         $action = $request->input('action');
         $signTime = $request->input('sign_time');
 
-        if (!$this->serviceId || !$this->secretKey || !$signString) {
+        if (! $this->serviceId || ! $this->secretKey || ! $signString) {
             return false;
         }
 
-        $hashSource = $merchantTransId . $this->serviceId . $this->secretKey . $amount . $action . $signTime;
+        $hashSource = $merchantTransId.$this->serviceId.$this->secretKey.$amount.$action.$signTime;
         $expected = md5($hashSource);
 
         return hash_equals($expected, $signString);
@@ -38,7 +37,7 @@ class ClickService implements PaymentGatewayInterface
 
     public function handleCallback(Request $request): JsonResponse
     {
-        if (!$this->validateSignature($request)) {
+        if (! $this->validateSignature($request)) {
             return response()->json([
                 'error' => true,
                 'message' => 'Invalid signature',

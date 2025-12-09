@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Http/Controllers/Api/V1/CodeRunController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -17,8 +19,8 @@ class CodeRunController extends Controller
     {
         $data = $req->validated();
         $postId = null;
-        if (!empty($data['post_slug'])) {
-            $postId = Post::where('slug',$data['post_slug'])->value('id');
+        if (! empty($data['post_slug'])) {
+            $postId = Post::where('slug', $data['post_slug'])->value('id');
         }
 
         $run = CodeRun::create([
@@ -41,7 +43,6 @@ class CodeRunController extends Controller
             $run->save();
         });
 
-        return $run->only(['id','language','stdout','stderr','exit_code','runtime_ms','status']);
+        return $run->only(['id', 'language', 'stdout', 'stderr', 'exit_code', 'runtime_ms', 'status']);
     }
 }
-

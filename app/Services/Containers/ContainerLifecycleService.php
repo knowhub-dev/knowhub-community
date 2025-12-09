@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class ContainerLifecycleService
 {
-    public function __construct(private readonly DockerAdapter $adapter)
-    {
-    }
+    public function __construct(private readonly DockerAdapter $adapter) {}
 
     public function create(Container $container, array $envVars = []): Container
     {

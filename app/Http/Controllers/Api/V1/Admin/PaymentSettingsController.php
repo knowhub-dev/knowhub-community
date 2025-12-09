@@ -20,7 +20,7 @@ class PaymentSettingsController extends Controller
 
         foreach ($data as $key => $value) {
             if ($value !== null) {
-                Settings::set('payments.' . $key, $value, 'encrypted');
+                Settings::set('payments.'.$key, $value, 'encrypted');
             }
         }
 
@@ -35,8 +35,8 @@ class PaymentSettingsController extends Controller
         $baseUrl = rtrim(config('app.url'), '/');
 
         return response()->json([
-            'payme' => $baseUrl . route('payments.payme.callback', [], false),
-            'click' => $baseUrl . route('payments.click.callback', [], false),
+            'payme' => $baseUrl.route('payments.payme.callback', [], false),
+            'click' => $baseUrl.route('payments.click.callback', [], false),
         ]);
     }
 }

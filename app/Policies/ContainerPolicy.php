@@ -29,6 +29,6 @@ class ContainerPolicy
 
     public function create(User $user): bool
     {
-        return $user !== null;
+        return $user->canCreateContainer();
     }
 }

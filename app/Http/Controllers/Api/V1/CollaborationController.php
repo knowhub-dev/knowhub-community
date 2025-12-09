@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Http/Controllers/Api/V1/CollaborationController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -60,7 +62,7 @@ class CollaborationController extends Controller
             ->with('participants.user')
             ->first();
 
-        if (!$session) {
+        if (! $session) {
             return response()->json(['message' => 'Faol sessiya topilmadi'], 404);
         }
 
@@ -87,7 +89,7 @@ class CollaborationController extends Controller
     public function heartbeat(Request $request, CollaborationSession $session)
     {
         $participant = $session->participants()->where('user_id', $request->user()->id)->first();
-        if (!$participant) {
+        if (! $participant) {
             return response()->json(['message' => 'Sessiyada ro\'yxatdan o\'tmagansiz'], 404);
         }
 
@@ -107,7 +109,7 @@ class CollaborationController extends Controller
             'payload' => 'required|array',
         ]);
 
-        if (!$session->participants()->where('user_id', $request->user()->id)->exists()) {
+        if (! $session->participants()->where('user_id', $request->user()->id)->exists()) {
             return response()->json(['message' => 'Sessiyada ro\'yxatdan o\'tmagansiz'], 403);
         }
 
@@ -129,7 +131,7 @@ class CollaborationController extends Controller
         $afterId = $request->query('after_id');
 
         $events = $session->events()
-            ->when($afterId, fn($q) => $q->where('id', '>', $afterId))
+            ->when($afterId, fn ($q) => $q->where('id', '>', $afterId))
             ->orderBy('id')
             ->limit(100)
             ->get();

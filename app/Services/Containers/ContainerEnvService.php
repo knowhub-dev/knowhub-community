@@ -35,13 +35,13 @@ class ContainerEnvService
     }
 
     /**
-     * @param array<string,string|null> $envVars
+     * @param  array<string,string|null>  $envVars
      */
     public function syncFromArray(Container $container, array $envVars): void
     {
         $keys = array_keys($envVars);
 
-        if (!empty($keys)) {
+        if (! empty($keys)) {
             $container->envVars()->whereNotIn('key', $keys)->delete();
         }
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -32,7 +32,8 @@ class ContactController extends Controller
 
             return back()->with('success', 'Xabaringiz muvaffaqiyatli yuborildi! Tez orada javob beramiz.');
         } catch (\Exception $e) {
-            Log::error('Contact form error: ' . $e->getMessage());
+            Log::error('Contact form error: '.$e->getMessage());
+
             return back()->with('error', 'Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
         }
     }

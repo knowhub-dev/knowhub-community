@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 class BrandingController extends Controller
 {
     private const LIGHT_KEY = 'branding.logo.light';
+
     private const DARK_KEY = 'branding.logo.dark';
 
     public function show()
@@ -23,7 +24,7 @@ class BrandingController extends Controller
 
     public function store(Request $request)
     {
-        if (!$request->user() || !$request->user()->is_admin) {
+        if (! $request->user() || ! $request->user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -36,7 +37,7 @@ class BrandingController extends Controller
         $file = $validated['file'];
         $path = $file->storeAs(
             'branding',
-            Str::uuid() . '.' . $file->getClientOriginalExtension(),
+            Str::uuid().'.'.$file->getClientOriginalExtension(),
             'public'
         );
 
@@ -57,7 +58,7 @@ class BrandingController extends Controller
 
     public function destroy(Request $request)
     {
-        if (!$request->user() || !$request->user()->is_admin) {
+        if (! $request->user() || ! $request->user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -79,7 +80,7 @@ class BrandingController extends Controller
 
     private function formatLogoResponse($path): ?array
     {
-        if (!$path) {
+        if (! $path) {
             return null;
         }
 

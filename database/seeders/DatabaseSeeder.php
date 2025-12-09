@@ -1,17 +1,19 @@
 <?php
+
 // file: database/seeders/DatabaseSeeder.php
+
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB; // <-- Muhim!
-use Illuminate\Support\Facades\Hash;
-use App\Models\Category;
-use App\Models\Tag;
-use App\Models\Level;
-use App\Models\User;     // <-- Yangi
-use App\Models\Post;     // <-- Yangi
-use App\Models\Comment;  // <-- Yangi
 use App\Models\Badge;
+use App\Models\Category; // <-- Muhim!
+use App\Models\Comment;
+use App\Models\Level;
+use App\Models\Post;
+use App\Models\Tag;
+use App\Models\User;     // <-- Yangi
+use Illuminate\Database\Seeder;     // <-- Yangi
+use Illuminate\Support\Facades\DB;  // <-- Yangi
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,28 +33,30 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // 1. Kategoriyalar (sizning kodingiz)
-        foreach (['Dasturlash','AI','Cybersecurity','Open Source','DevOps'] as $name) {
-            Category::firstOrCreate(['name'=>$name], ['slug'=>\Str::slug($name)]);
+        foreach (['Dasturlash', 'AI', 'Cybersecurity', 'Open Source', 'DevOps'] as $name) {
+            Category::firstOrCreate(['name' => $name], ['slug' => \Str::slug($name)]);
         }
 
         // 2. Teglar (sizning kodingiz)
         $tags = collect();
-        foreach (['Laravel','Livewire','MySQL','PostgreSQL','Redis','Next.js','Tailwind','Python','PHP','JavaScript'] as $t) {
-            $tags->push(Tag::firstOrCreate(['name'=>$t], ['slug'=>\Str::slug($t)]));
+        foreach (['Laravel', 'Livewire', 'MySQL', 'PostgreSQL', 'Redis', 'Next.js', 'Tailwind', 'Python', 'PHP', 'JavaScript'] as $t) {
+            $tags->push(Tag::firstOrCreate(['name' => $t], ['slug' => \Str::slug($t)]));
         }
 
         // 3. Levellar (sizning kodingiz)
         $levels = [
-            ['name'=>'Novice','min_xp'=>0,'icon'=>'spark'],
-            ['name'=>'Apprentice','min_xp'=>200,'icon'=>'feather'],
-            ['name'=>'Wizard','min_xp'=>1000,'icon'=>'wand'],
-            ['name'=>'Mentor','min_xp'=>2500,'icon'=>'shield'],
+            ['name' => 'Novice', 'min_xp' => 0, 'icon' => 'spark'],
+            ['name' => 'Apprentice', 'min_xp' => 200, 'icon' => 'feather'],
+            ['name' => 'Wizard', 'min_xp' => 1000, 'icon' => 'wand'],
+            ['name' => 'Mentor', 'min_xp' => 2500, 'icon' => 'shield'],
         ];
-        foreach ($levels as $lv) { Level::firstOrCreate(['name'=>$lv['name']], $lv); }
+        foreach ($levels as $lv) {
+            Level::firstOrCreate(['name' => $lv['name']], $lv);
+        }
 
         // 3.1. Badge'larni seeding qilamiz
         $this->call(BadgeSeeder::class);
-        
+
         // 4. ADMINNI YARATAMIZ
         // Default credentialar: admin@knowhub.uz / admin123
         $adminLevelId = Level::orderByDesc('min_xp')->first()?->id ?? 1;
@@ -84,16 +88,16 @@ class DatabaseSeeder extends Seeder
             ->recycle($users) // $users'dan tasodifiy user_id oladi
             ->recycle($posts) // $posts'dan tasodifiy post_id oladi
             ->create();
-            
+
         // 8. (Bonus) Postlarga Teglarni Bog'laymiz
         $posts->each(function ($post) use ($tags) {
             $post->tags()->attach(
                 $tags->random(rand(1, 3))->pluck('id')->toArray()
             );
         });
-        
+
         // 9. (Bonus) Postlardagi kommentlar sonini yangilaymiz
-        foreach($posts as $post) {
+        foreach ($posts as $post) {
             $post->update(['answers_count' => $post->comments()->count()]);
         }
     }

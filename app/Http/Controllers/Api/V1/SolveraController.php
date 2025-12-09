@@ -18,7 +18,7 @@ class SolveraController
 
         $enabled = (bool) Settings::get('solvera.enabled', true);
 
-        if (!$enabled) {
+        if (! $enabled) {
             return response()->json([
                 'message' => 'SolVera hozircha o\'chirilgan.',
             ], 503);
@@ -31,11 +31,11 @@ class SolveraController
         $maxTokens = (int) Settings::get('solvera.max_tokens', 800);
         $persona = Settings::get(
             'solvera.persona',
-            'Sen KnowHub hamjamiyatining SolVera nomli AI yordamchisisan. Iltimos, qisqa va amaliy takliflar ber, ' .
+            'Sen KnowHub hamjamiyatining SolVera nomli AI yordamchisisan. Iltimos, qisqa va amaliy takliflar ber, '.
             'tajribali dasturchi uslubida javob qaytar va foydalanuvchining kontekstiga mos ravishda yo\'l ko\'rsat.'
         );
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'message' => 'SolVera API kaliti topilmadi. Iltimos, administrator bilan bog\'laning.',
             ], 500);
@@ -46,17 +46,17 @@ class SolveraController
             ['role' => 'user', 'content' => $validated['message']],
         ];
 
-        if (!empty($validated['context'])) {
+        if (! empty($validated['context'])) {
             $messages[] = [
                 'role' => 'system',
-                'content' => 'Qo\'shimcha kontekst: ' . json_encode($validated['context']),
+                'content' => 'Qo\'shimcha kontekst: '.json_encode($validated['context']),
             ];
         }
 
         try {
             $response = Http::withToken($apiKey)
                 ->timeout(18)
-                ->post($apiBase . '/chat/completions', [
+                ->post($apiBase.'/chat/completions', [
                     'model' => $model,
                     'messages' => $messages,
                     'temperature' => $temperature,
@@ -64,7 +64,7 @@ class SolveraController
                     'stream' => false,
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::warning('SolVera API error', [
                     'status' => $response->status(),
                     'body' => $response->body(),
@@ -79,7 +79,7 @@ class SolveraController
             $payload = $response->json();
             $reply = $payload['choices'][0]['message']['content'] ?? null;
 
-            if (!$reply) {
+            if (! $reply) {
                 return response()->json([
                     'message' => 'SolVera javobi bo\'sh keldi. Birozdan so\'ng urinib ko\'ring.',
                 ], 502);

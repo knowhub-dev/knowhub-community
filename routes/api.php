@@ -1,34 +1,33 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\ProfileController;
-use App\Http\Controllers\Api\V1\UserController;
-use App\Http\Controllers\Api\V1\PostController;
-use App\Http\Controllers\Api\V1\CommentController;
-use App\Http\Controllers\Api\V1\VoteController;
-use App\Http\Controllers\Api\V1\FollowController;
-use App\Http\Controllers\Api\V1\NotificationController;
-use App\Http\Controllers\Api\V1\ActivityFeedController;
-use App\Http\Controllers\Api\V1\SearchController;
-use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\ContainerController as LegacyContainerController;
+use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BookmarkController;
+use App\Http\Controllers\Api\V1\BrandingController;
+use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ContainerController;
-use App\Http\Controllers\Api\V1\ContainerFileController;
 use App\Http\Controllers\Api\V1\ContainerEnvController;
+use App\Http\Controllers\Api\V1\ContainerFileController;
 use App\Http\Controllers\Api\V1\ContainerLifecycleController;
 use App\Http\Controllers\Api\V1\ContainerLogsController;
 use App\Http\Controllers\Api\V1\ContainerStatsController;
-use App\Http\Controllers\Api\V1\ReportController;
-use App\Http\Controllers\Api\V1\BookmarkController;
-use App\Http\Controllers\Api\V1\CategoryController;
-use App\Http\Controllers\Api\V1\TagController;
-use App\Http\Middleware\RateLimitMiddleware;
-use App\Http\Controllers\Api\V1\BrandingController;
-use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\ContentController;
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\FollowController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\PostController;
+use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SearchController;
+use App\Http\Controllers\Api\V1\StatsController;
+use App\Http\Controllers\Api\V1\TagController;
+use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VoteController;
 use App\Http\Controllers\Auth\OAuthController;
-
+use App\Http\Middleware\RateLimitMiddleware;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,14 +38,12 @@ use App\Http\Controllers\Auth\OAuthController;
 |--------------------------------------------------------------------------
 */
 
-
 Route::prefix('v1')->group(function () {
-
 
     /* ============================
      |  Authentication & Tokens
      ============================ */
-    Route::prefix('auth')->group(function () {
+    Route::prefix('auth')->middleware(RateLimitMiddleware::class.':auth-attempt,5')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -66,12 +63,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/auth/github/redirect', [OAuthController::class, 'redirectGithub']);
     Route::get('/auth/github/callback', [OAuthController::class, 'handleGithubCallback']);
 
-
-
     /* ============================
      | PROTECTED AUTH USER ROUTES
      ============================ */
-    Route::middleware(['auth:sanctum', RateLimitMiddleware::class . ':api,100'])->group(function () {
+    Route::middleware(['auth:sanctum', RateLimitMiddleware::class.':api,100'])->group(function () {
 
         /* ---- PROFILE (MAIN FIX) ---- */
         Route::get('/profile/me', [ProfileController::class, 'me']);                // ✔ Always authenticated
@@ -153,8 +148,6 @@ Route::prefix('v1')->group(function () {
 
     });
 
-
-
     /* ============================
      | PUBLIC ROUTES
      ============================ */
@@ -191,7 +184,6 @@ Route::prefix('v1')->group(function () {
         ->where('username', '^(?!me$)[A-Za-z0-9._-]+$'); // ❗ /me ga to‘qnashmaydi
 
 });
-
 
 /*use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\OAuthController;
@@ -307,4 +299,3 @@ Route::prefix('v1')->group(function () {
 
     });
 });*/
-

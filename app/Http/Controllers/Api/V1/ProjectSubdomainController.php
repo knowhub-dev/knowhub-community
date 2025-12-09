@@ -13,7 +13,7 @@ class ProjectSubdomainController extends Controller
     public function serve(Request $request, string $subdomain, ?string $path = null)
     {
         $validator = Validator::make(['subdomain' => $subdomain], [
-            'subdomain' => ['required', 'string', new ReservedSubdomain()],
+            'subdomain' => ['required', 'string', new ReservedSubdomain],
         ]);
 
         if ($validator->fails()) {
@@ -28,7 +28,7 @@ class ProjectSubdomainController extends Controller
             ->where('subdomain', $subdomain)
             ->first();
 
-        if (!$container) {
+        if (! $container) {
             return response()->json([
                 'message' => 'Project not found.',
                 'subdomain' => $subdomain,
@@ -49,7 +49,7 @@ class ProjectSubdomainController extends Controller
             ],
             'proxy_target' => $target,
             'ready' => $container->status === 'running' && $target !== null,
-            'requested_path' => '/' . ltrim($path ?? '', '/'),
+            'requested_path' => '/'.ltrim($path ?? '', '/'),
         ]);
     }
 }

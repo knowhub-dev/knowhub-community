@@ -1,7 +1,7 @@
 <?php
 
-
 // file: app/Http/Controllers/Auth/OAuthController.php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -190,4 +190,3 @@ class OAuthController extends Controller
         return $candidate;
     }
 }
-

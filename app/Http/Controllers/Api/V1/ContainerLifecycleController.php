@@ -14,8 +14,7 @@ class ContainerLifecycleController extends Controller
 {
     public function __construct(
         private readonly ContainerLifecycleService $lifecycleService,
-    ) {
-    }
+    ) {}
 
     public function start(Container $container): JsonResponse
     {

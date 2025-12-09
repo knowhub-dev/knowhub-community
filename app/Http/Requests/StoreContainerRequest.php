@@ -44,10 +44,10 @@ class StoreContainerRequest extends FormRequest
             'subdomain' => array_filter([
                 'nullable',
                 'string',
-                'min:' . $minSubdomainLength,
-                'max:' . $maxSubdomainLength,
+                'min:'.$minSubdomainLength,
+                'max:'.$maxSubdomainLength,
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                new ReservedSubdomain(),
+                new ReservedSubdomain,
                 Rule::unique('containers', 'subdomain'),
             ]),
             'type' => ['nullable', 'string', Rule::in(array_keys($templateImages))],
@@ -55,8 +55,8 @@ class StoreContainerRequest extends FormRequest
             'cpu_limit' => ['nullable', 'integer', 'min:1', 'max:4'],
             'memory_limit' => ['nullable', 'integer', 'min:128', 'max:2048'],
             'disk_limit' => ['nullable', 'integer', 'min:256', 'max:10240'],
-            'env_vars' => ['nullable', 'array', 'max:' . $maxEnvVars],
-            'env_vars.*' => ['nullable', 'string', 'max:' . $envValueMaxLength],
+            'env_vars' => ['nullable', 'array', 'max:'.$maxEnvVars],
+            'env_vars.*' => ['nullable', 'string', 'max:'.$envValueMaxLength],
         ];
     }
 
@@ -68,28 +68,30 @@ class StoreContainerRequest extends FormRequest
                 return;
             }
 
-            if (!is_array($envVars)) {
+            if (! is_array($envVars)) {
                 $validator->errors()->add('env_vars', 'Environment variables must be an object of key/value pairs.');
+
                 return;
             }
 
             $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
 
             foreach ($envVars as $key => $value) {
-                if (!is_string($key) || trim($key) === '') {
+                if (! is_string($key) || trim($key) === '') {
                     $validator->errors()->add('env_vars', 'Environment variable keys must be non-empty strings.');
+
                     continue;
                 }
 
                 $normalizedKey = strtoupper(trim((string) $key));
                 $normalizedKey = preg_replace('/[^A-Z0-9_]/', '_', $normalizedKey);
 
-                if (!preg_match($keyPattern, $normalizedKey)) {
-                    $validator->errors()->add('env_vars.' . $key, 'Environment variable keys may only include uppercase letters, digits, and underscores.');
+                if (! preg_match($keyPattern, $normalizedKey)) {
+                    $validator->errors()->add('env_vars.'.$key, 'Environment variable keys may only include uppercase letters, digits, and underscores.');
                 }
 
-                if (!is_null($value) && !is_scalar($value)) {
-                    $validator->errors()->add('env_vars.' . $key, 'Environment variable values must be simple strings or numbers.');
+                if (! is_null($value) && ! is_scalar($value)) {
+                    $validator->errors()->add('env_vars.'.$key, 'Environment variable values must be simple strings or numbers.');
                 }
             }
         });

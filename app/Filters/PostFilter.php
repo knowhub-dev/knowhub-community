@@ -21,7 +21,7 @@ class PostFilter
             'category' => ['nullable', 'string', 'max:64'],
             'user' => ['nullable', 'string', 'max:64'],
             'search' => ['nullable', 'string', 'min:3', 'max:80', 'regex:/^[\pL\pN\s\-\._@]+$/u'],
-            'sort' => ['nullable', 'in:' . implode(',', self::ALLOWED_SORTS)],
+            'sort' => ['nullable', 'in:'.implode(',', self::ALLOWED_SORTS)],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
@@ -31,14 +31,11 @@ class PostFilter
     public function apply(Builder $query, array $filters): Builder
     {
         $query->where('status', 'published')
-            ->when($filters['tag'] ?? null, fn (Builder $builder, string $tag) =>
-                $builder->whereHas('tags', fn (Builder $tags) => $tags->where('slug', $tag))
+            ->when($filters['tag'] ?? null, fn (Builder $builder, string $tag) => $builder->whereHas('tags', fn (Builder $tags) => $tags->where('slug', $tag))
             )
-            ->when($filters['category'] ?? null, fn (Builder $builder, string $category) =>
-                $builder->whereHas('category', fn (Builder $categories) => $categories->where('slug', $category))
+            ->when($filters['category'] ?? null, fn (Builder $builder, string $category) => $builder->whereHas('category', fn (Builder $categories) => $categories->where('slug', $category))
             )
-            ->when($filters['user'] ?? null, fn (Builder $builder, string $username) =>
-                $builder->whereHas('user', fn (Builder $users) => $users->where('username', $username))
+            ->when($filters['user'] ?? null, fn (Builder $builder, string $username) => $builder->whereHas('user', fn (Builder $users) => $users->where('username', $username))
             )
             ->when($filters['search'] ?? null, function (Builder $builder, string $search): void {
                 $escaped = $this->escapeLike($search);
@@ -81,12 +78,12 @@ class PostFilter
 
         return implode('|', [
             'posts',
-            'user:' . $normalized['user_id'],
-            'sort:' . $normalized['sort'],
-            'tag:' . $normalized['tag'],
-            'category:' . $normalized['category'],
-            'search:' . ($normalized['search'] === '' ? '' : sha1($normalized['search'])),
-            'per_page:' . $normalized['per_page'],
+            'user:'.$normalized['user_id'],
+            'sort:'.$normalized['sort'],
+            'tag:'.$normalized['tag'],
+            'category:'.$normalized['category'],
+            'search:'.($normalized['search'] === '' ? '' : sha1($normalized['search'])),
+            'per_page:'.$normalized['per_page'],
         ]);
     }
 

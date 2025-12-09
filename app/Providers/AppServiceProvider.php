@@ -2,10 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\URL;
 use App\Models\Comment;
 use App\Models\Container;
 use App\Models\Post;
@@ -16,6 +12,10 @@ use App\Services\AI\OpenAiAssistant;
 use App\Services\CodeRun\CodeRunner;
 use App\Services\CodeRun\PistonCodeRunner;
 use App\Services\Docker\ContainerService;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Container Service binding
         $this->app->singleton(ContainerService::class, function ($app) {
-            return new ContainerService();
+            return new ContainerService;
         });
     }
 
@@ -61,8 +61,3 @@ class AppServiceProvider extends ServiceProvider
         ]);
     }
 }
-
-
-
-
-

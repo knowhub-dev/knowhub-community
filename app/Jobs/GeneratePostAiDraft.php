@@ -1,6 +1,7 @@
 <?php
 
 // file: app/Jobs/GeneratePostAiDraft.php
+
 namespace App\Jobs;
 
 use App\Models\Post;
@@ -27,7 +28,9 @@ class GeneratePostAiDraft implements ShouldQueue
     public function handle(AiAssistant $ai): void
     {
         $post = Post::find($this->postId);
-        if (!$post) return;
+        if (! $post) {
+            return;
+        }
 
         try {
             $suggestion = $ai->suggestAnswer($post->title, $post->content_markdown);
@@ -35,7 +38,7 @@ class GeneratePostAiDraft implements ShouldQueue
             $post->is_ai_suggested = true;
             $post->save();
         } catch (\Exception $e) {
-            \Log::error('AI suggestion failed for post ' . $this->postId . ': ' . $e->getMessage());
+            \Log::error('AI suggestion failed for post '.$this->postId.': '.$e->getMessage());
         }
     }
 }

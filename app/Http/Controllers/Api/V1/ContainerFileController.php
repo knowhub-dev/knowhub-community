@@ -23,20 +23,20 @@ class ContainerFileController extends Controller
         }
         $target = $this->workspacePath($container, $relativePath);
 
-        if (!Storage::disk('local')->exists($target)) {
+        if (! Storage::disk('local')->exists($target)) {
             Storage::disk('local')->makeDirectory($target);
         }
 
         $workspacePrefix = $this->workspacePrefix($container);
         $directories = collect(Storage::disk('local')->directories($target))->map(fn ($dir) => [
             'name' => basename($dir),
-            'path' => trim(Str::after($dir, $workspacePrefix . '/'), '/'),
+            'path' => trim(Str::after($dir, $workspacePrefix.'/'), '/'),
             'type' => 'directory',
         ]);
 
         $files = collect(Storage::disk('local')->files($target))->map(fn ($file) => [
             'name' => basename($file),
-            'path' => trim(Str::after($file, $workspacePrefix . '/'), '/'),
+            'path' => trim(Str::after($file, $workspacePrefix.'/'), '/'),
             'type' => 'file',
             'size' => Storage::disk('local')->size($file),
         ]);
@@ -59,7 +59,7 @@ class ContainerFileController extends Controller
 
         $target = $this->workspacePath($container, $relativePath);
 
-        if (!Storage::disk('local')->exists($target)) {
+        if (! Storage::disk('local')->exists($target)) {
             return response()->json(['message' => 'File not found.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -100,7 +100,7 @@ class ContainerFileController extends Controller
             return response()->json(['message' => 'Folder created.']);
         }
 
-        if (!$request->hasFile('file')) {
+        if (! $request->hasFile('file')) {
             return response()->json(['message' => 'No file uploaded.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -167,7 +167,7 @@ class ContainerFileController extends Controller
 
     private function workspacePrefix(Container $container): string
     {
-        if (!$container->uuid) {
+        if (! $container->uuid) {
             $container->uuid = (string) Str::uuid();
             $container->save();
         }
@@ -202,11 +202,11 @@ class ContainerFileController extends Controller
         $baseNormalized = $this->normalizeRelativePath($base);
         $segmentNormalized = $this->normalizeRelativePath($segment);
 
-        return trim($baseNormalized) === '' ? $segmentNormalized : trim($baseNormalized . '/' . $segmentNormalized, '/');
+        return trim($baseNormalized) === '' ? $segmentNormalized : trim($baseNormalized.'/'.$segmentNormalized, '/');
     }
 
     private function relativeFromWorkspace(Container $container, string $path): string
     {
-        return trim(Str::after($path, $this->workspacePrefix($container) . '/'), '/');
+        return trim(Str::after($path, $this->workspacePrefix($container).'/'), '/');
     }
 }

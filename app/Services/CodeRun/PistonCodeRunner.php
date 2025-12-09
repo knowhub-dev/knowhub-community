@@ -1,19 +1,18 @@
 <?php
+
 namespace App\Services\CodeRun;
 
 use App\Models\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 class PistonCodeRunner implements CodeRunner
 {
-    public function __construct(private string $baseUrl, private int $defaultTimeoutMs)
-    {
-    }
+    public function __construct(private string $baseUrl, private int $defaultTimeoutMs) {}
 
     public function run(User $user, string $language, string $source): array
     {
@@ -62,14 +61,14 @@ class PistonCodeRunner implements CodeRunner
             );
         }
 
-        $data = json_decode((string)$resp->getBody(), true);
+        $data = json_decode((string) $resp->getBody(), true);
 
         $stdout = Arr::get($data, 'run.stdout', '');
         $stderr = Arr::get($data, 'run.stderr', '');
         $code = (int) Arr::get($data, 'run.code', 0);
         $timeMs = (int) round((float) (Arr::get($data, 'run.signal', 0)) ?: 0);
 
-        return ['stdout'=>$stdout, 'stderr'=>$stderr, 'code'=>$code, 'time_ms'=>$timeMs];
+        return ['stdout' => $stdout, 'stderr' => $stderr, 'code' => $code, 'time_ms' => $timeMs];
     }
 
     private function resolveTimeout(User $user): int
@@ -83,4 +82,3 @@ class PistonCodeRunner implements CodeRunner
         return $user->isPro() ? 15000 : $this->defaultTimeoutMs;
     }
 }
-

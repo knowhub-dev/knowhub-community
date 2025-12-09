@@ -1,7 +1,7 @@
 <?php
 
-
 // file: app/Http/Resources/PostResource.php
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,14 +22,14 @@ class PostResource extends JsonResource
             'answers_count' => $this->answers_count,
             'comments_count' => $this->when(isset($this->comments_count), $this->comments_count),
             'votes_count' => $this->when(isset($this->votes_count), $this->votes_count),
-            'tags' => $this->tags->map(fn($t) => ['name' => $t->name, 'slug' => $t->slug]),
-            'category' => $this->category?->only(['id','name','slug']),
+            'tags' => $this->tags->map(fn ($t) => ['name' => $t->name, 'slug' => $t->slug]),
+            'category' => $this->category?->only(['id', 'name', 'slug']),
             'user' => [
                 'id' => $author?->id,
                 'name' => $author?->name,
                 'username' => $author?->username,
                 'avatar_url' => $author?->avatar_url,
-                'level' => $author?->level?->only(['id','name','min_xp']),
+                'level' => $author?->level?->only(['id', 'name', 'min_xp']),
                 'xp' => $author?->xp,
             ],
             'ai_suggestion' => $this->ai_suggestion,
@@ -37,4 +37,3 @@ class PostResource extends JsonResource
         ];
     }
 }
-

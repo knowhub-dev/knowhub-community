@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-// Faylning yuqorisiga UserResource'ni chaqirib olamiz
 use App\Http\Resources\UserResource;
+// Faylning yuqorisiga UserResource'ni chaqirib olamiz
 use App\Models\Container;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -21,9 +21,9 @@ class ProfileController extends Controller
             $user = User::where('username', $username)
                 ->with(['badges', 'level', 'featuredContainers'])
                 ->withCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ])
                 ->firstOrFail();
 
@@ -49,8 +49,9 @@ class ProfileController extends Controller
     {
         $user = $req->user();
 
-        if (!$user) {
+        if (! $user) {
             Log::error('Profile /me endpoint called without authenticated user');
+
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
@@ -58,9 +59,9 @@ class ProfileController extends Controller
             $user = $user
                 ->loadMissing(['level', 'badges', 'featuredContainers'])
                 ->loadCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ]);
 
             return new UserResource($user);
@@ -98,9 +99,9 @@ class ProfileController extends Controller
         return new \App\Http\Resources\UserResource(
             $user->loadMissing(['level', 'badges', 'featuredContainers'])
                 ->loadCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ])
         );
     }
@@ -130,9 +131,9 @@ class ProfileController extends Controller
         return new UserResource(
             $user->fresh(['level', 'badges', 'featuredContainers'])
                 ->loadCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ])
         );
     }
@@ -141,7 +142,7 @@ class ProfileController extends Controller
     {
         $container = Container::where('user_id', $req->user()->id)->findOrFail($container);
 
-        $container->is_featured = !$container->is_featured;
+        $container->is_featured = ! $container->is_featured;
         $container->save();
 
         return response()->json([

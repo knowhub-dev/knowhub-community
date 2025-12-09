@@ -15,10 +15,11 @@ class CacheMiddleware
             return $next($request);
         }
 
-        $key = 'cache:' . md5($request->fullUrl() . ($request->user()?->id ?? 'guest'));
-        
+        $key = 'cache:'.md5($request->fullUrl().($request->user()?->id ?? 'guest'));
+
         if (Cache::has($key)) {
             $cached = Cache::get($key);
+
             return response($cached['content'], $cached['status'])
                 ->withHeaders($cached['headers'])
                 ->header('X-Cache', 'HIT');
@@ -30,7 +31,7 @@ class CacheMiddleware
             Cache::put($key, [
                 'content' => $response->getContent(),
                 'status' => $response->getStatusCode(),
-                'headers' => $response->headers->all()
+                'headers' => $response->headers->all(),
             ], $ttl);
         }
 

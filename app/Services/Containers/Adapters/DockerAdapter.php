@@ -54,7 +54,7 @@ class DockerAdapter
         $process = new Process($command);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw new ContainerRuntimeException($process->getErrorOutput() ?: 'Container runtime error');
         }
     }

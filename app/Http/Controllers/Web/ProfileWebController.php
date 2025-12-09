@@ -9,8 +9,8 @@ class ProfileWebController extends Controller
 {
     public function show(string $username)
     {
-        $user = User::with('level')->where('username',$username)->firstOrFail();
+        $user = User::with('level')->where('username', $username)->firstOrFail();
+
         return view('profile.show', compact('user'));
     }
 }
-

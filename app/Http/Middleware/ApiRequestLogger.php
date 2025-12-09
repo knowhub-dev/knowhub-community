@@ -124,4 +124,3 @@ class ApiRequestLogger
         }, $payload, array_keys($payload));
     }
 }
-

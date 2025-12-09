@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Notification extends Model
 {
     protected $fillable = [
-        'user_id', 'type', 'title', 'message', 'data', 
-        'notifiable_id', 'notifiable_type', 'read_at'
+        'user_id', 'type', 'title', 'message', 'data',
+        'notifiable_id', 'notifiable_type', 'read_at',
     ];
 
     protected $casts = [
         'data' => 'array',
-        'read_at' => 'datetime'
+        'read_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

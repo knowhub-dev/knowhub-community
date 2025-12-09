@@ -1,33 +1,35 @@
 <?php
+
 // file: app/Http/Controllers/Api/V1/TagController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tag;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class TagController extends Controller
 {
-    public function index(Request $request) 
-    { 
-        $cacheKey = 'tags:list:' . ($request->get('popular') ? 'popular' : 'all');
-        
+    public function index(Request $request)
+    {
+        $cacheKey = 'tags:list:'.($request->get('popular') ? 'popular' : 'all');
+
         return Cache::remember($cacheKey, 1800, function () use ($request) {
             $query = Tag::select('id', 'name', 'slug');
-            
+
             if ($request->get('popular')) {
                 $query->withCount(['posts' => function ($q) {
                     $q->where('status', 'published')
-                      ->where('created_at', '>=', now()->subDays(30));
+                        ->where('created_at', '>=', now()->subDays(30));
                 }])
-                ->having('posts_count', '>', 0)
-                ->orderByDesc('posts_count');
+                    ->having('posts_count', '>', 0)
+                    ->orderByDesc('posts_count');
             } else {
                 $query->orderBy('name');
             }
-            
+
             return $query->get();
         });
     }
@@ -35,9 +37,9 @@ class TagController extends Controller
     public function show(string $slug)
     {
         $tag = Tag::where('slug', $slug)->firstOrFail();
-        
+
         $cacheKey = "tag:stats:{$slug}";
-        
+
         $stats = Cache::remember($cacheKey, 600, function () use ($tag) {
             return [
                 'id' => $tag->id,
@@ -61,14 +63,14 @@ class TagController extends Controller
                 'related_tags' => $this->getRelatedTags($tag),
             ];
         });
-        
+
         return response()->json($stats);
     }
 
     public function trending()
     {
         $cacheKey = 'tags:trending';
-        
+
         $trendingTags = Cache::remember($cacheKey, 600, function () {
             return DB::table('post_tag')
                 ->join('tags', 'post_tag.tag_id', '=', 'tags.id')
@@ -81,7 +83,7 @@ class TagController extends Controller
                 ->limit(20)
                 ->get();
         });
-        
+
         return response()->json($trendingTags);
     }
 
@@ -99,4 +101,3 @@ class TagController extends Controller
             ->get();
     }
 }
-

@@ -25,19 +25,19 @@ class UserController extends Controller
 
         try {
             $query = User::with(['level', 'badges'])
-                ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                ->withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                 ->withCount(['followers', 'following']);
 
             if ($search = $filters['search']) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('username', 'LIKE', "%{$search}%");
+                        ->orWhere('username', 'LIKE', "%{$search}%");
                 });
             }
 
             if ($level = $filters['level']) {
                 if (is_numeric($level)) {
-                    $query->where('level_id', (int)$level);
+                    $query->where('level_id', (int) $level);
                 } else {
                     $query->whereHas('level', function ($q) use ($level) {
                         $q->whereRaw('LOWER(name) = ?', [Str::of($level)->replace('-', ' ')->lower()]);
@@ -46,10 +46,14 @@ class UserController extends Controller
             }
 
             switch ($filters['sort']) {
-                case 'xp': $query->orderByDesc('xp'); break;
-                case 'posts': $query->orderByDesc('posts_count'); break;
-                case 'followers': $query->orderByDesc('followers_count'); break;
-                case 'recent': $query->latest(); break;
+                case 'xp': $query->orderByDesc('xp');
+                    break;
+                case 'posts': $query->orderByDesc('posts_count');
+                    break;
+                case 'followers': $query->orderByDesc('followers_count');
+                    break;
+                case 'recent': $query->latest();
+                    break;
             }
 
             return UserResource::collection($query->paginate(20));
@@ -76,9 +80,9 @@ class UserController extends Controller
         $user = Cache::remember($cacheKey, 600, function () use ($username) {
             return User::with(['level', 'badges'])
                 ->withCount([
-                    'posts' => fn($q) => $q->where('status', 'published'),
+                    'posts' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ])
                 ->where('username', $username)
                 ->firstOrFail();
@@ -122,9 +126,9 @@ class UserController extends Controller
         $users = Cache::remember($cacheKey, 300, function () use ($type, $period) {
             $query = User::with('level')
                 ->withCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ]);
 
             if ($period !== 'all') {
@@ -132,23 +136,26 @@ class UserController extends Controller
 
                 if ($type === 'posts') {
                     $query->withCount([
-                        'posts as posts_count' => fn($q) => $q->where('status', 'published')->where('created_at', '>=', $date)
+                        'posts as posts_count' => fn ($q) => $q->where('status', 'published')->where('created_at', '>=', $date),
                     ]);
                 } elseif ($type === 'xp') {
-                    $query->whereHas('xpTransactions', fn($q) => $q->where('created_at', '>=', $date));
+                    $query->whereHas('xpTransactions', fn ($q) => $q->where('created_at', '>=', $date));
                 }
             } else {
                 if ($type === 'posts') {
-                    $query->withCount(['posts as posts_count' => fn($q) => $q->where('status', 'published')]);
+                    $query->withCount(['posts as posts_count' => fn ($q) => $q->where('status', 'published')]);
                 } elseif ($type === 'followers') {
                     $query->withCount('followers');
                 }
             }
 
             switch ($type) {
-                case 'xp': $query->orderByDesc('xp'); break;
-                case 'posts': $query->orderByDesc('posts_count'); break;
-                case 'followers': $query->orderByDesc('followers_count'); break;
+                case 'xp': $query->orderByDesc('xp');
+                    break;
+                case 'posts': $query->orderByDesc('posts_count');
+                    break;
+                case 'followers': $query->orderByDesc('followers_count');
+                    break;
             }
 
             return $query->limit(50)->get();
@@ -205,9 +212,9 @@ class UserController extends Controller
         return new UserResource(
             $user->fresh(['level', 'badges'])
                 ->loadCount([
-                    'posts as posts_count' => fn($q) => $q->where('status', 'published'),
+                    'posts as posts_count' => fn ($q) => $q->where('status', 'published'),
                     'followers',
-                    'following'
+                    'following',
                 ])
         );
     }
@@ -232,4 +239,3 @@ class UserController extends Controller
         return $months;
     }
 }
-

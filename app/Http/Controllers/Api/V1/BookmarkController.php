@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
-use App\Models\Bookmark;
 use App\Http\Resources\PostResource;
+use App\Models\Bookmark;
+use App\Models\Post;
 use Illuminate\Http\Request;
 
 class BookmarkController extends Controller
@@ -24,13 +24,13 @@ class BookmarkController extends Controller
     public function toggle(Request $request)
     {
         $data = $request->validate([
-            'post_id' => 'required|exists:posts,id'
+            'post_id' => 'required|exists:posts,id',
         ]);
 
         $post = Post::findOrFail($data['post_id']);
         $bookmark = Bookmark::where([
             'user_id' => $request->user()->id,
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ])->first();
 
         if ($bookmark) {
@@ -39,14 +39,14 @@ class BookmarkController extends Controller
         } else {
             Bookmark::create([
                 'user_id' => $request->user()->id,
-                'post_id' => $post->id
+                'post_id' => $post->id,
             ]);
             $bookmarked = true;
         }
 
         return response()->json([
             'bookmarked' => $bookmarked,
-            'message' => $bookmarked ? 'Post bookmarked' : 'Bookmark removed'
+            'message' => $bookmarked ? 'Post bookmarked' : 'Bookmark removed',
         ]);
     }
 
@@ -54,7 +54,7 @@ class BookmarkController extends Controller
     {
         $bookmarked = Bookmark::where([
             'user_id' => $request->user()->id,
-            'post_id' => $postId
+            'post_id' => $postId,
         ])->exists();
 
         return response()->json(['bookmarked' => $bookmarked]);

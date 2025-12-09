@@ -4,9 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\ContainerEnvResource;
-use App\Http\Resources\ContainerEventResource;
-use App\Http\Resources\ContainerMetricResource;
 
 class ContainerResource extends JsonResource
 {

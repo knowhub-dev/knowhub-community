@@ -13,12 +13,17 @@ class Container extends Model
     use SoftDeletes;
 
     public const TYPE_CODE_RUNNER = 'code_runner';
+
     public const TYPE_DEV_SERVICE = 'dev_service';
+
     public const TYPE_BOT = 'bot';
 
     public const STATUS_CREATING = 'creating';
+
     public const STATUS_RUNNING = 'running';
+
     public const STATUS_STOPPED = 'stopped';
+
     public const STATUS_ERROR = 'error';
 
     protected $fillable = [
@@ -55,7 +60,7 @@ class Container extends Model
     {
         static::creating(function (self $container): void {
             if (empty($container->slug)) {
-                $container->slug = Str::slug($container->name . '-' . Str::random(6));
+                $container->slug = Str::slug($container->name.'-'.Str::random(6));
             }
         });
     }

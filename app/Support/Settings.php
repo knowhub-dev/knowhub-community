@@ -36,6 +36,6 @@ class Settings
 
     private static function cacheKey(string $key): string
     {
-        return 'settings:' . $key;
+        return 'settings:'.$key;
     }
 }

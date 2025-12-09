@@ -5,9 +5,9 @@ namespace App\Services\Docker;
 use App\Models\Container;
 use App\Models\ContainerStats;
 use Exception;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 class ContainerService
 {
     private Client $client;
+
     private string $socket;
 
     public function __construct()
@@ -36,11 +37,11 @@ class ContainerService
     public function create(Container $container): bool
     {
         try {
-            if (!in_array($container->image, config('containers.allowed_images', []), true)) {
+            if (! in_array($container->image, config('containers.allowed_images', []), true)) {
                 throw new Exception('Attempted to launch a container with a disallowed image.');
             }
 
-            if (!$container->port) {
+            if (! $container->port) {
                 $container->port = $this->allocatePort($container);
             }
 
@@ -53,7 +54,7 @@ class ContainerService
             if ($container->port) {
                 $portKey = sprintf('%d/tcp', $container->port);
                 $config['ExposedPorts'] = [
-                    $portKey => new \stdClass(),
+                    $portKey => new \stdClass,
                 ];
             }
 
@@ -70,9 +71,10 @@ class ContainerService
 
             return true;
         } catch (Exception|GuzzleException $e) {
-            Log::error('Container creation failed: ' . $e->getMessage(), [
+            Log::error('Container creation failed: '.$e->getMessage(), [
                 'container_id' => $container->id,
             ]);
+
             return false;
         }
     }
@@ -83,11 +85,13 @@ class ContainerService
             $this->client->post("/containers/{$container->container_id}/start");
             $container->status = 'running';
             $container->save();
+
             return true;
         } catch (Exception|GuzzleException $e) {
-            Log::error('Container start failed: ' . $e->getMessage(), [
+            Log::error('Container start failed: '.$e->getMessage(), [
                 'container_id' => $container->id,
             ]);
+
             return false;
         }
     }
@@ -98,11 +102,13 @@ class ContainerService
             $this->client->post("/containers/{$container->container_id}/stop");
             $container->status = 'stopped';
             $container->save();
+
             return true;
         } catch (Exception|GuzzleException $e) {
-            Log::error('Container stop failed: ' . $e->getMessage(), [
+            Log::error('Container stop failed: '.$e->getMessage(), [
                 'container_id' => $container->id,
             ]);
+
             return false;
         }
     }
@@ -119,11 +125,13 @@ class ContainerService
             }
 
             $container->delete();
+
             return true;
         } catch (Exception|GuzzleException $e) {
-            Log::error('Container deletion failed: ' . $e->getMessage(), [
+            Log::error('Container deletion failed: '.$e->getMessage(), [
                 'container_id' => $container->id,
             ]);
+
             return false;
         }
     }
@@ -144,11 +152,13 @@ class ContainerService
             ]);
 
             $containerStats->save();
+
             return $containerStats;
         } catch (Exception|GuzzleException $e) {
-            Log::error('Failed to get container stats: ' . $e->getMessage(), [
+            Log::error('Failed to get container stats: '.$e->getMessage(), [
                 'container_id' => $container->id,
             ]);
+
             return null;
         }
     }
@@ -215,13 +225,14 @@ class ContainerService
         foreach ($envVars as $key => $value) {
             $formatted[] = sprintf('%s=%s', $key, (string) $value);
         }
+
         return $formatted;
     }
 
     private function allocatePort(Container $container): ?int
     {
         $range = config('containers.port_range');
-        if (!$range) {
+        if (! $range) {
             return null;
         }
 
@@ -235,7 +246,7 @@ class ContainerService
         $usedPorts = Container::whereNotNull('port')->pluck('port')->toArray();
 
         for ($port = $start; $port <= $end; $port++) {
-            if (!in_array($port, $usedPorts, true)) {
+            if (! in_array($port, $usedPorts, true)) {
                 return $port;
             }
         }
@@ -257,19 +268,19 @@ class ContainerService
         $workspacePath = $this->ensureWorkspace($container);
         $hostConfig['Binds'] = [sprintf('%s:/app', $workspacePath)];
 
-        if (!empty($security['no_new_privileges'])) {
+        if (! empty($security['no_new_privileges'])) {
             $hostConfig['SecurityOpt'][] = 'no-new-privileges:true';
         }
 
-        if (!empty($security['drop_capabilities'])) {
+        if (! empty($security['drop_capabilities'])) {
             $hostConfig['CapDrop'] = (array) $security['drop_capabilities'];
         }
 
-        if (!empty($security['readonly_root_filesystem'])) {
+        if (! empty($security['readonly_root_filesystem'])) {
             $hostConfig['ReadonlyRootfs'] = true;
         }
 
-        if (!empty($security['pids_limit'])) {
+        if (! empty($security['pids_limit'])) {
             $hostConfig['PidsLimit'] = (int) $security['pids_limit'];
         }
 
@@ -291,6 +302,7 @@ class ContainerService
     {
         $prefix = $container->subdomain ?: sprintf('user-%d', $container->user_id);
         $prefix = Str::slug($prefix);
+
         return sprintf('%s-%s', $prefix, Str::lower(Str::random(8)));
     }
 
@@ -304,6 +316,7 @@ class ContainerService
 
         if ($systemDelta > 0 && $cpuDelta > 0) {
             $cpuCount = count($cpuStats['cpu_usage']['percpu_usage'] ?? [1]);
+
             return ($cpuDelta / $systemDelta) * $cpuCount * 100.0;
         }
 
@@ -314,6 +327,7 @@ class ContainerService
     {
         $memStats = $stats['memory_stats'] ?? [];
         $usage = ($memStats['usage'] ?? 0) - ($memStats['stats']['cache'] ?? 0);
+
         return $usage / (1024 * 1024);
     }
 
@@ -333,7 +347,7 @@ class ContainerService
 
     private function ensureWorkspace(Container $container): string
     {
-        if (!$container->uuid) {
+        if (! $container->uuid) {
             $container->uuid = (string) Str::uuid();
             $container->save();
         }

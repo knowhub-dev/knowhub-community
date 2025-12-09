@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\CodeRun;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
-use App\Models\Comment;
 use App\Models\WikiArticle;
-use App\Models\CodeRun;
 use App\Models\XpTransaction;
-use App\Models\Category;
-use App\Models\Tag;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +18,7 @@ class StatsController extends Controller
     public function public()
     {
         $cacheKey = 'public:stats';
-        
+
         $stats = Cache::remember($cacheKey, 1800, function () {
             return [
                 'users' => [
@@ -57,7 +56,7 @@ class StatsController extends Controller
                         ->limit(5)
                         ->get(),
                 ],
-                'categories' => Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                'categories' => Category::withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                     ->orderByDesc('posts_count')
                     ->limit(8)
                     ->get(['id', 'name', 'slug', 'posts_count']),
@@ -73,7 +72,7 @@ class StatsController extends Controller
                     ->get(),
                 'top_users' => User::with('level')
                     ->where('xp', '>', 50)
-                    ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                    ->withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                     ->orderByDesc('xp')
                     ->limit(5)
                     ->get(['id', 'name', 'username', 'avatar_url', 'xp', 'posts_count']),
@@ -127,9 +126,9 @@ class StatsController extends Controller
                     ->limit(8)
                     ->get(),
                 'categories' => Category::withCount(['posts' => function ($q) {
-                        $q->where('status', 'published')
-                          ->where('created_at', '>=', now()->subDays(30));
-                    }])
+                    $q->where('status', 'published')
+                        ->where('created_at', '>=', now()->subDays(30));
+                }])
                     ->having('posts_count', '>', 0)
                     ->orderByDesc('posts_count')
                     ->limit(8)
@@ -146,7 +145,7 @@ class StatsController extends Controller
                     ->get(),
                 'top_users' => User::with('level')
                     ->where('xp', '>', 50)
-                    ->withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                    ->withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                     ->orderByDesc('xp')
                     ->limit(5)
                     ->get(),

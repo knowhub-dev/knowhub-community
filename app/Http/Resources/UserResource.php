@@ -29,7 +29,7 @@ class UserResource extends JsonResource
             ],
             'level' => $this->level?->only(['id', 'name', 'min_xp', 'icon']),
             'badges' => $this->whenLoaded('badges', function () {
-                return $this->badges->map(fn($badge) => [
+                return $this->badges->map(fn ($badge) => [
                     'id' => $badge->id,
                     'name' => $badge->name,
                     'slug' => $badge->slug,
@@ -37,7 +37,7 @@ class UserResource extends JsonResource
                     'icon' => $badge->icon,
                     'icon_key' => $badge->icon_key,
                     'level' => $badge->level,
-                    'awarded_at' => $badge->pivot->awarded_at
+                    'awarded_at' => $badge->pivot->awarded_at,
                 ]);
             }),
         ];

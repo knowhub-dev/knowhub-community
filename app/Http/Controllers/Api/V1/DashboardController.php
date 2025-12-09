@@ -204,10 +204,10 @@ class DashboardController extends Controller
     public function analytics(Request $request): JsonResponse
     {
         $period = $request->get('period', '30'); // days
-        $startDate = now()->subDays((int)$period);
-        
+        $startDate = now()->subDays((int) $period);
+
         $cacheKey = "dashboard:analytics:{$period}";
-        
+
         $analytics = Cache::remember($cacheKey, 1800, function () use ($startDate, $request) {
             $user = $request->user();
 

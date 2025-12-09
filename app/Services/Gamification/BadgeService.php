@@ -30,7 +30,7 @@ class BadgeService
     {
         $authorBadge = $this->findBadge('author', 'Author');
 
-        if (!$authorBadge) {
+        if (! $authorBadge) {
             return null;
         }
 

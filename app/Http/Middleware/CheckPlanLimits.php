@@ -12,7 +12,7 @@ class CheckPlanLimits
     {
         $user = $request->user();
 
-        if ($action === 'create-container' && $user && !$user->canCreateContainer()) {
+        if ($action === 'create-container' && $user && ! $user->canCreateContainer()) {
             return response()->json(['message' => 'Pro versiyaga o‘ting!'], Response::HTTP_FORBIDDEN);
         }
 

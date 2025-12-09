@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Services/AI/OpenAiAssistant.php
+
 namespace App\Services\AI;
 
 use GuzzleHttp\Client;
@@ -22,14 +24,14 @@ class OpenAiAssistant implements AiAssistant
             'json' => [
                 'model' => $this->model,
                 'messages' => [
-                    ['role'=>'system','content'=>'You are a senior software engineer.'],
-                    ['role'=>'user','content'=>$prompt],
+                    ['role' => 'system', 'content' => 'You are a senior software engineer.'],
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'temperature' => 0.2,
             ],
         ]);
 
-        $data = json_decode((string)$resp->getBody(), true);
+        $data = json_decode((string) $resp->getBody(), true);
         $content = $data['choices'][0]['message']['content'] ?? '';
 
         return [
@@ -38,4 +40,3 @@ class OpenAiAssistant implements AiAssistant
         ];
     }
 }
-

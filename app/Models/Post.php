@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Models/Post.php
+
 namespace App\Models;
 
 use App\Filters\PostFilter;
@@ -7,8 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory; // <-- QO'SHILDI
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Post extends Model
@@ -29,7 +31,7 @@ class Post extends Model
         'answers_count',
         'is_ai_suggested',
         'required_xp',
-        'requires_verification'
+        'requires_verification',
     ];
 
     /**

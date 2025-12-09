@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
-use App\Models\WikiArticle;
-use App\Models\User;
 use App\Http\Resources\PostResource;
+use App\Models\Post;
+use App\Models\User;
+use App\Models\WikiArticle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +17,7 @@ class SearchController extends Controller
         $query = $request->validate([
             'q' => 'required|string|min:2|max:100',
             'type' => 'sometimes|in:posts,wiki,users,all',
-            'limit' => 'sometimes|integer|min:1|max:50'
+            'limit' => 'sometimes|integer|min:1|max:50',
         ]);
 
         $searchTerm = $query['q'];
@@ -31,7 +31,7 @@ class SearchController extends Controller
                 ->where('status', 'published')
                 ->where(function ($q) use ($searchTerm) {
                     $q->where('title', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('content_markdown', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('content_markdown', 'LIKE', "%{$searchTerm}%");
                 })
                 ->orderByDesc('score')
                 ->limit($limit)
@@ -44,7 +44,7 @@ class SearchController extends Controller
             $wiki = WikiArticle::where('status', 'published')
                 ->where(function ($q) use ($searchTerm) {
                     $q->where('title', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('content_markdown', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('content_markdown', 'LIKE', "%{$searchTerm}%");
                 })
                 ->limit($limit)
                 ->get();
@@ -56,11 +56,11 @@ class SearchController extends Controller
             $users = User::with('level')
                 ->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('username', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('username', 'LIKE', "%{$searchTerm}%");
                 })
                 ->limit($limit)
                 ->get()
-                ->map(fn($user) => $user->only(['id', 'name', 'username', 'avatar_url', 'xp', 'level']));
+                ->map(fn ($user) => $user->only(['id', 'name', 'username', 'avatar_url', 'xp', 'level']));
 
             $results['users'] = $users;
         }
@@ -68,14 +68,14 @@ class SearchController extends Controller
         return response()->json([
             'query' => $searchTerm,
             'results' => $results,
-            'total' => collect($results)->sum(fn($items) => count($items))
+            'total' => collect($results)->sum(fn ($items) => count($items)),
         ]);
     }
 
     public function suggestions(Request $request)
     {
         $query = $request->validate([
-            'q' => 'required|string|min:1|max:50'
+            'q' => 'required|string|min:1|max:50',
         ]);
 
         $searchTerm = $query['q'];

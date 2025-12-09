@@ -12,16 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // 1. Biz yaratgan ForceJsonResponse ni API guruhiga qo'shamiz
+        $middleware->api(prepend: [
+            \App\Http\Middleware\ForceJsonResponse::class, // <--- MANA SHU MUHIM
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
-            if ($request->is('api/*') || $request->wantsJson()) {
-                return response()->json(['message' => 'Unauthenticated.'], 401);
-            }
-        });
-    })
-    ->create();
-
+        // Bu joy endi shart emas, chunki Middleware o'zi hal qiladi,
+        // lekin xavfsizlik uchun tursa zarar qilmaydi.
+    })->create();

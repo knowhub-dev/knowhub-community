@@ -19,9 +19,9 @@ return [
         'legend' => [
             'max_containers' => 10,
             'max_memory_mb' => 1024,
-            'max_upload_kb' => 10240,
+            'max_upload_kb' => 20480,
             'priority' => true,
-            'timeout_ms' => 15000,
+            'timeout_ms' => 30000,
         ],
     ],
 ];

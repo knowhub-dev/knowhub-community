@@ -1,19 +1,22 @@
 <?php
+
 // file: database/factories/UserFactory.php
+
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
+use App\Models\Level;
 use App\Models\User;
-use App\Models\Level; // <-- Buni qo'shdik
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str; // <-- Buni qo'shdik
 
 class UserFactory extends Factory
 {
     protected $model = User::class;
-    
+
     public function definition(): array
     {
         $name = $this->faker->name();
+
         return [
             'name' => $name,
             'username' => Str::slug($name.'-'.$this->faker->unique()->randomNumber(3)),
@@ -23,7 +26,7 @@ class UserFactory extends Factory
             'level_id' => Level::inRandomOrder()->first()?->id ?? 1, // Tasodifiy level
             'is_admin' => 0, // Standart foydalanuvchi ADMIN EMAS
             'is_banned' => 0,
-            //'email_verified_at' => now(), // Test uchun emailni tasdiqlaymiz
+            // 'email_verified_at' => now(), // Test uchun emailni tasdiqlaymiz
         ];
     }
 

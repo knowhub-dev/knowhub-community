@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
-use App\Models\Comment;
 use App\Models\Category;
-use App\Models\Tag;
+use App\Models\Comment;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,53 +14,53 @@ class PostWebController extends Controller
 {
     public function index()
     {
-        $query = Post::with(['user.level','tags','category'])
-            ->where('status','published')
-            ->when(request('search'), function($q, $search) {
-                $q->where(function($qq) use ($search) {
+        $query = Post::with(['user.level', 'tags', 'category'])
+            ->where('status', 'published')
+            ->when(request('search'), function ($q, $search) {
+                $q->where(function ($qq) use ($search) {
                     $qq->where('title', 'LIKE', "%{$search}%")
-                       ->orWhere('content_markdown', 'LIKE', "%{$search}%");
+                        ->orWhere('content_markdown', 'LIKE', "%{$search}%");
                 });
             })
-            ->when(request('category'), function($q, $category) {
+            ->when(request('category'), function ($q, $category) {
                 if ($category !== 'all') {
-                    $q->whereHas('category', fn($c) => $c->where('slug', $category));
+                    $q->whereHas('category', fn ($c) => $c->where('slug', $category));
                 }
             })
-            ->when(request('tag'), function($q, $tag) {
+            ->when(request('tag'), function ($q, $tag) {
                 if ($tag !== 'all') {
-                    $q->whereHas('tags', fn($t) => $t->where('slug', $tag));
+                    $q->whereHas('tags', fn ($t) => $t->where('slug', $tag));
                 }
             })
-            ->when(request('sort'), function($q, $sort) {
-                switch($sort) {
+            ->when(request('sort'), function ($q, $sort) {
+                switch ($sort) {
                     case 'trending':
                         $q->where('created_at', '>=', now()->subDays(7))
-                          ->orderByDesc('score')
-                          ->orderByDesc('answers_count');
+                            ->orderByDesc('score')
+                            ->orderByDesc('answers_count');
                         break;
                     case 'popular':
                         $q->orderByDesc('answers_count')
-                          ->orderByDesc('score');
+                            ->orderByDesc('score');
                         break;
                     case 'unanswered':
                         $q->where('answers_count', 0)
-                          ->orderByDesc('created_at');
+                            ->orderByDesc('created_at');
                         break;
                     default:
                         $q->latest();
                 }
-            }, function($q) {
+            }, function ($q) {
                 $q->latest();
             });
 
         $posts = $query->paginate(12);
-        
+
         // Additional data for filters
-        $categories = Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+        $categories = Category::withCount(['posts' => fn ($q) => $q->where('status', 'published')])
             ->orderBy('name')
             ->get();
-            
+
         $popularTags = DB::table('post_tag')
             ->join('tags', 'post_tag.tag_id', '=', 'tags.id')
             ->join('posts', 'post_tag.post_id', '=', 'posts.id')
@@ -77,7 +76,7 @@ class PostWebController extends Controller
 
     public function show(string $slug)
     {
-        $post = Post::with(['user','tags','comments.user','comments.children.user'])
+        $post = Post::with(['user', 'tags', 'comments.user', 'comments.children.user'])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -107,17 +106,20 @@ class PostWebController extends Controller
         ]);
 
         // Handle tags
-        if (!empty($data['tags'])) {
+        if (! empty($data['tags'])) {
             $tagNames = array_map('trim', explode(',', $data['tags']));
             $tagIds = collect($tagNames)->map(function ($name) {
-                if (empty($name)) return null;
+                if (empty($name)) {
+                    return null;
+                }
                 $tag = \App\Models\Tag::firstOrCreate(
-                    ['name' => $name], 
+                    ['name' => $name],
                     ['slug' => \Str::slug($name)]
                 );
+
                 return $tag->id;
             })->filter();
-            
+
             $post->tags()->sync($tagIds);
         }
 
@@ -129,10 +131,10 @@ class PostWebController extends Controller
     {
         $request->validate([
             'content_markdown' => 'required|string',
-            'parent_id' => 'nullable|exists:comments,id'
+            'parent_id' => 'nullable|exists:comments,id',
         ]);
 
-        $post = Post::where('slug',$slug)->firstOrFail();
+        $post = Post::where('slug', $slug)->firstOrFail();
 
         Comment::create([
             'post_id' => $post->id,

@@ -9,9 +9,7 @@ use Illuminate\Http\Request;
 
 class PaymentCallbackController extends Controller
 {
-    public function __construct(private readonly PaymentGatewayFactory $gatewayFactory)
-    {
-    }
+    public function __construct(private readonly PaymentGatewayFactory $gatewayFactory) {}
 
     public function payme(Request $request): JsonResponse
     {

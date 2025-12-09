@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Http/Controllers/Api/V1/CategoryController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -10,10 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 class CategoryController extends Controller
 {
-    public function index(Request $request) 
-    { 
+    public function index(Request $request)
+    {
         $cacheKey = 'categories:list';
-        
+
         return Cache::remember($cacheKey, 1800, function () {
             return Category::select('id', 'name', 'slug', 'description')
                 ->withCount(['posts' => function ($q) {
@@ -27,9 +29,9 @@ class CategoryController extends Controller
     public function show(string $slug)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
-        
+
         $cacheKey = "category:stats:{$slug}";
-        
+
         $stats = Cache::remember($cacheKey, 600, function () use ($category) {
             return [
                 'id' => $category->id,
@@ -62,8 +64,7 @@ class CategoryController extends Controller
                     ->get(),
             ];
         });
-        
+
         return response()->json($stats);
     }
 }
-

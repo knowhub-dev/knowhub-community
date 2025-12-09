@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Gate;
 
 class ContainerStatsController extends Controller
 {
-    public function __construct(private readonly ContainerStatsService $statsService)
-    {
-    }
+    public function __construct(private readonly ContainerStatsService $statsService) {}
 
     public function show(Container $container): JsonResponse
     {

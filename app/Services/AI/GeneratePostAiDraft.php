@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Jobs/GeneratePostAiDraft.php
+
 namespace App\Jobs;
 
 use App\Models\Post;
@@ -17,7 +19,9 @@ class GeneratePostAiDraft implements ShouldQueue
     public function handle(AiAssistant $ai): void
     {
         $post = Post::find($this->postId);
-        if (!$post) return;
+        if (! $post) {
+            return;
+        }
 
         $suggestion = $ai->suggestAnswer($post->title, $post->content_markdown);
         $post->ai_suggestion = $suggestion;
@@ -25,4 +29,3 @@ class GeneratePostAiDraft implements ShouldQueue
         $post->save();
     }
 }
-

@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
-use App\Models\Post;
 use App\Models\Category;
-use App\Models\Tag;
+use App\Models\Post;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +15,7 @@ class HomeController extends Controller
     public function index()
     {
         $cacheKey = 'homepage:data';
-        
+
         $data = Cache::remember($cacheKey, 600, function () {
             return [
                 'trending_posts' => $this->getTrendingPosts(),
@@ -62,7 +60,7 @@ class HomeController extends Controller
         return Category::select('id', 'name', 'slug', 'description')
             ->withCount(['posts' => function ($q) {
                 $q->where('status', 'published')
-                  ->where('created_at', '>=', now()->subDays(30));
+                    ->where('created_at', '>=', now()->subDays(30));
             }])
             ->having('posts_count', '>', 0)
             ->orderByDesc('posts_count')

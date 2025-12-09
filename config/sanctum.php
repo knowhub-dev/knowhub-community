@@ -12,20 +12,20 @@ $defaultStateful = [
     '::1',
 ];
 
-if ($baseHost && !in_array($baseHost, $defaultStateful, true)) {
+if ($baseHost && ! in_array($baseHost, $defaultStateful, true)) {
     $defaultStateful[] = $baseHost;
 }
 
-if ($baseHost && !in_array('api.' . $baseHost, $defaultStateful, true)) {
-    $defaultStateful[] = 'api.' . $baseHost;
+if ($baseHost && ! in_array('api.'.$baseHost, $defaultStateful, true)) {
+    $defaultStateful[] = 'api.'.$baseHost;
 }
 
-if ($frontendHost && !in_array($frontendHost, $defaultStateful, true)) {
+if ($frontendHost && ! in_array($frontendHost, $defaultStateful, true)) {
     $defaultStateful[] = $frontendHost;
 }
 
-if ($frontendHost && !in_array('api.' . $frontendHost, $defaultStateful, true)) {
-    $defaultStateful[] = 'api.' . $frontendHost;
+if ($frontendHost && ! in_array('api.'.$frontendHost, $defaultStateful, true)) {
+    $defaultStateful[] = 'api.'.$frontendHost;
 }
 
 return [

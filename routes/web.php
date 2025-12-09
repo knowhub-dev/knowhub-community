@@ -6,6 +6,6 @@ Route::get('/', function () {
     return [
         'app' => 'KnowHub Community API',
         'version' => app()->version(),
-        'status' => 'ok'
+        'status' => 'ok',
     ];
 });

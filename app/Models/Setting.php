@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 
 class Setting extends Model
 {
@@ -34,6 +34,7 @@ class Setting extends Model
             },
             set: function ($value, array $attributes) {
                 $type = $attributes['type'] ?? $this->attributes['type'] ?? 'string';
+
                 return [
                     'value' => match ($type) {
                         'json' => $value !== null ? json_encode($value) : null,
@@ -48,7 +49,7 @@ class Setting extends Model
 
     private function decryptValue(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 

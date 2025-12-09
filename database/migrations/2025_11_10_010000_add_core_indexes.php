@@ -9,21 +9,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('posts', function (Blueprint $table) {
-            if (!Schema::hasColumn('posts', 'slug')) {
+            if (! Schema::hasColumn('posts', 'slug')) {
                 return;
             }
             $table->index('slug');
         });
 
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'username')) {
+            if (! Schema::hasColumn('users', 'username')) {
                 return;
             }
             $table->index('username');
         });
 
         Schema::table('tags', function (Blueprint $table) {
-            if (!Schema::hasColumn('tags', 'name')) {
+            if (! Schema::hasColumn('tags', 'name')) {
                 return;
             }
             $table->index('name');

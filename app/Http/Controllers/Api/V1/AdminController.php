@@ -3,34 +3,35 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Post;
-use App\Models\Comment;
-use App\Models\WikiArticle;
-use App\Models\CodeRun;
-use App\Models\Category;
-use App\Models\Tag;
-use App\Models\Notification;
-use App\Models\Vote;
-use App\Models\Follow;
 use App\Models\Bookmark;
+use App\Models\Category;
+use App\Models\CodeRun;
+use App\Models\Comment;
 use App\Models\Container;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use App\Models\Follow;
+use App\Models\Notification;
+use App\Models\Post;
+use App\Models\Tag;
+use App\Models\User;
+use App\Models\Vote;
+use App\Models\WikiArticle;
 use App\Support\Settings;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!$request->user() || !$this->isAdmin($request->user())) {
+            if (! $request->user() || ! $this->isAdmin($request->user())) {
                 return response()->json(['message' => 'Unauthorized - Admin access required'], 403);
             }
+
             return $next($request);
         });
     }
@@ -58,7 +59,7 @@ class AdminController extends Controller
                     'online_now' => User::where('updated_at', '>=', now()->subMinutes(5))->count(),
                     'verified' => User::whereNotNull('email_verified_at')->count(),
                     'with_posts' => User::has('posts')->count(),
-                    'top_contributors' => User::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                    'top_contributors' => User::withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                         ->orderByDesc('posts_count')
                         ->limit(5)
                         ->get(['id', 'name', 'username', 'xp', 'posts_count']),
@@ -119,7 +120,7 @@ class AdminController extends Controller
                 'categories' => [
                     'total' => Category::count(),
                     'with_posts' => Category::has('posts')->count(),
-                    'popular' => Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+                    'popular' => Category::withCount(['posts' => fn ($q) => $q->where('status', 'published')])
                         ->orderByDesc('posts_count')
                         ->limit(5)
                         ->get(['id', 'name', 'slug', 'posts_count']),
@@ -245,8 +246,8 @@ class AdminController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('username', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%");
+                    ->orWhere('username', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
             });
         }
 
@@ -275,7 +276,7 @@ class AdminController extends Controller
 
         if ($level = $request->get('level')) {
             if (is_numeric($level)) {
-                $query->where('level_id', (int)$level);
+                $query->where('level_id', (int) $level);
             } else {
                 $query->whereHas('level', function ($q) use ($level) {
                     $q->whereRaw('LOWER(name) = ?', [strtolower(str_replace('-', ' ', $level))]);
@@ -295,7 +296,7 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($userId);
 
-        $user->is_banned = !$user->is_banned;
+        $user->is_banned = ! $user->is_banned;
         $user->save();
 
         Log::info('User ban state toggled', [
@@ -305,7 +306,7 @@ class AdminController extends Controller
         ]);
 
         return response()->json([
-            'message' => $user->is_banned ? 'Foydalanuvchi bloklandi' : "Foydalanuvchi blokdan chiqarildi",
+            'message' => $user->is_banned ? 'Foydalanuvchi bloklandi' : 'Foydalanuvchi blokdan chiqarildi',
             'user' => $user,
         ]);
     }
@@ -318,7 +319,7 @@ class AdminController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('content_markdown', 'LIKE', "%{$search}%");
+                    ->orWhere('content_markdown', 'LIKE', "%{$search}%");
             });
         }
 
@@ -343,7 +344,7 @@ class AdminController extends Controller
         }
 
         $posts = $query->latest()->paginate(20);
-        
+
         return response()->json($posts);
     }
 
@@ -369,17 +370,17 @@ class AdminController extends Controller
         }
 
         $comments = $query->latest()->paginate(20);
-        
+
         return response()->json($comments);
     }
 
     public function analytics(Request $request)
     {
         $period = $request->get('period', '30'); // days
-        $startDate = now()->subDays((int)$period);
+        $startDate = now()->subDays((int) $period);
 
         $cacheKey = "admin:analytics:{$period}";
-        
+
         $analytics = Cache::remember($cacheKey, 1800, function () use ($startDate) {
             return [
                 'user_growth' => $this->getUserGrowth($startDate),
@@ -412,7 +413,7 @@ class AdminController extends Controller
                 'harassment' => 0,
                 'copyright' => 0,
                 'other' => 0,
-            ]
+            ],
         ]);
     }
 
@@ -420,13 +421,13 @@ class AdminController extends Controller
     {
         try {
             $logFile = storage_path('logs/laravel.log');
-            if (!file_exists($logFile)) {
+            if (! file_exists($logFile)) {
                 return response()->json(['data' => [], 'message' => 'Log fayl topilmadi']);
             }
 
             $lines = array_slice(file($logFile), -200); // So'nggi 200 ta log
             $logs = [];
-            
+
             foreach (array_reverse($lines) as $line) {
                 if (preg_match('/\[(.*?)\] (\w+)\.(\w+): (.*)/', $line, $matches)) {
                     $logs[] = [
@@ -445,7 +446,8 @@ class AdminController extends Controller
                 'levels' => array_count_values(array_column($logs, 'level')),
             ]);
         } catch (\Exception $e) {
-            Log::error('Admin log reading error: ' . $e->getMessage());
+            Log::error('Admin log reading error: '.$e->getMessage());
+
             return response()->json(['data' => [], 'error' => 'Log faylini o\'qib bo\'lmadi']);
         }
     }
@@ -453,9 +455,9 @@ class AdminController extends Controller
     public function activity(Request $request)
     {
         $limit = $request->get('limit', 50);
-        
+
         $cacheKey = "admin:activity:{$limit}";
-        
+
         $activities = Cache::remember($cacheKey, 300, function () use ($limit) {
             $activities = collect();
 
@@ -464,7 +466,7 @@ class AdminController extends Controller
                 ->latest()
                 ->limit($limit / 4)
                 ->get()
-                ->map(fn($post) => [
+                ->map(fn ($post) => [
                     'id' => $post->id,
                     'type' => 'post',
                     'action' => 'created',
@@ -476,7 +478,7 @@ class AdminController extends Controller
                         'score' => $post->score,
                         'comments' => $post->answers_count,
                         'category' => $post->category?->name,
-                    ]
+                    ],
                 ]);
 
             // Recent comments
@@ -484,25 +486,25 @@ class AdminController extends Controller
                 ->latest()
                 ->limit($limit / 4)
                 ->get()
-                ->map(fn($comment) => [
+                ->map(fn ($comment) => [
                     'id' => $comment->id,
                     'type' => 'comment',
                     'action' => 'created',
                     'user' => $comment->user->only(['name', 'username', 'avatar_url']),
-                    'target' => 'Komment: ' . Str::limit($comment->content_markdown, 50),
-                    'target_url' => route('posts.show', $comment->post->slug) . '#comment-' . $comment->id,
+                    'target' => 'Komment: '.Str::limit($comment->content_markdown, 50),
+                    'target_url' => route('posts.show', $comment->post->slug).'#comment-'.$comment->id,
                     'created_at' => $comment->created_at,
                     'metadata' => [
                         'post_title' => $comment->post->title,
                         'score' => $comment->score,
-                    ]
+                    ],
                 ]);
 
             // Recent users
             $recentUsers = User::latest()
                 ->limit($limit / 4)
                 ->get()
-                ->map(fn($user) => [
+                ->map(fn ($user) => [
                     'id' => $user->id,
                     'type' => 'user',
                     'action' => 'registered',
@@ -513,14 +515,14 @@ class AdminController extends Controller
                     'metadata' => [
                         'xp' => $user->xp,
                         'level' => $user->level?->name,
-                    ]
+                    ],
                 ]);
 
             // Recent wiki articles
             $recentWiki = WikiArticle::latest()
                 ->limit($limit / 4)
                 ->get()
-                ->map(fn($article) => [
+                ->map(fn ($article) => [
                     'id' => $article->id,
                     'type' => 'wiki',
                     'action' => 'created',
@@ -531,7 +533,7 @@ class AdminController extends Controller
                     'metadata' => [
                         'version' => $article->version,
                         'status' => $article->status,
-                    ]
+                    ],
                 ]);
 
             return $activities
@@ -556,9 +558,9 @@ class AdminController extends Controller
         ]);
 
         $user = User::findOrFail($userId);
-        
+
         // Prevent self-demotion
-        if ($user->id === $request->user()->id && isset($data['is_admin']) && !$data['is_admin']) {
+        if ($user->id === $request->user()->id && isset($data['is_admin']) && ! $data['is_admin']) {
             return response()->json(['message' => 'O\'zingizni admin huquqidan mahrum qila olmaysiz'], 422);
         }
 
@@ -576,14 +578,14 @@ class AdminController extends Controller
     public function deletePost($postId)
     {
         $post = Post::findOrFail($postId);
-        
+
         Log::warning('Post deleted by admin', [
             'admin_id' => auth()->id(),
             'post_id' => $postId,
             'post_title' => $post->title,
             'post_author' => $post->user->name,
         ]);
-        
+
         $post->delete();
 
         return response()->json(['message' => 'Post o\'chirildi']);
@@ -612,14 +614,14 @@ class AdminController extends Controller
     public function deleteComment($commentId)
     {
         $comment = Comment::findOrFail($commentId);
-        
+
         Log::warning('Comment deleted by admin', [
             'admin_id' => auth()->id(),
             'comment_id' => $commentId,
             'comment_author' => $comment->user->name,
             'post_title' => $comment->post->title,
         ]);
-        
+
         $comment->delete();
 
         return response()->json(['message' => 'Komment o\'chirildi']);
@@ -637,7 +639,7 @@ class AdminController extends Controller
             'email_notifications_enabled' => Cache::get('settings.email_notifications_enabled', true),
             'auto_moderation_enabled' => Cache::get('settings.auto_moderation_enabled', false),
             'site_title' => Settings::get('site.title', config('app.name', 'KnowHub Community')),
-            'site_tagline' => Settings::get('site.tagline', "Dasturchilar hamjamiyati"),
+            'site_tagline' => Settings::get('site.tagline', 'Dasturchilar hamjamiyati'),
             'seo_meta_description' => Settings::get('seo.meta_description'),
             'seo_meta_keywords' => Settings::get('seo.meta_keywords', []),
             'branding' => [
@@ -792,7 +794,7 @@ class AdminController extends Controller
 
     private function formatLogo($path): ?array
     {
-        if (!$path) {
+        if (! $path) {
             return null;
         }
 
@@ -809,13 +811,14 @@ class AdminController extends Controller
             Artisan::call('config:clear');
             Artisan::call('route:clear');
             Artisan::call('view:clear');
-            
+
             Log::info('Cache cleared by admin', ['admin_id' => auth()->id()]);
-            
+
             return response()->json(['message' => 'Cache muvaffaqiyatli tozalandi']);
         } catch (\Exception $e) {
-            Log::error('Cache clear error: ' . $e->getMessage());
-            return response()->json(['message' => 'Cache tozalashda xatolik: ' . $e->getMessage()], 500);
+            Log::error('Cache clear error: '.$e->getMessage());
+
+            return response()->json(['message' => 'Cache tozalashda xatolik: '.$e->getMessage()], 500);
         }
     }
 
@@ -826,28 +829,29 @@ class AdminController extends Controller
             Artisan::call('route:cache');
             Artisan::call('view:cache');
             Artisan::call('optimize');
-            
+
             Log::info('System optimized by admin', ['admin_id' => auth()->id()]);
-            
+
             return response()->json(['message' => 'Tizim muvaffaqiyatli optimallashtirildi']);
         } catch (\Exception $e) {
-            Log::error('System optimization error: ' . $e->getMessage());
-            return response()->json(['message' => 'Tizimni optimallashtirishda xatolik: ' . $e->getMessage()], 500);
+            Log::error('System optimization error: '.$e->getMessage());
+
+            return response()->json(['message' => 'Tizimni optimallashtirishda xatolik: '.$e->getMessage()], 500);
         }
     }
 
     public function backupDatabase()
     {
         try {
-            $filename = 'backup_' . date('Y_m_d_H_i_s') . '.sql';
+            $filename = 'backup_'.date('Y_m_d_H_i_s').'.sql';
             $backupPath = storage_path('app/backups');
-            
-            if (!file_exists($backupPath)) {
+
+            if (! file_exists($backupPath)) {
                 mkdir($backupPath, 0755, true);
             }
-            
-            $fullPath = $backupPath . '/' . $filename;
-            
+
+            $fullPath = $backupPath.'/'.$filename;
+
             $command = sprintf(
                 'mysqldump -u%s -p%s %s > %s 2>/dev/null',
                 escapeshellarg(config('database.connections.mysql.username')),
@@ -855,30 +859,31 @@ class AdminController extends Controller
                 escapeshellarg(config('database.connections.mysql.database')),
                 escapeshellarg($fullPath)
             );
-            
+
             exec($command, $output, $return_var);
-            
+
             if ($return_var === 0 && file_exists($fullPath)) {
                 $size = filesize($fullPath);
-                
+
                 Log::info('Database backup created', [
                     'admin_id' => auth()->id(),
                     'filename' => $filename,
                     'size' => $size,
                 ]);
-                
+
                 return response()->json([
                     'message' => 'Database backup muvaffaqiyatli yaratildi',
                     'filename' => $filename,
                     'size' => $this->formatBytes($size),
-                    'download_url' => route('admin.download-backup', $filename)
+                    'download_url' => route('admin.download-backup', $filename),
                 ]);
             } else {
                 throw new \Exception('Backup yaratishda xatolik yuz berdi');
             }
         } catch (\Exception $e) {
-            Log::error('Database backup error: ' . $e->getMessage());
-            return response()->json(['message' => 'Backup yaratishda xatolik: ' . $e->getMessage()], 500);
+            Log::error('Database backup error: '.$e->getMessage());
+
+            return response()->json(['message' => 'Backup yaratishda xatolik: '.$e->getMessage()], 500);
         }
     }
 
@@ -887,7 +892,7 @@ class AdminController extends Controller
     {
         $totalPosts = Post::where('status', 'published')->count();
         $totalVotes = Vote::count();
-        
+
         return $totalPosts > 0 ? round(($totalVotes / $totalPosts) * 100, 2) : 0;
     }
 
@@ -896,7 +901,8 @@ class AdminController extends Controller
         try {
             $dbName = config('database.connections.mysql.database');
             $size = DB::select("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'size' FROM information_schema.tables WHERE table_schema = ?", [$dbName]);
-            return ($size[0]->size ?? 0) . ' MB';
+
+            return ($size[0]->size ?? 0).' MB';
         } catch (\Exception $e) {
             return 'N/A';
         }
@@ -907,7 +913,7 @@ class AdminController extends Controller
         try {
             $bytes = 0;
             $storagePath = storage_path();
-            
+
             if (is_dir($storagePath)) {
                 $iterator = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($storagePath, \RecursiveDirectoryIterator::SKIP_DOTS)
@@ -916,7 +922,7 @@ class AdminController extends Controller
                     $bytes += $file->getSize();
                 }
             }
-            
+
             return $this->formatBytes($bytes);
         } catch (\Exception $e) {
             return 'N/A';
@@ -929,7 +935,7 @@ class AdminController extends Controller
             Cache::put('admin_test', 'working', 60);
             $test = Cache::get('admin_test');
             Cache::forget('admin_test');
-            
+
             return $test === 'working' ? 'Ishlayapti' : 'Ishlamayapti';
         } catch (\Exception $e) {
             return 'Xatolik';
@@ -941,8 +947,10 @@ class AdminController extends Controller
         try {
             if (function_exists('shell_exec')) {
                 $uptime = shell_exec('uptime -p 2>/dev/null');
+
                 return trim($uptime) ?: 'N/A';
             }
+
             return 'N/A';
         } catch (\Exception $e) {
             return 'N/A';
@@ -986,13 +994,14 @@ class AdminController extends Controller
         try {
             $bytes = disk_free_space('/');
             $total = disk_total_space('/');
-            
+
             if ($bytes !== false && $total !== false) {
                 $used = $total - $bytes;
                 $percentage = round(($used / $total) * 100, 1);
-                return $this->formatBytes($used) . ' (' . $percentage . '%)';
+
+                return $this->formatBytes($used).' ('.$percentage.'%)';
             }
-            
+
             return 'N/A';
         } catch (\Exception $e) {
             return 'N/A';
@@ -1034,12 +1043,12 @@ class AdminController extends Controller
     private function formatBytes($bytes, $precision = 2): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, $precision) . ' ' . $units[$i];
+
+        return round($bytes, $precision).' '.$units[$i];
     }
 
     private function getLogSeverity($level): int
@@ -1054,7 +1063,7 @@ class AdminController extends Controller
             'info' => 1,
             'debug' => 0,
         ];
-        
+
         return $severities[strtolower($level)] ?? 1;
     }
 
@@ -1108,7 +1117,7 @@ class AdminController extends Controller
         $activeNewUsers = User::where('created_at', '>=', $startDate)
             ->where('updated_at', '>=', now()->subDays(7))
             ->count();
-            
+
         return $newUsers > 0 ? round(($activeNewUsers / $newUsers) * 100, 2) : 0;
     }
 
@@ -1166,8 +1175,8 @@ class AdminController extends Controller
     {
         return User::with('level')
             ->withCount([
-                'posts' => fn($q) => $q->where('created_at', '>=', $startDate)->where('status', 'published'),
-                'comments' => fn($q) => $q->where('created_at', '>=', $startDate),
+                'posts' => fn ($q) => $q->where('created_at', '>=', $startDate)->where('status', 'published'),
+                'comments' => fn ($q) => $q->where('created_at', '>=', $startDate),
             ])
             ->having('posts_count', '>', 0)
             ->orderByDesc('posts_count')
@@ -1184,7 +1193,7 @@ class AdminController extends Controller
                 ['name' => 'Rossiya', 'users' => User::count() * 0.15],
                 ['name' => 'Qozog\'iston', 'users' => User::count() * 0.1],
                 ['name' => 'Boshqalar', 'users' => User::count() * 0.05],
-            ]
+            ],
         ];
     }
 
@@ -1208,7 +1217,7 @@ class AdminController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('image', 'LIKE', "%{$search}%");
+                    ->orWhere('image', 'LIKE', "%{$search}%");
             });
         }
 
@@ -1221,7 +1230,7 @@ class AdminController extends Controller
         }
 
         $containers = $query->latest()->paginate(20);
-        
+
         return response()->json($containers);
     }
 
@@ -1239,8 +1248,8 @@ class AdminController extends Controller
                 AVG(network_tx) as avg_network_tx,
                 COUNT(DISTINCT container_id) as active_containers
             ', [
-                $groupBy === 'hour' ? '%Y-%m-%d %H:00:00' : '%Y-%m-%d %H:%i:00'
-            ])
+            $groupBy === 'hour' ? '%Y-%m-%d %H:00:00' : '%Y-%m-%d %H:%i:00',
+        ])
             ->where('created_at', '>=', $startDate)
             ->groupByRaw('period')
             ->orderBy('period')
@@ -1258,16 +1267,17 @@ class AdminController extends Controller
                 'total_disk_usage' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->avg('disk_usage'),
                 'total_network_rx' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->sum('network_rx'),
                 'total_network_tx' => ContainerStats::where('created_at', '>=', now()->subMinutes(5))->sum('network_tx'),
-            ]
+            ],
         ]);
     }
 
     public function startContainer(Request $request, Container $container)
     {
         $this->authorize('manage', $container);
-        
+
         try {
             app(ContainerService::class)->startContainer($container);
+
             return response()->json(['message' => 'Container started successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -1277,9 +1287,10 @@ class AdminController extends Controller
     public function stopContainer(Request $request, Container $container)
     {
         $this->authorize('manage', $container);
-        
+
         try {
             app(ContainerService::class)->stopContainer($container);
+
             return response()->json(['message' => 'Container stopped successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -1289,9 +1300,10 @@ class AdminController extends Controller
     public function restartContainer(Request $request, Container $container)
     {
         $this->authorize('manage', $container);
-        
+
         try {
             app(ContainerService::class)->restartContainer($container);
+
             return response()->json(['message' => 'Container restarted successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -1301,9 +1313,10 @@ class AdminController extends Controller
     public function deleteContainer(Request $request, Container $container)
     {
         $this->authorize('manage', $container);
-        
+
         try {
             app(ContainerService::class)->deleteContainer($container);
+
             return response()->json(['message' => 'Container deleted successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -1313,10 +1326,11 @@ class AdminController extends Controller
     public function getContainerLogs(Request $request, Container $container)
     {
         $this->authorize('manage', $container);
-        
+
         try {
             $lines = $request->get('lines', 100);
             $logs = app(ContainerService::class)->getContainerLogs($container, $lines);
+
             return response()->json(['logs' => $logs]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -1353,6 +1367,7 @@ class AdminController extends Controller
     {
         try {
             $result = DB::select("SHOW GLOBAL STATUS LIKE 'Slow_queries'");
+
             return $result[0]->Value ?? 0;
         } catch (\Exception $e) {
             return 0;

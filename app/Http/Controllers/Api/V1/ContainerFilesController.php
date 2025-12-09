@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Gate;
 
 class ContainerFilesController extends Controller
 {
-    public function __construct(private readonly ContainerFilesService $filesService)
-    {
-    }
+    public function __construct(private readonly ContainerFilesService $filesService) {}
 
     public function index(Container $container): JsonResponse
     {

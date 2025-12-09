@@ -1,14 +1,15 @@
 <?php
 
 // file: app/Http/Controllers/Api/V1/VoteController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\VoteRequest;
 use App\Models\Comment;
+use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Vote;
-use App\Models\Notification;
 use App\Models\XpTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class VoteController extends Controller
             $previousVote = Vote::where([
                 'user_id' => $req->user()->id,
                 'votable_id' => $votable->id,
-                'votable_type' => $model
+                'votable_type' => $model,
             ])->first();
 
             $xpChange = 0;
@@ -43,7 +44,7 @@ class VoteController extends Controller
                 );
 
                 // Award XP for receiving votes
-                if (!$previousVote || $previousVote->value !== $data['value']) {
+                if (! $previousVote || $previousVote->value !== $data['value']) {
                     if ($previousVote) {
                         // Remove previous XP
                         $xpChange -= $previousVote->value * ($model === Post::class ? 5 : 2);
@@ -69,7 +70,7 @@ class VoteController extends Controller
                                 'user_id' => $votable->user_id,
                                 'type' => 'vote',
                                 'title' => 'Ovoz olindi',
-                                'message' => "{$req->user()->name} sizning " . ($model === Post::class ? 'postingiz' : 'kommentingiz') . "ga ijobiy ovoz berdi",
+                                'message' => "{$req->user()->name} sizning ".($model === Post::class ? 'postingiz' : 'kommentingiz').'ga ijobiy ovoz berdi',
                                 'data' => [
                                     'voter_name' => $req->user()->name,
                                     'vote_value' => $data['value'],
@@ -77,7 +78,7 @@ class VoteController extends Controller
                                     'votable_id' => $votable->id,
                                 ],
                                 'notifiable_id' => $votable->id,
-                                'notifiable_type' => $model
+                                'notifiable_type' => $model,
                             ]);
                         }
                     }
@@ -100,12 +101,11 @@ class VoteController extends Controller
         $vote = Vote::where([
             'user_id' => $req->user()->id,
             'votable_id' => $id,
-            'votable_type' => $model
+            'votable_type' => $model,
         ])->first();
 
         return response()->json([
-            'vote' => $vote ? $vote->value : 0
+            'vote' => $vote ? $vote->value : 0,
         ]);
     }
 }
-

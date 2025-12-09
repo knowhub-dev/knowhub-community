@@ -1,6 +1,7 @@
 <?php
 
 // file: app/Models/Tag.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Tag extends Model
 {
-    protected $fillable = ['name','slug'];
+    protected $fillable = ['name', 'slug'];
 
     protected static function booted(): void
     {
@@ -18,19 +19,18 @@ class Tag extends Model
         });
     }
 
-    public function posts(): BelongsToMany { return $this->belongsToMany(Post::class); }
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class);
+    }
 
     public function scopePopular($query)
     {
         return $query->withCount(['posts' => function ($q) {
             $q->where('status', 'published')
-              ->where('created_at', '>=', now()->subDays(30));
+                ->where('created_at', '>=', now()->subDays(30));
         }])
-        ->having('posts_count', '>', 0)
-        ->orderByDesc('posts_count');
+            ->having('posts_count', '>', 0)
+            ->orderByDesc('posts_count');
     }
 }
-
-
-
-?>

@@ -168,6 +168,7 @@ class SystemStatusController extends Controller
             $contents = @file_get_contents($path);
             if ($contents !== false) {
                 [$seconds] = explode(' ', trim($contents));
+
                 return (int) round((float) $seconds);
             }
         }
@@ -253,6 +254,7 @@ class SystemStatusController extends Controller
     private function formatLatency(float $startedAt): ?float
     {
         $ms = (microtime(true) - $startedAt) * 1000;
+
         return round($ms, 2);
     }
 }

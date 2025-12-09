@@ -1,5 +1,7 @@
 <?php
+
 // file: app/Models/User.php
+
 namespace App\Models;
 
 // Barcha kerakli importlar
@@ -20,6 +22,7 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
+     *
      * @var array<int, string>
      */
     protected $fillable = [
@@ -38,12 +41,14 @@ class User extends Authenticatable
 
     /**
      * The attributes that should be hidden for serialization.
+     *
      * @var array<int, string>
      */
-    protected $hidden = [ 'password', 'remember_token' ];
+    protected $hidden = ['password', 'remember_token'];
 
     /**
      * The attributes that should be cast.
+     *
      * @var array<string, string>
      */
     protected $casts = [
@@ -100,7 +105,7 @@ class User extends Authenticatable
      */
     public function followers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 
+        return $this->belongsToMany(User::class, 'follows',
             'following_id', // Men kuzatilayotganman
             'follower_id'   // Ular meni kuzatyapti
         );
@@ -112,7 +117,7 @@ class User extends Authenticatable
      */
     public function following(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 
+        return $this->belongsToMany(User::class, 'follows',
             'follower_id',    // Men kuzatyapman
             'following_id'  // Ularni kuzatyapman
         );

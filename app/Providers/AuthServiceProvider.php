@@ -2,13 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use App\Models\Post;
 use App\Models\Comment;
 use App\Models\Container;
-use App\Policies\PostPolicy;
+use App\Models\Post;
 use App\Policies\CommentPolicy;
 use App\Policies\ContainerPolicy;
+use App\Policies\PostPolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -23,4 +23,3 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
     }
 }
-

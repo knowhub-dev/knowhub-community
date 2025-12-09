@@ -25,4 +25,3 @@ class LevelController extends Controller
         return response()->json(['data' => $levels]);
     }
 }
-?>

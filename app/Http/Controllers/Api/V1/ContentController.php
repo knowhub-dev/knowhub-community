@@ -14,7 +14,7 @@ class ContentController extends Controller
         $content = Cache::remember($cacheKey, 1800, function () {
             return [
                 'hero' => [
-                    'title' => "Biz Haqimizda",
+                    'title' => 'Biz Haqimizda',
                     'subtitle' => "KnowHub Community - O'zbekiston va dunyo bo'ylab dasturchilarni birlashtiruvchi ochiq platforma.",
                 ],
                 'mission' => [

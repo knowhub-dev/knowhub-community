@@ -1,11 +1,13 @@
 <?php
+
 // file: tests/Feature/PostFlowTest.php
+
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class PostFlowTest extends TestCase
 {
@@ -17,9 +19,9 @@ class PostFlowTest extends TestCase
         Sanctum::actingAs($user);
 
         $res = $this->postJson('/api/v1/posts', [
-            'title'=>'Laravel Auth muammo',
-            'content_markdown'=>'**Savol**: Laravelda auth...',
-            'tags'=>['Laravel','Auth']
+            'title' => 'Laravel Auth muammo',
+            'content_markdown' => '**Savol**: Laravelda auth...',
+            'tags' => ['Laravel', 'Auth'],
         ])->assertOk();
 
         $this->getJson('/api/v1/posts')->assertOk()->assertJsonStructure(['data']);
@@ -27,4 +29,3 @@ class PostFlowTest extends TestCase
         $this->getJson("/api/v1/posts/{$slug}")->assertOk();
     }
 }
-

@@ -1,9 +1,10 @@
 <?php
+
 // file: app/Exceptions/Handler.php
+
 namespace App\Exceptions;
 
 use App\Http\Responses\ApiResponse;
-use App\Exceptions\ContainerRuntimeException;
 use Illuminate\Auth\AuthenticationException; // <-- BU ENG MUHIM IMPORT
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Throwable;
+
 use function config;
 
 class Handler extends ExceptionHandler
@@ -149,8 +151,7 @@ class Handler extends ExceptionHandler
     /**
      * Authenticated bo'lmagan so'rovni to'g'irlaymiz.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Illuminate\Auth\AuthenticationException $exception
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     protected function unauthenticated($request, AuthenticationException $exception)

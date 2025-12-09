@@ -10,9 +10,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContainerLogsController extends Controller
 {
-    public function __construct(private readonly ContainerLogsService $logsService)
-    {
-    }
+    public function __construct(private readonly ContainerLogsService $logsService) {}
 
     public function stream(Container $container): StreamedResponse
     {
@@ -20,7 +18,7 @@ class ContainerLogsController extends Controller
 
         return response()->stream(function () use ($container) {
             $this->logsService->stream($container, function (string $line): void {
-                echo 'data: ' . $line . "\n\n";
+                echo 'data: '.$line."\n\n";
                 if (ob_get_level()) {
                     ob_flush();
                 }

@@ -2,8 +2,8 @@
 
 $sessionDomain = env('SESSION_DOMAIN', '.knowhub.uz');
 $primaryDomain = ltrim($sessionDomain, '.');
-$frontendUrl = rtrim(env('FRONTEND_URL', 'https://' . $primaryDomain), '/');
-$appUrl = rtrim(env('APP_URL', 'https://api.' . $primaryDomain), '/');
+$frontendUrl = rtrim(env('FRONTEND_URL', 'https://'.$primaryDomain), '/');
+$appUrl = rtrim(env('APP_URL', 'https://api.'.$primaryDomain), '/');
 
 return [
 
@@ -23,9 +23,9 @@ return [
 
     'allowed_origins' => array_values(array_filter(array_unique(array_merge(
         [
-            'https://' . $primaryDomain,
-            'https://www.' . $primaryDomain,
-            'https://api.' . $primaryDomain,
+            'https://'.$primaryDomain,
+            'https://www.'.$primaryDomain,
+            'https://api.'.$primaryDomain,
             'http://localhost',
             'http://localhost:3000',
             'http://127.0.0.1',
@@ -42,8 +42,8 @@ return [
     )))),
 
     'allowed_origin_patterns' => array_values(array_filter([
-        'https://*.' . $primaryDomain,
-        'http://*.' . $primaryDomain,
+        'https://*.'.$primaryDomain,
+        'http://*.'.$primaryDomain,
         env('CORS_ALLOWED_ORIGIN_PATTERN'),
     ])),
 

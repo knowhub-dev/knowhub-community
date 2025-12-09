@@ -6,13 +6,10 @@ use App\Models\Container;
 use App\Models\ContainerMetric;
 use App\Services\Containers\Adapters\DockerAdapter;
 use Carbon\Carbon;
-use Throwable;
 
 class ContainerStatsService
 {
-    public function __construct(private readonly DockerAdapter $adapter)
-    {
-    }
+    public function __construct(private readonly DockerAdapter $adapter) {}
 
     /** @return array<string,mixed> */
     public function show(Container $container): array

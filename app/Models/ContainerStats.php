@@ -12,7 +12,7 @@ class ContainerStats extends Model
         'memory_usage',
         'disk_usage',
         'network_rx',
-        'network_tx'
+        'network_tx',
     ];
 
     protected $casts = [
@@ -20,7 +20,7 @@ class ContainerStats extends Model
         'memory_usage' => 'float',
         'disk_usage' => 'float',
         'network_rx' => 'integer',
-        'network_tx' => 'integer'
+        'network_tx' => 'integer',
     ];
 
     public function container()

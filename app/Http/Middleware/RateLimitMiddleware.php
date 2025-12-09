@@ -12,13 +12,14 @@ class RateLimitMiddleware
     public function handle(Request $request, Closure $next, string $key = 'api', int $maxAttempts = 60): Response
     {
         $identifier = $request->user()?->id ?? $request->ip();
-        $rateLimitKey = $key . ':' . $identifier;
+        $rateLimitKey = $key.':'.$identifier;
 
         if (RateLimiter::tooManyAttempts($rateLimitKey, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($rateLimitKey);
+
             return response()->json([
-                'message' => 'Too many requests. Try again in ' . $seconds . ' seconds.',
-                'retry_after' => $seconds
+                'message' => 'Too many requests. Try again in '.$seconds.' seconds.',
+                'retry_after' => $seconds,
             ], 429);
         }
 

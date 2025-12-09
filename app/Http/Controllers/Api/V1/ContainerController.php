@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Exceptions\ContainerRuntimeException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Container\StoreContainerRequest;
 use App\Http\Requests\Container\UpdateContainerRequest;
@@ -15,9 +14,7 @@ use Illuminate\Support\Facades\Gate;
 
 class ContainerController extends Controller
 {
-    public function __construct(private readonly ContainerService $containerService)
-    {
-    }
+    public function __construct(private readonly ContainerService $containerService) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -26,14 +23,14 @@ class ContainerController extends Controller
             $request->only(['status', 'type'])
         );
 
-        return (ContainerResource::collection($containers))
+        return ContainerResource::collection($containers)
             ->additional(['meta' => ['total' => $containers->total()]])
             ->response();
     }
 
     public function store(StoreContainerRequest $request): JsonResponse
     {
-        $this->authorize('create', Container::class);
+        $this->authorize('create', [$request->user(), Container::class]);
 
         $container = $this->containerService->create($request->user(), $request->validated());
 

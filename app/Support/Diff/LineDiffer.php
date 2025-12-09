@@ -80,7 +80,7 @@ class LineDiffer
 
         foreach ($lines as $entry) {
             $prefix = $this->prefixForType($entry['type'] ?? 'context');
-            $output[] = $prefix . ($entry['text'] ?? '');
+            $output[] = $prefix.($entry['text'] ?? '');
         }
 
         return implode("\n", $output);

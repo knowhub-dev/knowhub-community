@@ -10,12 +10,14 @@ class WikiWebController extends Controller
     public function index()
     {
         $articles = WikiArticle::latest()->paginate(10);
+
         return view('wiki.index', compact('articles'));
     }
 
     public function show(string $slug)
     {
-        $article = WikiArticle::where('slug',$slug)->firstOrFail();
+        $article = WikiArticle::where('slug', $slug)->firstOrFail();
+
         return view('wiki.show', compact('article'));
     }
 
@@ -43,4 +45,3 @@ class WikiWebController extends Controller
             ->with('success', 'Wiki maqola muvaffaqiyatli yaratildi!');
     }
 }
-
