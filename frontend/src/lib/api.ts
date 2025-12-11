@@ -1,7 +1,5 @@
 import axios from 'axios';
-
-import { clearAuthCookie } from './auth-cookie';
-import { getApiBaseUrl, getApiRootUrl } from './api-base-url';
+import { getApiBaseUrl } from './api-base-url';
 
 export const api = axios.create({
   baseURL: getApiBaseUrl(),
@@ -13,32 +11,6 @@ export const api = axios.create({
     'X-Requested-With': 'XMLHttpRequest',
   },
 });
-
-const csrfClient = axios.create({
-  baseURL: getApiRootUrl(),
-  withCredentials: true,
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-  },
-});
-
-let csrfCookiePromise: Promise<void> | null = null;
-
-export const ensureCsrfCookie = () => {
-  if (!csrfCookiePromise) {
-    csrfCookiePromise = csrfClient
-      .get('/sanctum/csrf-cookie')
-      .then(() => undefined)
-      .catch(error => {
-        csrfCookiePromise = null;
-        throw error;
-      });
-  }
-
-  return csrfCookiePromise;
-};
 
 // Xatolarni global tutish
 api.interceptors.response.use(
@@ -54,12 +26,7 @@ api.interceptors.response.use(
       });
 
       if (error.response.status === 401) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          delete api.defaults.headers.common['Authorization'];
-        }
-
-        clearAuthCookie();
+        // Unauthorized responses are handled by the calling code.
       }
 
       if ([404, 500].includes(error.response.status)) {
@@ -76,4 +43,5 @@ api.interceptors.response.use(
     throw error;
   }
 );
+
 

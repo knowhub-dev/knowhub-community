@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
-import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +22,9 @@ function CallbackFallback() {
       <div className="w-full max-w-md rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center shadow-lg">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--primary))]" />
-          <p className="text-base font-medium text-[hsl(var(--foreground))]">Hisobingiz tasdiqlanmoqda...</p>
+          <p className="text-base font-medium text-[hsl(var(--foreground))]">
+            Hisobingiz tasdiqlanmoqda...
+          </p>
         </div>
       </div>
     </div>
@@ -48,7 +49,6 @@ function OAuthCallbackContent() {
   useEffect(() => {
     let redirectTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const token = searchParams.get("token");
     const provider = searchParams.get("provider") ?? "unknown";
     const error = searchParams.get("error");
     const statusParam = searchParams.get("status");
@@ -65,36 +65,31 @@ function OAuthCallbackContent() {
 
     async function finalize() {
       try {
-        if (token) {
-          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("auth_token", token);
-          }
-        }
         await checkUser();
+
         setStatus("success");
-        setMessage(statusParam === "success"
-          ? `${provider === "github" ? "GitHub" : "Google"} orqali muvaffaqiyatli kirdingiz.`
-          : "Muvaffaqiyatli kirdingiz.");
+        setMessage(
+          statusParam === "success"
+            ? `${provider === "github" ? "GitHub" : "Google"} orqali muvaffaqiyatli kirdingiz.`
+            : "Muvaffaqiyatli kirdingiz."
+        );
+
         redirectTimer = setTimeout(() => {
           router.replace(redirectTarget);
         }, 1000);
+
       } catch (err) {
         console.error("OAuth finalize failed", err);
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("auth_token");
-        }
-        delete api.defaults.headers.common["Authorization"];
+
         setStatus("error");
         setMessage("Tokenni tasdiqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
       }
     }
 
     finalize();
+
     return () => {
-      if (redirectTimer) {
-        clearTimeout(redirectTimer);
-      }
+      if (redirectTimer) clearTimeout(redirectTimer);
     };
   }, [checkUser, redirectTarget, router, searchParams]);
 

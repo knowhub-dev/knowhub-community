@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api, ensureCsrfCookie } from '@/lib/api';
-import { clearAuthCookie } from '@/lib/auth-cookie';
+import { api } from '@/lib/api';
 import type { User as BaseUser } from '@/types';
 
 interface AuthUser extends BaseUser {
@@ -15,7 +14,7 @@ interface AuthContextType {
   register: (name: string, username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkUser: () => Promise<void>;
-  isAdmin: boolean; // <-- BU HAM MUHIM
+  isAdmin: boolean;
   isAuthenticated: boolean;
 }
 
@@ -30,22 +29,9 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   const [user, setUser] = useState<AuthUser | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
 
-  const applyToken = (token?: string | null) => {
-    if (typeof window === 'undefined') return;
-
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
-      localStorage.setItem('auth_token', token);
-    } else {
-      delete api.defaults.headers.common.Authorization;
-      localStorage.removeItem('auth_token');
-    }
-  };
-
   const checkUser = async () => {
     setLoading(true);
     try {
-      // Bu manzil to'g'ri (api.ts da /api/v1 prefiksi bor)
       const response = await api.get<{ data: AuthUser } | AuthUser>('/profile/me');
       const payload = response.data;
       const normalizedUser = 'data' in payload ? payload.data : payload;
@@ -58,40 +44,27 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('auth_token');
-      if (stored) {
-        api.defaults.headers.common.Authorization = `Bearer ${stored}`;
-      }
-    }
-
     checkUser();
   }, []);
 
   const login = async (email: string, password: string) => {
-    await ensureCsrfCookie();
-    const response = await api.post<{ user: AuthUser } | AuthUser>('/auth/login', {
+    const response = await api.post<{ user: AuthUser }>('/auth/login', {
       email,
       password,
     });
-    const payload = response.data as any;
-    const userData = payload.user ?? payload.data ?? payload;
-    applyToken(payload.token ?? null);
+    const { user: userData } = response.data;
     setUser(userData);
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    await ensureCsrfCookie();
-    const response = await api.post<{ user: AuthUser } | AuthUser>('/auth/register', {
+    const response = await api.post<{ user: AuthUser }>('/auth/register', {
       name,
       username,
       email,
       password,
       password_confirmation: password,
     });
-    const payload = response.data as any;
-    const userData = payload.user ?? payload.data ?? payload;
-    applyToken(payload.token ?? null);
+    const { user: userData } = response.data;
     setUser(userData);
   };
 
@@ -99,19 +72,19 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     try {
       await api.post('/auth/logout');
     } catch {
-      // Ignore
+      // ignore logout errors
     } finally {
-      clearAuthCookie();
-      applyToken(null);
       setUser(null);
     }
   };
-  
+
   const isAdmin = !!user && (user.role === 'admin' || (user as any).is_admin);
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser, isAdmin, isAuthenticated }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, checkUser, isAdmin, isAuthenticated }}
+    >
       {children}
     </AuthContext.Provider>
   );

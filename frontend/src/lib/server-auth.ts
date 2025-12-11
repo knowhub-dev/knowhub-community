@@ -2,21 +2,20 @@ import { cookies } from 'next/headers';
 
 import type { User } from '@/types';
 
-import { AUTH_COOKIE_NAME } from './auth-cookie';
 import { buildApiUrl } from './api-base-url';
 
 type ServerAuthResult = {
   user: User | null;
-  hasToken: boolean;
+  hasSession: boolean;
 };
 
 export async function fetchServerAuthenticatedUser(): Promise<ServerAuthResult> {
   const cookieStore = cookies();
   const cookieHeader = cookieStore.toString();
-  const authToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  const hasSessionCookie = cookieStore.getAll().length > 0;
 
-  if (!cookieHeader && !authToken) {
-    return { user: null, hasToken: false };
+  if (!hasSessionCookie) {
+    return { user: null, hasSession: false };
   }
 
   try {
@@ -25,22 +24,21 @@ export async function fetchServerAuthenticatedUser(): Promise<ServerAuthResult> 
       headers: {
         Accept: 'application/json',
         ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
       credentials: 'include',
       cache: 'no-store',
     });
 
     if (!response.ok) {
-      return { user: null, hasToken: !!authToken };
+      return { user: null, hasSession: hasSessionCookie };
     }
 
     const payload = await response.json();
     const user = 'data' in payload ? (payload.data as User) : (payload as User);
 
-    return { user, hasToken: true };
+    return { user, hasSession: true };
   } catch (error) {
     console.error('Failed to fetch authenticated user on server:', error);
-    return { user: null, hasToken: !!authToken };
+    return { user: null, hasSession: hasSessionCookie };
   }
 }
