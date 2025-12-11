@@ -14,6 +14,8 @@ use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
 {
+    private const STATE_TTL_SECONDS = 300;
+
     public function redirectGoogle(Request $request): RedirectResponse
     {
         return $this->redirectToProvider($request, 'google');
@@ -112,10 +114,10 @@ class OAuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
 
         return redirect()->away($this->buildRedirectUrl([
-            'token' => $token,
             'provider' => $provider,
             'redirect' => $redirect,
-        ]));
+            'status' => 'success',
+        ]))->withCookie($this->issueAuthCookie($token));
     }
 
     protected function redirectWithError(string $provider, string $error, ?string $encodedState = null): RedirectResponse
@@ -143,7 +145,15 @@ class OAuthController extends Controller
             return null;
         }
 
-        return base64_encode(json_encode(['redirect' => $redirect]));
+        $payload = [
+            'redirect' => $redirect,
+            'nonce' => Str::random(16),
+            'ts' => time(),
+        ];
+
+        $payload['sig'] = hash_hmac('sha256', $payload['redirect'].'|'.$payload['nonce'].'|'.$payload['ts'], config('app.key'));
+
+        return base64_encode(json_encode($payload));
     }
 
     protected function decodeState(?string $encoded): ?string
@@ -154,7 +164,33 @@ class OAuthController extends Controller
 
         $decoded = json_decode(base64_decode($encoded, true) ?: '', true);
 
-        return is_array($decoded) ? ($decoded['redirect'] ?? null) : null;
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $ts = $decoded['ts'] ?? 0;
+        $sig = $decoded['sig'] ?? '';
+        $nonce = $decoded['nonce'] ?? '';
+        $redirect = $decoded['redirect'] ?? null;
+
+        if (! $redirect || ! is_string($redirect)) {
+            return null;
+        }
+
+        if (abs(time() - (int) $ts) > self::STATE_TTL_SECONDS) {
+            Log::warning('OAuth state expired', ['ts' => $ts]);
+
+            return null;
+        }
+
+        $expected = hash_hmac('sha256', $redirect.'|'.$nonce.'|'.$ts, config('app.key'));
+        if (! hash_equals($expected, (string) $sig)) {
+            Log::warning('OAuth state signature mismatch');
+
+            return null;
+        }
+
+        return $redirect;
     }
 
     protected function sanitizeRedirect(?string $redirect): ?string
@@ -188,5 +224,20 @@ class OAuthController extends Controller
         }
 
         return $candidate;
+    }
+
+    private function issueAuthCookie(string $token)
+    {
+        return cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 30,
+            '/',
+            config('session.domain'),
+            (bool) config('session.secure', true),
+            true,
+            false,
+            config('session.same_site', 'lax')
+        );
     }
 }

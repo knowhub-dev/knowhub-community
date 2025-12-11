@@ -71,11 +71,24 @@ class ContainerEnvController extends Controller
         Gate::authorize('update', $container);
 
         $payload = $request->validate([
-            'env_vars' => ['array'],
-            'env_vars.*' => ['nullable', 'string'],
+            'env_vars' => ['array', 'max:'.config('containers.max_env_vars', 10)],
         ]);
 
-        $this->envService->syncFromArray($container, $payload['env_vars'] ?? []);
+        $envVars = $payload['env_vars'] ?? [];
+        $keyPattern = config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/');
+        $valueMax = (int) config('containers.env_value_max_length', 256);
+
+        foreach ($envVars as $key => $value) {
+            if (! is_string($key) || ! preg_match($keyPattern, $key)) {
+                return response()->json(['message' => 'Invalid environment variable name.'], 422);
+            }
+
+            if ($value !== null && strlen((string) $value) > $valueMax) {
+                return response()->json(['message' => 'Environment variable value is too long.'], 422);
+            }
+        }
+
+        $this->envService->syncFromArray($container, $envVars);
 
         return ContainerEnvResource::collection($container->envVars)
             ->additional(['meta' => null])

@@ -113,6 +113,23 @@ class ContainerService
         }
     }
 
+    public function restart(Container $container): bool
+    {
+        try {
+            $this->client->post("/containers/{$container->container_id}/restart");
+            $container->status = 'running';
+            $container->save();
+
+            return true;
+        } catch (Exception|GuzzleException $e) {
+            Log::error('Container restart failed: '.$e->getMessage(), [
+                'container_id' => $container->id,
+            ]);
+
+            return false;
+        }
+    }
+
     public function delete(Container $container): bool
     {
         try {

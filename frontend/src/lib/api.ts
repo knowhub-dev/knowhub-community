@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { clearAuthCookie } from './auth-cookie';
-import { getApiBaseUrl } from './api-base-url';
+import { getApiBaseUrl, getApiRootUrl } from './api-base-url';
 
 export const api = axios.create({
   baseURL: getApiBaseUrl(),
@@ -10,6 +10,17 @@ export const api = axios.create({
   xsrfHeaderName: 'X-XSRF-TOKEN',
   headers: {
     Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+});
+
+const csrfClient = axios.create({
+  baseURL: getApiRootUrl(),
+  withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',
   },
 });
 
@@ -17,7 +28,7 @@ let csrfCookiePromise: Promise<void> | null = null;
 
 export const ensureCsrfCookie = () => {
   if (!csrfCookiePromise) {
-    csrfCookiePromise = api
+    csrfCookiePromise = csrfClient
       .get('/sanctum/csrf-cookie')
       .then(() => undefined)
       .catch(error => {
@@ -65,5 +76,4 @@ api.interceptors.response.use(
     throw error;
   }
 );
-
 

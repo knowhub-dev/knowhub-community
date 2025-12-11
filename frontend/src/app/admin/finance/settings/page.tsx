@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import type { Plan } from '@/types/plan';
 
 interface GatewayConfig {
   enabled: boolean;
@@ -18,15 +19,9 @@ interface GatewayConfig {
   callback_url?: string;
 }
 
-interface PricingConfig {
-  monthly_price: number;
-  yearly_price: number;
-}
-
 interface PaymentSettingsResponse {
   payme: GatewayConfig;
   click: GatewayConfig;
-  plans: PricingConfig;
 }
 
 type GatewayKey = 'payme' | 'click';
@@ -168,17 +163,22 @@ function CallbackUrlDisplay({ label, url }: { label: string; url?: string }) {
 
 export default function PaymentSettingsPage() {
   const [settings, setSettings] = useState<PaymentSettingsResponse | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [showSecret, setShowSecret] = useState<SecretVisibility>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get<PaymentSettingsResponse>('/admin/payment-settings');
-        setSettings(res.data);
+        const [gatewayRes, plansRes] = await Promise.all([
+          api.get<PaymentSettingsResponse>('/admin/payment-settings'),
+          api.get<{ plans: Plan[] }>('/admin/plans'),
+        ]);
+        setSettings(gatewayRes.data);
+        setPlans(plansRes.data.plans);
       } catch (error) {
         console.error(error);
-        toast.error('Failed to load payment settings');
+        toast.error('Failed to load payment & plan settings');
       }
     };
     load();
@@ -188,16 +188,55 @@ export default function PaymentSettingsPage() {
     setSettings(prev => (prev ? { ...prev, [provider]: { ...prev[provider], [field]: value } } : prev));
   };
 
-  const updatePlans = (field: keyof PricingConfig, value: number) => {
-    setSettings(prev => (prev ? { ...prev, plans: { ...prev.plans, [field]: value } } : prev));
+  const updatePlanField = (planId: string, field: keyof Plan, value: string | number | boolean | string[]) => {
+    setPlans(prev =>
+      prev.map(plan => (plan.id === planId ? { ...plan, [field]: value } : plan)),
+    );
+  };
+
+  const addCustomPlan = () => {
+    setPlans(prev => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}`,
+        name: 'Custom plan',
+        currency: 'UZS',
+        price_monthly: 0,
+        price_yearly: 0,
+        description: '',
+        features: [],
+        highlight: false,
+      },
+    ]);
   };
 
   const handleSave = async () => {
     if (!settings) return;
+    if (plans.length === 0) {
+      toast.error('No plans to save');
+      return;
+    }
     setSaving(true);
     try {
-      await api.post('/admin/payment-settings', settings);
-      toast.success('Payment settings saved');
+      const payload = {
+        payme: {
+          enabled: settings.payme?.enabled ?? false,
+          merchant_id: settings.payme?.merchant_id,
+          secret_key: settings.payme?.secret_key,
+        },
+        click: {
+          enabled: settings.click?.enabled ?? false,
+          service_id: settings.click?.service_id,
+          merchant_user_id: settings.click?.merchant_user_id,
+          secret_key: settings.click?.secret_key,
+        },
+      };
+
+      await Promise.all([
+        api.post('/admin/payment-settings', payload),
+        api.post('/admin/plans', { plans }),
+      ]);
+      toast.success('Payment and plan settings saved');
     } catch (error) {
       console.error(error);
       toast.error('Failed to save settings');
@@ -209,12 +248,12 @@ export default function PaymentSettingsPage() {
   return (
     <div className="space-y-8">
       <Toaster position="top-right" />
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-indigo-500">Payments</p>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Payment Integrations</h1>
-          <p className="text-slate-600 dark:text-slate-400">Configure Payme and Click gateways without redeploying.</p>
-        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-indigo-500">Payments</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Payment Integrations</h1>
+            <p className="text-slate-600 dark:text-slate-400">Configure Payme and Click gateways without redeploying.</p>
+          </div>
         <Button onClick={handleSave} disabled={saving || !settings} className="gap-2">
           {saving ? <ShieldCheck className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save changes
         </Button>
@@ -251,35 +290,90 @@ export default function PaymentSettingsPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="h-5 w-5 text-indigo-500" />
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Plans</p>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pricing Configuration</h3>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-indigo-500" />
+            <div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Plans</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pricing Configuration</h3>
+            </div>
           </div>
+          <Button variant="secondary" onClick={addCustomPlan}>
+            Add custom plan
+          </Button>
         </div>
+
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label className="text-sm text-slate-600 dark:text-slate-300">Monthly price (UZS)</Label>
-            <Input
-              type="number"
-              value={settings?.plans.monthly_price ?? ''}
-              onChange={e => updatePlans('monthly_price', Number(e.target.value))}
-              placeholder="e.g. 99000"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm text-slate-600 dark:text-slate-300">Yearly price (UZS)</Label>
-            <Input
-              type="number"
-              value={settings?.plans.yearly_price ?? ''}
-              onChange={e => updatePlans('yearly_price', Number(e.target.value))}
-              placeholder="e.g. 999000"
-            />
-          </div>
+          {plans.map(plan => (
+            <div key={plan.id} className={cn('rounded-xl border p-4', plan.highlight ? 'border-indigo-400' : 'border-border/70')}>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-xs uppercase tracking-[0.2em] text-muted-foreground/70">{plan.id}</Label>
+                  <Input
+                    className="mt-1"
+                    value={plan.name}
+                    onChange={e => updatePlanField(plan.id, 'name', e.target.value)}
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={plan.highlight ?? false}
+                    onChange={e => updatePlanField(plan.id, 'highlight', e.target.checked)}
+                  />
+                  Highlight
+                </label>
+              </div>
+
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Monthly price</Label>
+                  <Input
+                    type="number"
+                    value={plan.price_monthly}
+                    onChange={e => updatePlanField(plan.id, 'price_monthly', Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Yearly price</Label>
+                  <Input
+                    type="number"
+                    value={plan.price_yearly}
+                    onChange={e => updatePlanField(plan.id, 'price_yearly', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <Label className="text-xs text-muted-foreground">Currency</Label>
+                <Input
+                  value={plan.currency}
+                  onChange={e => updatePlanField(plan.id, 'currency', e.target.value.toUpperCase())}
+                />
+              </div>
+
+              <div className="mt-3">
+                <Label className="text-xs text-muted-foreground">Description</Label>
+                <Input
+                  value={plan.description ?? ''}
+                  onChange={e => updatePlanField(plan.id, 'description', e.target.value)}
+                  placeholder="Short marketing copy"
+                />
+              </div>
+
+              <div className="mt-3">
+                <Label className="text-xs text-muted-foreground">Features (one per line)</Label>
+                <textarea
+                  className="mt-1 w-full rounded-lg border border-border/70 bg-transparent px-3 py-2 text-sm"
+                  rows={4}
+                  value={(plan.features ?? []).join('\n')}
+                  onChange={e => updatePlanField(plan.id, 'features', e.target.value.split('\n'))}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

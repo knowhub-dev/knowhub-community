@@ -4,12 +4,21 @@
 
 namespace App\Services\CodeRun;
 
+use App\Models\CodeRun;
 use App\Models\User;
 
 interface CodeRunner
 {
+    public function submit(
+        User $user,
+        string $language,
+        string $source,
+        ?int $postId = null,
+        ?int $commentId = null
+    ): CodeRun;
+
     /**
-     * @return array{stdout:string,stderr:string,code:int,time_ms:int}
+     * @return void
      */
-    public function run(User $user, string $language, string $source): array;
+    public function execute(CodeRun $codeRun): void;
 }

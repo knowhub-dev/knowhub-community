@@ -1,14 +1,13 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth-cookie';
+import { api, ensureCsrfCookie } from '@/lib/api';
+import { clearAuthCookie } from '@/lib/auth-cookie';
 import type { User as BaseUser } from '@/types';
 
 interface AuthUser extends BaseUser {
   role?: 'admin' | 'user';
 }
 
-// 2. Kontekstga 'isAdmin'ni qo'shamiz
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
@@ -22,15 +21,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const resolveStoredToken = () => {
-  if (typeof window === 'undefined') return null;
-
-  const storedToken = localStorage.getItem('auth_token');
-  if (storedToken) return storedToken;
-
-  return getAuthCookie();
-};
-
 interface AuthProviderProps {
   children: React.ReactNode;
   initialUser?: AuthUser | null;
@@ -39,6 +29,18 @@ interface AuthProviderProps {
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
+
+  const applyToken = (token?: string | null) => {
+    if (typeof window === 'undefined') return;
+
+    if (token) {
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      localStorage.setItem('auth_token', token);
+    } else {
+      delete api.defaults.headers.common.Authorization;
+      localStorage.removeItem('auth_token');
+    }
+  };
 
   const checkUser = async () => {
     setLoading(true);
@@ -56,37 +58,40 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   };
 
   useEffect(() => {
-    const token = resolveStoredToken();
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('auth_token');
+      if (stored) {
+        api.defaults.headers.common.Authorization = `Bearer ${stored}`;
+      }
     }
 
     checkUser();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await api.post<{ token: string; user: AuthUser }>('/auth/login', {
+    await ensureCsrfCookie();
+    const response = await api.post<{ user: AuthUser } | AuthUser>('/auth/login', {
       email,
       password,
     });
-    const { token, user: userData } = response.data;
-    setAuthCookie(token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    localStorage.setItem('auth_token', token);
+    const payload = response.data as any;
+    const userData = payload.user ?? payload.data ?? payload;
+    applyToken(payload.token ?? null);
     setUser(userData);
   };
 
   const register = async (name: string, username: string, email: string, password: string) => {
-    const response = await api.post<{ token: string; user: AuthUser }>('/auth/register', {
+    await ensureCsrfCookie();
+    const response = await api.post<{ user: AuthUser } | AuthUser>('/auth/register', {
       name,
       username,
       email,
       password,
+      password_confirmation: password,
     });
-    const { token, user: userData } = response.data;
-    setAuthCookie(token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    localStorage.setItem('auth_token', token);
+    const payload = response.data as any;
+    const userData = payload.user ?? payload.data ?? payload;
+    applyToken(payload.token ?? null);
     setUser(userData);
   };
 
@@ -97,14 +102,12 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
       // Ignore
     } finally {
       clearAuthCookie();
-      localStorage.removeItem('auth_token');
-      delete api.defaults.headers.common['Authorization'];
+      applyToken(null);
       setUser(null);
     }
   };
   
-  // 3. isAdmin qiymatini shu yerda, 'user.role'ga qarab hisoblaymiz
-  const isAdmin = !!user && user.role === 'admin';
+  const isAdmin = !!user && (user.role === 'admin' || (user as any).is_admin);
   const isAuthenticated = !!user;
 
   return (

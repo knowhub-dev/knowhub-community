@@ -7,8 +7,9 @@ import { buildApiUrl } from '@/lib/api-base-url';
 import GuestLandingServer from './home/GuestLandingServer';
 
 export const generateMetadata = generateStaticMetadata({
-  title: 'Bosh sahifa',
-  description: "KnowHub Community — dasturchilar uchun bilim almashish va hamkorlik maydoni.",
+  title: 'KnowHub Community - Dasturchilar uchun Markaz',
+  description:
+    "KnowHub — bu dasturchilar uchun maxsus yaratilgan bilimlar markazi, hamkorlik platformasi va ijodiy maydon. Loyihalar yarating, bilim ulashing va hamjamiyatimizga qo'shiling.",
   path: '/',
 });
 

@@ -10,9 +10,10 @@ use App\Filters\PostFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
+use App\Events\PostCreated;
 use App\Http\Resources\PostResource;
 use App\Jobs\GeneratePostAiDraft;
-use App\Models\Notification;
+use App\Jobs\NotifyFollowers;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Cache\Repository;
@@ -217,11 +218,14 @@ class PostController extends Controller
             return $post->fresh(['user.level', 'tags', 'category']);
         });
 
+        // Dispatch PostCreated event for listeners
+        PostCreated::dispatch($post);
+
         // Clear cache
         $this->clearPostCaches();
 
         // Notify followers
-        $this->notifyFollowers($post);
+        NotifyFollowers::dispatch($post);
 
         GeneratePostAiDraft::dispatch($post->id);
 
@@ -289,24 +293,5 @@ class PostController extends Controller
             : Cache::store();
     }
 
-    private function notifyFollowers(Post $post): void
-    {
-        $followers = $post->user->followers()->get();
 
-        foreach ($followers as $follower) {
-            Notification::create([
-                'user_id' => $follower->id,
-                'type' => 'new_post',
-                'title' => 'Yangi post',
-                'message' => "{$post->user->name} yangi post yaratdi: {$post->title}",
-                'data' => [
-                    'post_id' => $post->id,
-                    'post_slug' => $post->slug,
-                    'author_name' => $post->user->name,
-                ],
-                'notifiable_id' => $post->id,
-                'notifiable_type' => Post::class,
-            ]);
-        }
-    }
 }

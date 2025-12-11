@@ -8,13 +8,17 @@ use App\Http\Requests\Container\UpdateContainerRequest;
 use App\Http\Resources\ContainerResource;
 use App\Models\Container;
 use App\Services\Containers\ContainerService;
+use App\Services\Plans\PlanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ContainerController extends Controller
 {
-    public function __construct(private readonly ContainerService $containerService) {}
+    public function __construct(
+        private readonly ContainerService $containerService,
+        private readonly PlanService $planService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -30,7 +34,27 @@ class ContainerController extends Controller
 
     public function store(StoreContainerRequest $request): JsonResponse
     {
-        $this->authorize('create', [$request->user(), Container::class]);
+        $user = $request->user();
+
+        if (! $user->canCreateContainer()) {
+            return response()->json([
+                'message' => 'Joriy rejangiz bo\'yicha mini-server limiti tugagan. Kengaytirish uchun yuqori reja tanlang.',
+                'upgrade_required' => true,
+                'plans' => $this->planService->all(),
+                'current_plan' => $user->currentPlan(),
+            ], 403);
+        }
+
+        $this->authorize('create', Container::class);
+
+        $minXp = (int) config('containers.min_xp_required', 0);
+        if ($minXp > 0 && $request->user()->xp < $minXp) {
+            return response()->json([
+                'message' => 'Mini-server yaratish uchun XP yetarli emas',
+                'required_xp' => $minXp,
+                'current_xp' => $request->user()->xp,
+            ], 403);
+        }
 
         $container = $this->containerService->create($request->user(), $request->validated());
 

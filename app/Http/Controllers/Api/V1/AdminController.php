@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\CodeRun;
 use App\Models\Comment;
 use App\Models\Container;
+use App\Models\ContainerStats;
 use App\Models\Follow;
 use App\Models\Notification;
 use App\Models\Post;
@@ -15,6 +16,8 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Models\Vote;
 use App\Models\WikiArticle;
+use App\Services\Docker\ContainerService as DockerContainerService;
+use App\Services\Plans\PlanService;
 use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -22,10 +25,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    public function __construct()
+    public function __construct(private readonly PlanService $planService)
     {
         $this->middleware(function ($request, $next) {
             if (! $request->user() || ! $this->isAdmin($request->user())) {
@@ -38,7 +42,7 @@ class AdminController extends Controller
 
     private function isAdmin($user): bool
     {
-        return $user->is_admin || $user->email === 'admin@knowhub.uz' || $user->id === 1;
+        return (bool) $user->is_admin;
     }
 
     public function dashboard()
@@ -226,7 +230,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function containerStats()
+    public function containerStatusOverview()
     {
         $total = Container::count();
 
@@ -472,7 +476,7 @@ class AdminController extends Controller
                     'action' => 'created',
                     'user' => $post->user->only(['name', 'username', 'avatar_url']),
                     'target' => $post->title,
-                    'target_url' => route('posts.show', $post->slug),
+                    'target_url' => url("/api/v1/posts/{$post->slug}"),
                     'created_at' => $post->created_at,
                     'metadata' => [
                         'score' => $post->score,
@@ -492,7 +496,7 @@ class AdminController extends Controller
                     'action' => 'created',
                     'user' => $comment->user->only(['name', 'username', 'avatar_url']),
                     'target' => 'Komment: '.Str::limit($comment->content_markdown, 50),
-                    'target_url' => route('posts.show', $comment->post->slug).'#comment-'.$comment->id,
+                    'target_url' => $comment->post?->slug ? url("/api/v1/posts/{$comment->post->slug}#comment-{$comment->id}") : null,
                     'created_at' => $comment->created_at,
                     'metadata' => [
                         'post_title' => $comment->post->title,
@@ -510,7 +514,7 @@ class AdminController extends Controller
                     'action' => 'registered',
                     'user' => $user->only(['name', 'username', 'avatar_url']),
                     'target' => 'Yangi foydalanuvchi',
-                    'target_url' => route('profile.show', $user->username),
+                    'target_url' => url("/profile/{$user->username}"),
                     'created_at' => $user->created_at,
                     'metadata' => [
                         'xp' => $user->xp,
@@ -528,7 +532,7 @@ class AdminController extends Controller
                     'action' => 'created',
                     'user' => User::find($article->created_by)?->only(['name', 'username', 'avatar_url']),
                     'target' => $article->title,
-                    'target_url' => route('wiki.show', $article->slug),
+                    'target_url' => url("/wiki/{$article->slug}"),
                     'created_at' => $article->created_at,
                     'metadata' => [
                         'version' => $article->version,
@@ -1234,7 +1238,7 @@ class AdminController extends Controller
         return response()->json($containers);
     }
 
-    public function containerStats(Request $request)
+    public function containerMetrics(Request $request)
     {
         $startDate = now()->subHours($request->get('hours', 24));
         $groupBy = $request->get('group_by', 'hour'); // hour, minute
@@ -1276,7 +1280,7 @@ class AdminController extends Controller
         $this->authorize('manage', $container);
 
         try {
-            app(ContainerService::class)->startContainer($container);
+            app(DockerContainerService::class)->start($container);
 
             return response()->json(['message' => 'Container started successfully']);
         } catch (\Exception $e) {
@@ -1289,7 +1293,7 @@ class AdminController extends Controller
         $this->authorize('manage', $container);
 
         try {
-            app(ContainerService::class)->stopContainer($container);
+            app(DockerContainerService::class)->stop($container);
 
             return response()->json(['message' => 'Container stopped successfully']);
         } catch (\Exception $e) {
@@ -1302,7 +1306,7 @@ class AdminController extends Controller
         $this->authorize('manage', $container);
 
         try {
-            app(ContainerService::class)->restartContainer($container);
+            app(DockerContainerService::class)->restart($container);
 
             return response()->json(['message' => 'Container restarted successfully']);
         } catch (\Exception $e) {
@@ -1315,7 +1319,7 @@ class AdminController extends Controller
         $this->authorize('manage', $container);
 
         try {
-            app(ContainerService::class)->deleteContainer($container);
+            app(DockerContainerService::class)->delete($container);
 
             return response()->json(['message' => 'Container deleted successfully']);
         } catch (\Exception $e) {
@@ -1329,7 +1333,7 @@ class AdminController extends Controller
 
         try {
             $lines = $request->get('lines', 100);
-            $logs = app(ContainerService::class)->getContainerLogs($container, $lines);
+            $logs = app(DockerContainerService::class)->getLogs($container, $lines);
 
             return response()->json(['logs' => $logs]);
         } catch (\Exception $e) {

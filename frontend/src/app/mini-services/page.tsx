@@ -5,8 +5,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { containerService } from '@/lib/services/containers';
 import { CreateContainerDto, Container } from '@/types/container';
 import { useAuth } from '@/providers/AuthProvider';
-import { ShieldCheck, Github, Cpu, Database, Globe2, Lock } from 'lucide-react';
+import { ShieldCheck, Github, Cpu, Database, Globe2, Lock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import type { Plan } from '@/types/plan';
+import axios from 'axios';
 
 type EnvRow = { key: string; value: string };
 
@@ -18,6 +20,8 @@ const defaultEnvRows: EnvRow[] = [
 export default function MiniServicesPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [upgradePlans, setUpgradePlans] = useState<Plan[] | null>(null);
+  const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
 
   const { data: options, isLoading: loadingOptions } = useQuery({
     queryKey: ['containers', 'options'],
@@ -72,6 +76,17 @@ export default function MiniServicesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries(['containers']);
       setFormData((prev) => ({ ...prev, name: '', subdomain: '' }));
+      setUpgradePlans(null);
+      setUpgradeMessage(null);
+    },
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const data = error.response.data as any;
+        if (data.upgrade_required) {
+          setUpgradeMessage(data.message ?? 'Limitga yetdingiz. Rejangizni kengaytiring.');
+          setUpgradePlans(data.plans ?? null);
+        }
+      }
     },
   });
 
@@ -128,6 +143,42 @@ export default function MiniServicesPage() {
           </div>
         </header>
 
+        {upgradePlans && (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-6 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">Limitga yetildi</p>
+                <h3 className="text-lg font-semibold text-amber-900">Resurslarni kengaytirish kerak</h3>
+                <p className="text-sm text-amber-800">{upgradeMessage}</p>
+              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-800"
+              >
+                Narxlarni ko‘rish <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {upgradePlans.map((plan) => (
+                <div key={plan.id} className="rounded-xl border border-amber-200 bg-white p-4 text-sm text-amber-900 shadow">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">{plan.name}</p>
+                    <span className="text-xs text-amber-700">{plan.id}</span>
+                  </div>
+                  <p className="mt-1 text-base font-bold">
+                    {plan.id === 'free' ? '0' : new Intl.NumberFormat('uz-UZ').format(plan.price_monthly)} {plan.currency}/oy
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs">
+                    {plan.features.slice(0, 3).map((f, idx) => (
+                      <li key={idx}>• {f}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-[1.3fr,0.7fr]">
           <section className="rounded-3xl border border-border bg-[hsl(var(--card))] p-6 shadow-sm">
             <div className="flex items-center justify-between">
@@ -145,6 +196,12 @@ export default function MiniServicesPage() {
             {xpGateMessage && (
               <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 {xpGateMessage}
+              </div>
+            )}
+
+            {remainingSlots === 0 && (
+              <div className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                Mini-server slotlari tugagan. Yangi server qo‘shish uchun rejangizni kengaytiring yoki mavjudlarini tozalang. <Link href="/pricing" className="font-semibold underline">Narxlar</Link>
               </div>
             )}
 

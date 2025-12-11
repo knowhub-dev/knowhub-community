@@ -13,8 +13,13 @@ export function getApiBaseUrl() {
   return `${sanitizedBaseUrl}/api/v1`;
 }
 
+export function getApiRootUrl() {
+  const baseUrl = getApiBaseUrl();
+
+  return baseUrl.replace(/\/api\/v1$/, '');
+}
+
 export function buildApiUrl(path: string) {
   const baseUrl = getApiBaseUrl();
   return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
-

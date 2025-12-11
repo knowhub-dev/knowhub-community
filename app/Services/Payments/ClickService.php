@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,7 @@ class ClickService implements PaymentGatewayInterface
     public function __construct(
         private readonly ?string $serviceId,
         private readonly ?string $secretKey,
+        private readonly PaymentCallbackLogger $logger,
     ) {}
 
     public function provider(): string
@@ -37,12 +39,36 @@ class ClickService implements PaymentGatewayInterface
 
     public function handleCallback(Request $request): JsonResponse
     {
-        if (! $this->validateSignature($request)) {
+        if (! $this->serviceId || ! $this->secretKey) {
+            throw new HttpResponseException(response()->json([
+                'error' => true,
+                'message' => 'Payment provider credentials are missing',
+            ], 500));
+        }
+
+        $signatureValid = $this->validateSignature($request);
+        if (! $signatureValid) {
+            $this->logger->log($this->provider(), $request, false, 'rejected', 'Invalid signature');
+
             return response()->json([
                 'error' => true,
                 'message' => 'Invalid signature',
             ], 401);
         }
+
+        $required = ['merchant_trans_id', 'amount', 'action', 'sign_time'];
+        foreach ($required as $field) {
+            if (! $request->filled($field)) {
+                $this->logger->log($this->provider(), $request, $signatureValid, 'rejected', "Missing field: {$field}");
+
+                return response()->json([
+                    'error' => true,
+                    'message' => "Missing required field: {$field}",
+                ], 422);
+            }
+        }
+
+        $this->logger->log($this->provider(), $request, $signatureValid, 'accepted', 'Callback accepted');
 
         return response()->json([
             'error' => false,

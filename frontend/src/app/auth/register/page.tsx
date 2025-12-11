@@ -49,7 +49,7 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Parollar mos kelmaydi');
+      setError('Maxfiy kalitlar bir-biriga mos kelmadi.');
       setLoading(false);
       return;
     }
@@ -58,7 +58,7 @@ export default function RegisterPage() {
       await register(formData.name, formData.username, formData.email, formData.password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || "Ro'yxatdan o'tish jarayonida xatolik yuz berdi");
+      setError(err.response?.data?.message || "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, ma'lumotlarni tekshirib qayta urunib ko'ring.");
     } finally {
       setLoading(false);
     }
@@ -72,11 +72,11 @@ export default function RegisterPage() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-[hsl(var(--secondary))]/15 text-[hsl(var(--secondary))]">
             <span className="text-xl font-semibold">KH</span>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">Yangi hisob yarating</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Platformada ro'yxatdan o'tish</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Yoki{' '}
+            Hisobingiz bormi?{' '}
             <Link href="/auth/login" className="font-medium text-[hsl(var(--primary))] hover:underline">
-              mavjud hisobingizga kiring
+              Tizimga kiring
             </Link>
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function RegisterPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="name">To'liq ism</Label>
+              <Label htmlFor="name">Ism va Familiya</Label>
               <div className="relative mt-2">
                 <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -103,13 +103,13 @@ export default function RegisterPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ismingiz Familiyangiz"
+                  placeholder="Masalan: Doniyorbek Anvarov"
                   className="pl-10"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="username">Foydalanuvchi nomi</Label>
+              <Label htmlFor="username">Username (Login)</Label>
               <div className="relative mt-2">
                 <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -124,19 +124,19 @@ export default function RegisterPage() {
                       username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''),
                     })
                   }
-                  placeholder="foydalanuvchi_nomi"
+                  placeholder="unikal_login"
                   className="pl-10"
                 />
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Faqat kichik harflar, raqamlar, _ va - belgilaridan foydalaning
+                Kichik lotin harflari, raqamlar va _ yoki - belgisi.
               </p>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="email">Email manzil</Label>
+              <Label htmlFor="email">Email</Label>
               <div className="relative mt-2">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -146,13 +146,13 @@ export default function RegisterPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="sizning@email.com"
+                  placeholder="dasturchi@email.com"
                   className="pl-10"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">Maxfiy kalit</Label>
               <div className="relative mt-2">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -162,7 +162,7 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Kamida 6 ta belgi"
+                  placeholder="Minimum 8 belgi, murakkabroq"
                   className="pl-10 pr-12"
                 />
                 <button
@@ -177,7 +177,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="confirmPassword">Parolni tasdiqlang</Label>
+            <Label htmlFor="confirmPassword">Maxfiy kalitni takrorlang</Label>
             <div className="relative mt-2">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -187,42 +187,42 @@ export default function RegisterPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="Parolni qayta kiriting"
+                placeholder="Maxfiy kalitni qayta kiriting"
                 className="pl-10"
               />
             </div>
           </div>
 
           <Button type="submit" disabled={loading} className="w-full text-base font-semibold">
-            {loading ? "Ro'yxatdan o'tilmoqda..." : "Ro'yxatdan o'tish"}
+            {loading ? 'Hisob yaratilmoqda...' : "A'zo bo'lish"}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            Ro'yxatdan o'tish orqali siz bizning{' '}
+            {"A'zo bo'lish tugmasini bosish orqali, siz KnowHubning "}{' '}
             <Link href="/terms" className="font-medium text-[hsl(var(--primary))] hover:underline">
-              Foydalanish shartlari
+              Foydalanish shartlariga
             </Link>{' '}
-            va{' '}
+            {' va '}
             <Link href="/privacy" className="font-medium text-[hsl(var(--primary))] hover:underline">
-              Maxfiylik siyosati
+              Maxfiylik siyosatiga
             </Link>
-            ga rozilik bildirasiz.
+            {' rozilik bildirasiz.'}
           </div>
         </form>
 
         <div className="space-y-4 rounded-3xl border border-border/60 bg-[hsl(var(--surface))] p-6 text-center text-sm text-muted-foreground">
-          <p className="text-xs uppercase tracking-[0.3em]">Yoki</p>
+          <p className="text-xs uppercase tracking-[0.3em]">Ijtimoiy tarmoqlar orqali</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
               <a href={buildApiUrl('/auth/google/redirect')}>
                 <GoogleGlyph className="h-5 w-5" />
-                Google
+                Google orqali
               </a>
             </Button>
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
               <a href={buildApiUrl('/auth/github/redirect')}>
                 <GithubGlyph className="h-5 w-5" />
-                GitHub
+                GitHub orqali
               </a>
             </Button>
           </div>

@@ -42,7 +42,8 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => new UserResource($user),
-        ], 201)->withCookie(cookie('auth_token', $token, 60 * 24 * 30, null, null, true, true));
+            'token' => $token,
+        ], 201)->withCookie($this->issueAuthCookie($token));
     }
 
     public function login(Request $request)
@@ -69,7 +70,8 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => new UserResource($user),
-        ])->withCookie(cookie('auth_token', $token, 60 * 24 * 30, null, null, true, true));
+            'token' => $token,
+        ])->withCookie($this->issueAuthCookie($token));
     }
 
     public function logout(Request $request)
@@ -86,7 +88,7 @@ class AuthController extends Controller
             $token->delete();
         }
 
-        return response()->json(['message' => 'Logged out'])->withCookie(cookie()->forget('auth_token'));
+        return response()->json(['message' => 'Logged out'])->withCookie($this->forgetAuthCookie());
     }
 
     public function refreshToken(Request $request)
@@ -108,6 +110,27 @@ class AuthController extends Controller
                         'following',
                     ])
             ),
-        ])->withCookie(cookie('auth_token', $newToken, 60 * 24 * 30, null, null, true, true));
+            'token' => $newToken,
+        ])->withCookie($this->issueAuthCookie($newToken));
+    }
+
+    private function issueAuthCookie(string $token)
+    {
+        return cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 30,
+            '/',
+            config('session.domain'),
+            (bool) config('session.secure', true),
+            true,
+            false,
+            config('session.same_site', 'lax')
+        );
+    }
+
+    private function forgetAuthCookie()
+    {
+        return cookie()->forget('auth_token', '/', config('session.domain'));
     }
 }

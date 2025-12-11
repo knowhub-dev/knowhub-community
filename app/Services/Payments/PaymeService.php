@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,7 @@ class PaymeService implements PaymentGatewayInterface
     public function __construct(
         private readonly ?string $merchantId,
         private readonly ?string $secretKey,
+        private readonly PaymentCallbackLogger $logger,
     ) {}
 
     public function provider(): string
@@ -40,7 +42,21 @@ class PaymeService implements PaymentGatewayInterface
 
     public function handleCallback(Request $request): JsonResponse
     {
-        if (! $this->validateSignature($request)) {
+        if (! $this->merchantId || ! $this->secretKey) {
+            throw new HttpResponseException(response()->json([
+                'jsonrpc' => $request->input('jsonrpc', '2.0'),
+                'error' => [
+                    'code' => -32400,
+                    'message' => 'Payment provider credentials are missing',
+                ],
+                'id' => $request->input('id'),
+            ], 500));
+        }
+
+        $signatureValid = $this->validateSignature($request);
+        if (! $signatureValid) {
+            $this->logger->log($this->provider(), $request, false, 'rejected', 'Invalid signature');
+
             return response()->json([
                 'jsonrpc' => $request->input('jsonrpc', '2.0'),
                 'error' => [
@@ -52,6 +68,22 @@ class PaymeService implements PaymentGatewayInterface
         }
 
         $payload = $request->json()->all();
+
+        $method = $payload['method'] ?? null;
+        if (! in_array($method, ['CheckPerformTransaction', 'PerformTransaction', 'CancelTransaction', 'CheckTransaction'], true)) {
+            $this->logger->log($this->provider(), $request, $signatureValid, 'rejected', 'Unsupported method');
+
+            return response()->json([
+                'jsonrpc' => $payload['jsonrpc'] ?? '2.0',
+                'id' => $payload['id'] ?? null,
+                'error' => [
+                    'code' => -32601,
+                    'message' => 'Method not found',
+                ],
+            ], 400);
+        }
+
+        $this->logger->log($this->provider(), $request, $signatureValid, 'accepted', 'Callback accepted');
 
         return response()->json([
             'jsonrpc' => $payload['jsonrpc'] ?? '2.0',

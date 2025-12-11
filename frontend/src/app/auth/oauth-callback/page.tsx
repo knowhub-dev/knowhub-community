@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/lib/api";
-import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +51,7 @@ function OAuthCallbackContent() {
     const token = searchParams.get("token");
     const provider = searchParams.get("provider") ?? "unknown";
     const error = searchParams.get("error");
+    const statusParam = searchParams.get("status");
 
     if (error) {
       setStatus("error");
@@ -63,25 +63,27 @@ function OAuthCallbackContent() {
       return;
     }
 
-    if (!token) {
-      setStatus("error");
-      setMessage("Token topilmadi. Iltimos, qayta urinib ko'ring yoki boshqa autentifikatsiya usulidan foydalaning.");
-      return;
-    }
-
     async function finalize() {
       try {
-        setAuthCookie(token);
+        if (token) {
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          if (typeof window !== "undefined") {
+            localStorage.setItem("auth_token", token);
+          }
+        }
         await checkUser();
         setStatus("success");
-        setMessage(`${provider === "github" ? "GitHub" : "Google"} orqali muvaffaqiyatli kirdingiz.`);
+        setMessage(statusParam === "success"
+          ? `${provider === "github" ? "GitHub" : "Google"} orqali muvaffaqiyatli kirdingiz.`
+          : "Muvaffaqiyatli kirdingiz.");
         redirectTimer = setTimeout(() => {
           router.replace(redirectTarget);
         }, 1000);
       } catch (err) {
         console.error("OAuth finalize failed", err);
-        clearAuthCookie();
-        localStorage.removeItem("auth_token");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth_token");
+        }
         delete api.defaults.headers.common["Authorization"];
         setStatus("error");
         setMessage("Tokenni tasdiqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");

@@ -19,9 +19,9 @@ function formatNumber(value?: number) {
 
 export function HeroSection({ stats, feedHighlights, spotlight }: HeroSectionProps) {
   const primaryStats = [
-    { label: "Community", value: stats?.users?.total },
-    { label: "Expert javoblar", value: stats?.comments?.total },
-    { label: "Mualliflar", value: stats?.posts?.total },
+    { label: "A'zolar", value: stats?.users?.total },
+    { label: "Javoblar", value: stats?.comments?.total },
+    { label: "Maqolalar", value: stats?.posts?.total },
   ];
 
   return (
@@ -35,14 +35,14 @@ export function HeroSection({ stats, feedHighlights, spotlight }: HeroSectionPro
 
           <div className="space-y-4">
             <h1 className="text-3xl leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              Bilim almashishning yangi darajasi.
+              Kodni yozing. Loyiha yarating.
               <span className="block bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-                KnowHub Aurora
+                Kelajakni quring.
               </span>
             </h1>
             <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-              Jamiyat a'zolari uchun tezkor javoblar, ekspert ko'magi va innovatsion hamkorlik maydoni. SSR asosidagi yangi
-              bosh sahifa sahifadagi ma'lumotlarni darhol ko'rsatadi.
+              O'zbekiston dasturchilari uchun yagona platforma. Savol bering, tajribangiz bilan bo'lishing va eng so'nggi
+              texnologiyalarni birgalikda o'rganing. Sizning IT-hamjamiyatingiz shu yerda.
             </p>
           </div>
 

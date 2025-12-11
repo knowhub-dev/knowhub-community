@@ -16,9 +16,10 @@ class CodeRunRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'language' => ['required', 'in:python,javascript,typescript,php,go,java,c++'],
-            'code' => ['required', 'string', 'max:10240'],
-            'post_slug' => ['nullable', 'string'],
+            'language' => ['required', 'string', 'in:python,javascript,typescript,php,go,java,c++'],
+            'code' => ['required_without:source', 'string', 'max:10240'],
+            'source' => ['sometimes', 'string', 'max:10240'],
+            'post_slug' => ['nullable', 'exists:posts,slug'],
             'comment_id' => ['nullable', 'integer', 'exists:comments,id'],
         ];
     }

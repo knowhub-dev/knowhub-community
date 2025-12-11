@@ -2,73 +2,83 @@
 
 namespace App\Services\CodeRun;
 
+use App\Jobs\RunCode;
+use App\Models\CodeRun;
 use App\Models\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PistonCodeRunner implements CodeRunner
 {
-    public function __construct(private string $baseUrl, private int $defaultTimeoutMs) {}
-
-    public function run(User $user, string $language, string $source): array
+    public function __construct(private string $baseUrl, private int $defaultTimeoutMs)
     {
-        $lang = match ($language) {
-            'javascript' => 'js',
-            'typescript' => 'ts',
-            'python' => 'py',
-            'php' => 'php',
-            'c++' => 'cpp',
-            default => $language
-        };
+    }
 
-        $timeout = $this->resolveTimeout($user);
+    public function submit(
+        User $user,
+        string $language,
+        string $source,
+        ?int $postId = null,
+        ?int $commentId = null
+    ): CodeRun {
+        $codeRun = CodeRun::create([
+            'user_id' => $user->id,
+            'post_id' => $postId,
+            'comment_id' => $commentId,
+            'language' => $this->normalizeLanguage($language),
+            'source' => $source,
+            'status' => CodeRun::STATUS_QUEUED,
+        ]);
+
+        RunCode::dispatch($codeRun);
+
+        return $codeRun;
+    }
+
+    public function execute(CodeRun $codeRun): void
+    {
+        $timeout = $this->resolveTimeout($codeRun->user);
         $client = new Client(['base_uri' => $this->baseUrl, 'timeout' => $timeout / 1000]);
 
+        $codeRun->update(['status' => CodeRun::STATUS_RUNNING]);
+
+        $startedAt = microtime(true);
         $payload = [
-            'language' => $lang,
+            'language' => $this->normalizeLanguage($codeRun->language),
             'version' => '*',
-            'files' => [['content' => $source]],
+            'files' => [['content' => $codeRun->source]],
             'stdin' => '',
             'args' => [],
             'compile_timeout' => $timeout,
             'run_timeout' => $timeout,
         ];
 
-        if ($user->hasPriorityExecution()) {
+        if ($codeRun->user->hasPriorityExecution()) {
             $payload['priority'] = true;
         }
 
         try {
             $resp = $client->post('/execute', ['json' => $payload]);
-        } catch (ConnectException $exception) {
-            Log::warning('Piston connection failed', ['error' => $exception->getMessage()]);
-            throw new HttpResponseException(
-                response()->json(['message' => 'Code execution service unavailable. Please try again later.'], 503)
-            );
-        } catch (RequestException $exception) {
-            Log::error('Piston request failed', ['error' => $exception->getMessage()]);
-            throw new HttpResponseException(
-                response()->json(['message' => 'Code execution request could not be completed.'], 503)
-            );
-        } catch (\Throwable $exception) {
-            Log::error('Piston execution error', ['error' => $exception->getMessage()]);
-            throw new HttpResponseException(
-                response()->json(['message' => 'Unexpected error while running code.'], 503)
-            );
+            $data = json_decode((string) $resp->getBody(), true);
+
+            $codeRun->update([
+                'status' => CodeRun::STATUS_SUCCESS,
+                'stdout' => $this->collectStdout($data),
+                'stderr' => $this->collectStderr($data),
+                'runtime_ms' => $this->extractRuntimeMs($data, $startedAt),
+                'exit_code' => (int) Arr::get($data, 'run.code', Arr::get($data, 'code', 0)),
+            ]);
+        } catch (ConnectException $e) {
+            $this->failRun($codeRun, 'Code execution service unavailable.', $e);
+        } catch (RequestException $e) {
+            $this->failRun($codeRun, 'Code execution request could not be completed.', $e);
+        } catch (Throwable $e) {
+            $this->failRun($codeRun, 'Unexpected error while running code.', $e);
         }
-
-        $data = json_decode((string) $resp->getBody(), true);
-
-        $stdout = Arr::get($data, 'run.stdout', '');
-        $stderr = Arr::get($data, 'run.stderr', '');
-        $code = (int) Arr::get($data, 'run.code', 0);
-        $timeMs = (int) round((float) (Arr::get($data, 'run.signal', 0)) ?: 0);
-
-        return ['stdout' => $stdout, 'stderr' => $stderr, 'code' => $code, 'time_ms' => $timeMs];
     }
 
     private function resolveTimeout(User $user): int
@@ -80,5 +90,57 @@ class PistonCodeRunner implements CodeRunner
         }
 
         return $user->isPro() ? 15000 : $this->defaultTimeoutMs;
+    }
+
+    private function normalizeLanguage(string $language): string
+    {
+        return match (strtolower($language)) {
+            'javascript', 'js' => 'js',
+            'typescript', 'ts' => 'ts',
+            'python', 'py' => 'py',
+            'c++', 'cpp' => 'cpp',
+            default => strtolower($language),
+        };
+    }
+
+    private function extractRuntimeMs(array $data, float $startedAt): int
+    {
+        $runtimeSec = (float) Arr::get($data, 'run.time', 0);
+
+        if ($runtimeSec <= 0) {
+            $runtimeSec = max(0, microtime(true) - $startedAt);
+        }
+
+        return (int) round($runtimeSec * 1000);
+    }
+
+    private function collectStdout(array $data): string
+    {
+        return (string) (Arr::get($data, 'run.output') ?? Arr::get($data, 'run.stdout', ''));
+    }
+
+    private function collectStderr(array $data): string
+    {
+        $compileStderr = trim((string) Arr::get($data, 'compile.stderr', ''));
+        $runStderr = trim((string) Arr::get($data, 'run.stderr', ''));
+
+        if ($compileStderr && $runStderr) {
+            return $compileStderr."\n".$runStderr;
+        }
+
+        return $compileStderr ?: $runStderr;
+    }
+
+    private function failRun(CodeRun $codeRun, string $message, Throwable $e): void
+    {
+        Log::error('Piston execution failed', [
+            'run_id' => $codeRun->id,
+            'error' => $e->getMessage(),
+        ]);
+
+        $codeRun->update([
+            'status' => CodeRun::STATUS_FAILED,
+            'stderr' => $message,
+        ]);
     }
 }

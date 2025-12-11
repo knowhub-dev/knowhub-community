@@ -14,8 +14,13 @@ class StoreEnvVarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'key' => ['required', 'string'],
-            'value' => ['nullable', 'string'],
+            'key' => [
+                'required',
+                'string',
+                'max:64',
+                'regex:'.config('containers.env_key_regex', '/^[A-Z][A-Z0-9_]*$/'),
+            ],
+            'value' => ['nullable', 'string', 'max:'.config('containers.env_value_max_length', 256)],
         ];
     }
 }

@@ -69,10 +69,10 @@ export default function Navbar() {
 
   const navLinks = useMemo<NavItem[]>(
     () => [
-      { href: '/posts', label: 'Blog' },
-      { href: '/wiki', label: 'Wiki' },
-      { href: '/containers', label: 'Mini-serverlar' },
-      { href: '/leaderboard', label: 'Liderlar' },
+      { href: '/posts', label: 'Maqolalar' },
+      { href: '/wiki', label: 'Bilimlar bazasi' },
+      { href: '/containers', label: 'Servislar' },
+      { href: '/leaderboard', label: 'Reyting' },
     ],
     [],
   );
@@ -115,7 +115,7 @@ export default function Navbar() {
             className="hidden rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition hover:-translate-y-0.5 lg:flex lg:items-center lg:gap-2"
           >
             <Plus className="h-4 w-4" />
-            Yangi post
+            Yaratish
           </Link>
           <div ref={profileRef} className="relative">
             <button
@@ -144,14 +144,14 @@ export default function Navbar() {
                     className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
                   >
                     <User className="h-4 w-4" />
-                    Profil
+                    Mening sahifam
                   </Link>
                   <Link
                     href="/settings"
                     className="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-[hsl(var(--surface))]/70 hover:text-foreground"
                   >
                     <Settings className="h-4 w-4" />
-                    Sozlamalar
+                    Profil sozlamalari
                   </Link>
                   <button
                     type="button"
@@ -159,7 +159,7 @@ export default function Navbar() {
                     className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-200"
                   >
                     <LogOut className="h-4 w-4" />
-                    Chiqish
+                    Tizimdan chiqish
                   </button>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function Navbar() {
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon transition-transform hover:-translate-y-0.5"
         >
           <User className="h-4 w-4" />
-          Ro'yxatdan o'tish
+          A'zo bo'lish
         </Link>
       </div>
     );
@@ -219,7 +219,7 @@ export default function Navbar() {
           className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-3 py-1.5 text-xs font-semibold text-white"
         >
           <User className="h-3.5 w-3.5" />
-          Ro'yxatdan o'tish
+          A'zo bo'lish
         </Link>
       </>
     );
@@ -298,8 +298,8 @@ export default function Navbar() {
               )}
             >
               <SheetHeader className="items-start text-left">
-                <SheetTitle className="text-xl font-bold text-[hsl(var(--foreground))]">Navigatsiya</SheetTitle>
-                <p className="text-sm text-muted-foreground">Menyuga va asosiy amallarga tezkor ulanish</p>
+                <SheetTitle className="text-xl font-bold text-[hsl(var(--foreground))]">Asosiy menyu</SheetTitle>
+                <p className="text-sm text-muted-foreground">Platforma bo'ylab tezkor harakatlanish</p>
               </SheetHeader>
 
               {mobileMenuVariant === 'bottom' && <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-border" />}
@@ -321,8 +321,8 @@ export default function Navbar() {
 
                 <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-[hsl(var(--surface))]/70 px-4 py-3 shadow-inner">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Mavzu</p>
-                    <p className="text-xs text-muted-foreground">Yorqin / Tungi rejim</p>
+                    <p className="text-sm font-semibold text-foreground">Tashqi ko'rinish</p>
+                    <p className="text-xs text-muted-foreground">Kunduzgi / Tungi rejim</p>
                   </div>
                   <button
                     type="button"
@@ -341,7 +341,7 @@ export default function Navbar() {
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-foreground">Bildirishnomalar</p>
-                      <p className="text-xs text-muted-foreground">So'nggi yangiliklardan xabardor bo'ling</p>
+                      <p className="text-xs text-muted-foreground">Eng so'nggi yangiliklar va eslatmalar</p>
                     </div>
                   </div>
                   <SheetClose asChild>
@@ -350,7 +350,7 @@ export default function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-xs font-semibold text-white shadow-neon"
                     >
-                      Yopish
+                      Menyuni yopish
                     </button>
                   </SheetClose>
                 </div>
@@ -365,7 +365,7 @@ export default function Navbar() {
                           className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-3 text-sm font-semibold text-white shadow-neon"
                         >
                           <Plus className="h-4 w-4" />
-                          Yangi post
+                          Yaratish
                         </Link>
                       </SheetClose>
                       <button
@@ -377,7 +377,7 @@ export default function Navbar() {
                         className="inline-flex items-center justify-center gap-2 rounded-full border border-border/70 px-4 py-3 text-sm font-semibold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-200"
                       >
                         <LogOut className="h-4 w-4" />
-                        Chiqish
+                        Tizimdan chiqish
                       </button>
                     </>
                   ) : (
@@ -398,7 +398,7 @@ export default function Navbar() {
                           className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] px-4 py-2 text-sm font-semibold text-white shadow-neon"
                         >
                           <User className="h-4 w-4" />
-                          Ro'yxatdan o'tish
+                          A'zo bo'lish
                         </Link>
                       </SheetClose>
                     </div>

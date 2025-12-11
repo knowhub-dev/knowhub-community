@@ -16,6 +16,8 @@ class UserResource extends JsonResource
             'avatar_url' => $this->avatar_url,
             'bio' => $this->bio,
             'xp' => $this->xp,
+            'is_admin' => (bool) ($this->is_admin ?? false),
+            'role' => ($this->is_admin ?? false) ? 'admin' : 'user',
             'plan_type' => $this->plan_type,
             'plan_expires_at' => $this->plan_expires_at?->toISOString(),
             'is_pro' => $this->isPro(),

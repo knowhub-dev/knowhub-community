@@ -49,7 +49,7 @@ export default function LoginPage() {
       await login(formData.email, formData.password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Kirish jarayonida xatolik yuz berdi');
+      setError(err.response?.data?.message || 'Kirishda xatolik. Email yoki parol noto‘g‘ri bo‘lishi mumkin.');
     } finally {
       setLoading(false);
     }
@@ -63,11 +63,11 @@ export default function LoginPage() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]">
             <span className="text-xl font-semibold">KH</span>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">Hisobingizga kiring</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Platformaga kirish</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Yoki{' '}
+            Hali a'zo emasmisiz?{' '}
             <Link href="/auth/register" className="font-medium text-[hsl(var(--primary))] hover:underline">
-              yangi hisob yarating
+              Ro'yxatdan o'ting
             </Link>
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
-                Email manzil
+                Email
               </Label>
               <div className="relative mt-2">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -96,7 +96,7 @@ export default function LoginPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="sizning@email.com"
+                  placeholder="dasturchi@email.com"
                   className="pl-10"
                 />
               </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
 
             <div>
               <Label htmlFor="password" className="text-sm font-medium">
-                Parol
+                Maxfiy kalit
               </Label>
               <div className="relative mt-2">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -115,7 +115,7 @@ export default function LoginPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Parolingiz"
+                  placeholder="••••••••"
                   className="pl-10 pr-12"
                 />
                 <button
@@ -130,29 +130,29 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" disabled={loading} className="w-full text-base font-semibold">
-            {loading ? 'Kirilmoqda...' : 'Kirish'}
+            {loading ? 'Autentifikatsiya...' : 'Tizimga kirish'}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
             <Link href="/forgot-password" className="font-medium text-[hsl(var(--primary))] hover:underline">
-              Parolni unutdingizmi?
+              Maxfiy kalitni unutdingizmi?
             </Link>
           </div>
         </form>
 
         <div className="space-y-4 rounded-3xl border border-border/60 bg-[hsl(var(--surface))] p-6 text-center text-sm text-muted-foreground">
-          <p className="text-xs uppercase tracking-[0.3em]">Yoki</p>
+          <p className="text-xs uppercase tracking-[0.3em]">Ijtimoiy tarmoqlar</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
               <a href={buildApiUrl('/auth/google/redirect')}>
                 <GoogleGlyph className="h-5 w-5" />
-                Google
+                Google orqali
               </a>
             </Button>
             <Button asChild variant="outline" className="gap-2 border-border/70 text-sm font-medium">
               <a href={buildApiUrl('/auth/github/redirect')}>
                 <GithubGlyph className="h-5 w-5" />
-                GitHub
+                GitHub orqali
               </a>
             </Button>
           </div>

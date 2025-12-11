@@ -6,6 +6,7 @@ const communityLinks = [
   { href: '/wiki', label: 'Wiki' },
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/containers', label: 'Mini-serverlar' },
+  { href: '/pricing', label: 'Narxlar' },
 ];
 
 const supportLinks = [

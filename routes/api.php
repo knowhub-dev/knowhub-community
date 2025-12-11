@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\BrandingController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\CodeRunController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ContainerController;
 use App\Http\Controllers\Api\V1\ContainerEnvController;
@@ -22,9 +23,14 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\StatsController;
+use App\Http\Controllers\Api\V1\SystemStatusController;
+use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VoteController;
+use App\Http\Controllers\Api\V1\AdminController;
+use App\Http\Controllers\Api\V1\Admin\PaymentSettingsController;
+use App\Http\Controllers\Api\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Middleware\RateLimitMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -40,28 +46,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
-    /* ============================
-     |  Authentication & Tokens
-     ============================ */
-    Route::prefix('auth')->middleware(RateLimitMiddleware::class.':auth-attempt,5')->group(function () {
-        Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-        Route::post('/refresh', [AuthController::class, 'refreshToken'])->middleware('auth:sanctum');
 
-        // Email auth aliases
-        Route::prefix('email')->group(function () {
-            Route::post('/register', [AuthController::class, 'register']);
-            Route::post('/login', [AuthController::class, 'login']);
-            Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-        });
-    });
-
-    /* ---- OAuth ---- */
-    Route::get('/auth/google/redirect', [OAuthController::class, 'redirectGoogle']);
-    Route::get('/auth/google/callback', [OAuthController::class, 'handleGoogleCallback']);
-    Route::get('/auth/github/redirect', [OAuthController::class, 'redirectGithub']);
-    Route::get('/auth/github/callback', [OAuthController::class, 'handleGithubCallback']);
 
     /* ============================
      | PROTECTED AUTH USER ROUTES
@@ -146,6 +131,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/report/post/{id}', [ReportController::class, 'postReport']);
         Route::post('/report/user/{username}', [ReportController::class, 'userReport']);
 
+        /* ---- Code Runs ---- */
+        Route::middleware(RateLimitMiddleware::class . ':code-run,20')->post('/code-runs', [CodeRunController::class, 'submit']);
+        Route::get('/code-runs/{codeRun}', [CodeRunController::class, 'show']);
     });
 
     /* ============================
@@ -167,6 +155,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/tags', [TagController::class, 'index']);
     Route::get('/tags/trending', [TagController::class, 'trending']);
 
+    /* ---- Plans / Pricing ---- */
+    Route::get('/plans', [PlanController::class, 'index']);
+
     /* ---- Activity Feed ---- */
     Route::get('/activity-feed', [ActivityFeedController::class, 'index']); // 500 muammo shu controllerda bo‘lishi mumkin
 
@@ -178,11 +169,40 @@ Route::prefix('v1')->group(function () {
     Route::get('/stats/homepage', [StatsController::class, 'homepage']);
     Route::get('/stats/weekly-heroes', [StatsController::class, 'weeklyHeroes']);
     Route::get('/content/about', [ContentController::class, 'about']);
+    Route::get('/status/summary', [SystemStatusController::class, 'summary']);
 
     /* ---- Profile Public ---- */
     Route::get('/profile/{username}', [ProfileController::class, 'show'])
         ->where('username', '^(?!me$)[A-Za-z0-9._-]+$'); // ❗ /me ga to‘qnashmaydi
 
+    /* ============================
+     | ADMIN ROUTES
+     ============================ */
+    Route::prefix('admin')->middleware(['auth:sanctum', RateLimitMiddleware::class.':admin,60'])->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::post('/users/{user}/ban', [AdminController::class, 'banUser']);
+        Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
+
+        Route::get('/system/resources', [AdminController::class, 'systemResources']);
+        Route::get('/system/settings', [AdminController::class, 'systemSettings']);
+        Route::put('/system/settings', [AdminController::class, 'updateSystemSettings']);
+        Route::post('/system/cache/clear', [AdminController::class, 'clearCache']);
+
+        Route::get('/containers', [AdminController::class, 'containers']);
+        Route::get('/containers/metrics', [AdminController::class, 'containerMetrics']);
+        Route::post('/containers/{container}/start', [AdminController::class, 'startContainer']);
+        Route::post('/containers/{container}/stop', [AdminController::class, 'stopContainer']);
+        Route::post('/containers/{container}/restart', [AdminController::class, 'restartContainer']);
+        Route::delete('/containers/{container}', [AdminController::class, 'deleteContainer']);
+        Route::get('/containers/{container}/logs', [AdminController::class, 'getContainerLogs']);
+
+        Route::get('/payment-settings', [PaymentSettingsController::class, 'getCallbacks']);
+        Route::post('/payment-settings', [PaymentSettingsController::class, 'update']);
+
+        Route::get('/plans', [AdminPlanController::class, 'index']);
+        Route::post('/plans', [AdminPlanController::class, 'save']);
+    });
 });
 
 /*use Illuminate\Support\Facades\Route;

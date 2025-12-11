@@ -9,40 +9,50 @@ use App\Http\Requests\CodeRunRequest;
 use App\Models\CodeRun;
 use App\Models\Post;
 use App\Services\CodeRun\CodeRunner;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 
 class CodeRunController extends Controller
 {
-    public function __construct(private CodeRunner $runner) {}
-
-    public function run(CodeRunRequest $req)
+    public function __construct(private readonly CodeRunner $runner)
     {
-        $data = $req->validated();
-        $postId = null;
-        if (! empty($data['post_slug'])) {
-            $postId = Post::where('slug', $data['post_slug'])->value('id');
+    }
+
+    public function submit(CodeRunRequest $req): JsonResponse
+    {
+        $this->authorize('create', CodeRun::class);
+
+        $source = $req->input('code', $req->input('source'));
+        if ($source === null) {
+            return response()->json(['message' => 'Code snippet is required.'], 422);
         }
 
-        $run = CodeRun::create([
-            'user_id' => $req->user()->id,
-            'post_id' => $postId,
-            'comment_id' => $data['comment_id'] ?? null,
-            'language' => $data['language'] === 'js' ? 'javascript' : $data['language'],
-            'source' => $data['code'],
-            'status' => 'running',
-        ]);
+        $postId = null;
+        if ($slug = $req->input('post_slug')) {
+            $postId = Post::where('slug', $slug)->value('id');
+        }
 
-        $result = $this->runner->run($req->user(), $run->language, $run->source);
+        $codeRun = $this->runner->submit(
+            $req->user(),
+            $req->input('language'),
+            $source,
+            $postId,
+            $req->input('comment_id')
+        );
 
-        DB::transaction(function () use ($run, $result) {
-            $run->stdout = $result['stdout'];
-            $run->stderr = $result['stderr'];
-            $run->exit_code = $result['code'];
-            $run->runtime_ms = $result['time_ms'];
-            $run->status = $result['code'] === 0 ? 'success' : 'failed';
-            $run->save();
-        });
+        return response()->json(['run_id' => $codeRun->id], 202);
+    }
 
-        return $run->only(['id', 'language', 'stdout', 'stderr', 'exit_code', 'runtime_ms', 'status']);
+    public function show(CodeRun $codeRun): JsonResponse
+    {
+        $this->authorize('view', $codeRun);
+
+        return response()->json($codeRun->only([
+            'id',
+            'status',
+            'stdout',
+            'stderr',
+            'runtime_ms',
+            'exit_code',
+        ]));
     }
 }
